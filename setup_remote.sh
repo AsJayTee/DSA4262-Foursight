@@ -112,7 +112,9 @@ ssh "${SSH_OPTS[@]}" "$HOST" "cd $REMOTE_DIR && bash bootstrap.sh"
 echo
 echo "Done. Connect and start working:"
 echo
-echo "    ssh ${KEY:+-i $KEY }$HOST"
+# Quote the key path: home directories with spaces ("C:\Users\Jane Doe") would
+# otherwise print a command that breaks when copy-pasted.
+echo "    ssh ${KEY:+-i \"$KEY\" }$HOST"
 echo "    cd ${REMOTE_DIR/#\~\//} && source .venv/bin/activate"
 echo "    make smoke CONFIG=configs/lightgbm.yaml"
 echo
