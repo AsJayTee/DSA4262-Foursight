@@ -88,14 +88,17 @@ python scripts/download_data.py    # pulls the training set from R2
 python scripts/train.py --config configs/quantiles.yaml
 ```
 
-Or on a fresh VM, all of the above in one command from your laptop:
+Or on a fresh Ronin instance, all of the above in one command from your laptop:
 
 ```bash
-./setup_remote.sh ubuntu@<instance-ip>
+./setup_remote.sh -i ~/.ssh/yourkey.pem ubuntu@<instance-host>
 ```
 
-See [docs/setup.md](docs/setup.md) — **read the platform notes there first if
-you are on Windows or macOS.**
+Safe to re-run at any time — it resets the instance to a known-good state and
+skips work already done.
+
+See [docs/setup.md](docs/setup.md) for the full walkthrough, including key
+permissions and the Windows notes. **On Windows, use Git Bash, not PowerShell.**
 
 ### Everyday commands
 
@@ -112,13 +115,23 @@ you are on Windows or macOS.**
 
 ## For the team
 
+**The default way to work in this repo is through a coding agent** — Claude
+Code, Codex, whatever you use. You describe an idea; the agent writes it, proves
+it runs with `make smoke`, and hands you a command to run on Ronin.
+
+You do not need to read this codebase to contribute to it. To understand,
+change, or extend anything, **ask your agent** — [AGENTS.md](AGENTS.md) tells it
+how the repo is organised, and it can read and explain any part of it in
+context. Reading the source yourself is always an option, never a prerequisite.
+
 | File | What it gives you |
 |---|---|
-| [docs/project-requirements.md](docs/project-requirements.md) | What the project is graded on — tasks, formats, deadlines, assessment |
+| [docs/setup.md](docs/setup.md) | Getting a machine working — **Ronin walkthrough, and the Windows notes** |
+| [docs/running-experiments.md](docs/running-experiments.md) | How to actually run an experiment, with or without an agent |
 | [GAPS.md](GAPS.md) | The backlog: what is missing, weak, or untested, with evidence |
+| [docs/project-requirements.md](docs/project-requirements.md) | What the project is graded on — tasks, formats, deadlines, assessment |
 | [docs/data.md](docs/data.md) | Data dictionary and measured statistics |
-| [docs/setup.md](docs/setup.md) | Local and VM setup — **read the platform notes if you are on Windows** |
-| [AGENTS.md](AGENTS.md) | Conventions for coding agents and people |
+| [AGENTS.md](AGENTS.md) | Conventions your agent follows — and why |
 | [analysis/m6anet/README.md](analysis/m6anet/README.md) | The m6Anet benchmark, and two traps waiting in it |
 
 ---

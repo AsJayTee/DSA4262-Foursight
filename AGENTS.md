@@ -18,7 +18,13 @@ Before planning any work, read:
 | [docs/project-requirements.md](docs/project-requirements.md) | What the project is graded on — tasks, formats, deadlines, assessment weights. The authoritative brief. |
 | [GAPS.md](GAPS.md) | What is currently missing, weak, or untested, with evidence. Deliberately records no solutions — work out your own. |
 | [docs/data.md](docs/data.md) | The data dictionary: file formats, feature meanings, measured statistics. |
-| [docs/setup.md](docs/setup.md) | Running things locally or on a VM. |
+| [docs/setup.md](docs/setup.md) | Getting a machine working, locally or on Ronin. |
+| [docs/running-experiments.md](docs/running-experiments.md) | The loop your user follows. Written for them, not you — but it tells you what they expect from you. |
+
+Most people here work through you rather than by reading the source. When you
+are asked to explain or change something, assume the person has not read the
+file and does not need to. Explain in terms of what it does and why, and hand
+back a command they can run.
 
 `GAPS.md` is the backlog. If you close a gap, delete the entry. If you find a
 new one, add it with whatever evidence you have.

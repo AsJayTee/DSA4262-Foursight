@@ -1,26 +1,30 @@
 # Setup
 
+Getting a machine ready to run experiments. For *how to run an experiment* once
+it is ready, see [running-experiments.md](running-experiments.md).
+
+---
+
 ## Read this first: what runs where
 
-This trips people up, so it is at the top.
+This is the thing that trips people up.
 
-| | Your laptop | The VM (Ubuntu) |
+| | Your laptop | The Ronin instance |
 |---|---|---|
-| Needs git, ssh, `.env` | Yes | — |
+| Needs git, ssh, your `.env`, your `.pem` key | Yes | — |
 | Needs Python, the data, `.venv` | **No** | Yes |
 | Runs `setup_remote.sh` | **Yes** | No |
-| Runs `bootstrap.sh` | **No** | Yes (automatically) |
+| Runs `bootstrap.sh` | **No** | Yes, automatically |
 
 **`bootstrap.sh` is Ubuntu-only.** It uses `apt-get`. Running it on a Windows
-or macOS laptop produces a wall of errors. You never need to run it by hand —
-`setup_remote.sh` runs it on the VM for you.
+or macOS laptop produces a wall of errors. You never run it by hand.
 
-**On Windows, run `setup_remote.sh` in Git Bash, not PowerShell.** It is a bash
-script. Git Bash ships with Git for Windows; open it from the Start menu, or
-right-click in the repo folder and choose "Git Bash Here".
+**On Windows, use Git Bash — not PowerShell, not CMD.** `setup_remote.sh` is a
+bash script. Git Bash ships with Git for Windows: find it in the Start menu, or
+right-click inside the repo folder and choose "Git Bash Here".
 
-`make` is also not available in Git Bash. On Windows, call the scripts directly
-instead:
+`make` does not exist in Git Bash either. On your laptop, call the scripts
+directly instead:
 
 ```bash
 python scripts/doctor.py
@@ -29,106 +33,235 @@ python scripts/train.py --config configs/lightgbm.yaml --smoke
 
 ---
 
-## One-time: your `.env`
+## One-time setup on your laptop
+
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/AsJayTee/DSA4262-Foursight.git
+cd DSA4262-Foursight
+```
+
+### 2. Create your `.env`
 
 ```bash
 cp .env.example .env
 ```
 
-Then fill it in:
+Then fill in two things:
 
-1. **The shared R2 block** — ask in the Telegram groupchat. These are the same
-   for everyone.
-2. **`WANDB_API_KEY`** — *yours*, from <https://wandb.ai/authorize>. Do not use
-   someone else's: per-person attribution on the shared W&B project is how we
-   each show our own contribution.
+- **The shared R2 block** — ask in the Telegram groupchat. Identical for everyone.
+- **`WANDB_API_KEY`** — *yours*, from <https://wandb.ai/authorize>. Do not use
+  someone else's. Per-person attribution on the shared W&B project is how each
+  of us evidences our own contribution for the individual grade.
 
-Never commit `.env`. `.gitignore` already blocks it.
+Never commit `.env`. `.gitignore` already blocks it, and nothing should ever
+change that.
+
+### 3. Put your Ronin key somewhere sane, with the right permissions
+
+Download the `.pem` key file from Ronin and move it into your `.ssh` folder:
+
+```bash
+mkdir -p ~/.ssh
+mv ~/Downloads/yourkey.pem ~/.ssh/
+chmod 600 ~/.ssh/yourkey.pem
+```
+
+**`chmod 600` matters.** SSH refuses to use a private key that other users can
+read, and the error it gives ("UNPROTECTED PRIVATE KEY FILE") does not make the
+fix obvious. In Git Bash, `~` is `C:\Users\<your name>`.
+
+#### If you use `~/.ssh/config`
+
+A config entry saves typing, but the `IdentityFile` path **must start with `~/`**:
+
+```
+Host jinthautest.nus.cloud
+  HostName jinthautest.nus.cloud
+  IdentityFile ~/.ssh/yourkey.pem     # NOT .ssh/yourkey.pem
+  User ubuntu
+```
+
+A relative path like `.ssh/yourkey.pem` is resolved against your *current
+directory*, not your home directory. It works when you happen to be sitting in
+`~`, and silently fails from the repo folder — which is where you will actually
+be running things.
 
 ---
 
-## Spinning up a VM
+## Running an experiment machine on Ronin
 
-From your laptop, in the repo folder:
+### Step 1 — launch the instance
 
-```bash
-./setup_remote.sh ubuntu@<instance-ip>
-```
+Launch an Ubuntu instance in Ronin and note its hostname or IP. The smallest
+tier is plenty: **2 vCPU / 8 GB**. Training on the full dataset takes about 90
+seconds.
 
-If the instance needs a key file:
+**Do not launch a GPU instance.** Nothing here needs one, and AWS overspending
+is an explicit 5% deduction on the project grade.
 
-```bash
-./setup_remote.sh -i ~/keys/dsa4262.pem ubuntu@<instance-ip>
-```
+### Step 2 — from your laptop, in Git Bash
 
-This clones or updates the repo on the VM, copies your `.env` across, installs
-everything, downloads the data from R2, and finishes by running `make doctor`.
-It takes a few minutes the first time and is safe to re-run.
-
-Then:
+From inside the repo folder:
 
 ```bash
-ssh ubuntu@<instance-ip>
-cd foursight && source .venv/bin/activate
-make smoke CONFIG=configs/lightgbm.yaml
+./setup_remote.sh -i ~/.ssh/yourkey.pem ubuntu@<your-instance-host>
 ```
 
-### When something goes wrong
+If your `~/.ssh/config` already has an entry for the host, the short form works:
 
-Run `make doctor` (or `python scripts/doctor.py`). It checks every part of the
-setup and names the command that fixes whatever is missing. Start there before
-reading tracebacks.
+```bash
+./setup_remote.sh <your-instance-host>
+```
+
+This is the only command you need. It clones or updates the repo on the
+instance, copies your `.env` across, installs Python and everything else,
+downloads the data from R2, logs into W&B, and finishes by running `doctor`.
+
+**It is safe to run again, any time.** If something looks wrong, re-running is
+the first thing to try — it resets the instance to a known-good state and
+skips work already done.
+
+Expected output:
+
+```
+==> [1/4] Checking connection to ubuntu@...
+==> [2/4] Cloning or updating the repo at ~/foursight
+    cloned at 2ad59c1
+==> [3/4] Copying .env
+==> [4/4] Running bootstrap.sh on the VM (this takes a few minutes)
+--> System packages
+--> Python environment (.venv)
+--> Installing m6a and dependencies
+--> Logging in to Weights & Biases
+    logged in as dsa4262-team
+--> Downloading data from R2
+  2 object(s) for --set course -> data/raw/
+  [downloaded] data.info.labelled  (4.7 MB)
+  [downloaded] dataset0.json.gz  (179.6 MB)
+
+================ make doctor ================
+[  OK  ] python 3.14.4
+...
+Ready.
+```
+
+First run takes a few minutes, mostly pip. A second run finishes in under a
+minute, with the data reported as `skipped (size match)`.
+
+### Step 3 — in the SSH terminal
+
+```bash
+ssh -i ~/.ssh/yourkey.pem ubuntu@<your-instance-host>
+```
+
+Then, every time you connect:
+
+```bash
+cd ~/foursight
+source .venv/bin/activate
+```
+
+**That `source` line is required.** Without it `python` is the system Python and
+nothing will import. If you get `ModuleNotFoundError: No module named 'm6a'`,
+this is why.
+
+Now you can run:
+
+```bash
+make doctor                                  # is this machine healthy?
+make smoke CONFIG=configs/lightgbm.yaml      # ~11s, 5,000 sites, no W&B
+make train CONFIG=configs/lightgbm.yaml      # ~90s, full data, logs to W&B
+make test                                    # the test suite
+make predict INPUT=<file.json.gz> OUTPUT=<out.csv>
+```
+
+To pick up code your teammates have pushed since you connected:
+
+```bash
+git pull
+```
+
+You do not need to reinstall after a `git pull` — the package is installed in
+editable mode, so code changes take effect immediately.
+
+### Step 4 — when you are done
+
+**Terminate the instance in Ronin. Not "stop".** A stopped instance still bills
+for its disk.
+
+You do not need to copy anything off it first: `make train` logs metrics *and*
+the trained model to W&B, so results survive termination.
+
+**Do make sure your code is pushed**, though — W&B does not back that up.
+
+```bash
+git add -A && git commit -m "what you did" && git push
+```
 
 ---
 
-## Instance types
+## When something goes wrong
 
-Task 1 needs very little. The full training set is 180 MB compressed, a full
-parse takes about 25 seconds, and a five-fold LightGBM run finishes in well
-under two minutes on a small instance.
+Run this first:
 
-| Task | Instance | Roughly |
-|---|---|---|
-| Task 1 — training, experiments | `t3.large` (2 vCPU, 8 GB) | $0.08/hr |
-| Task 1 — heavy CV sweeps | `t3.xlarge` / `c6i.2xlarge` | $0.17–0.34/hr |
-| Task 2 — SG-NEx batch prediction | `c6i.2xlarge` + more disk | $0.34/hr |
+```bash
+make doctor
+```
 
-**Do not spin up a GPU instance.** Nothing here needs one, and AWS overspending
-is an explicit 5% deduction on the project grade. If a MIL architecture later
-turns out to need a GPU, raise it with the team first and update this table.
+It checks every part of the setup and names the command that fixes whatever is
+missing. Read it before reading a traceback.
 
-**Terminate instances when you finish — not "stop".** A stopped instance still
-bills for its disk.
+| Symptom | Cause |
+|---|---|
+| `cannot ssh to <host>` | Key not passed — add `-i ~/.ssh/yourkey.pem` |
+| `UNPROTECTED PRIVATE KEY FILE` | `chmod 600 ~/.ssh/yourkey.pem` |
+| `no .env file found` | You skipped step 2 — ask on Telegram for the shared values |
+| `ModuleNotFoundError: No module named 'm6a'` | You forgot `source .venv/bin/activate` |
+| `No objects found for --set course` | R2 keys wrong or expired — check `.env` |
+| `bootstrap.sh` errors on apt | Not an Ubuntu instance |
+| `make: command not found` | You are on your laptop, not the instance — call `python scripts/...` directly |
 
-You do not need to pull results off an instance before terminating it: training
-runs log metrics and the model itself to W&B. Do make sure your **code** is
-pushed, though — W&B does not back that up.
+If `setup_remote.sh` itself fails, **say so rather than fixing that instance by
+hand**. A failure there will hit everyone, so it should be fixed in the script.
 
 ---
 
-## Local development without a VM
+## Local development without an instance
 
-You can run everything locally if you already have the data:
+You can run everything on your own machine if you want:
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
+source .venv/bin/activate          # Windows: .venv/Scripts/activate
 pip install -e ".[train,dev]"
+python scripts/download_data.py
+python scripts/train.py --config configs/lightgbm.yaml --smoke
+python -m pytest -q
 ```
 
-Point at data you already have, rather than re-downloading it, by setting this
-in `.env`:
+If you already have the data somewhere, point at it instead of re-downloading
+by setting this in `.env`:
 
 ```
 M6A_DATA_DIR=data0
 ```
 
-Then:
-
-```bash
-python scripts/train.py --config configs/lightgbm.yaml --smoke
-python -m pytest -q
-```
-
-The test suite builds its own synthetic dataset, so it runs with no data
+The test suite builds its own synthetic dataset, so `pytest` works with no data
 present at all.
+
+---
+
+## Instance sizing and cost
+
+| Task | Instance | Roughly |
+|---|---|---|
+| Training, experiments (Task 1) | 2 vCPU / 8 GB | $0.08/hr |
+| Heavy CV sweeps | 4–8 vCPU | $0.17–0.34/hr |
+| SG-NEx batch prediction (Task 2) | 8 vCPU + more disk | $0.34/hr |
+
+Each student gets US$100 of credit, pooled at team level — any one person can
+spend all of it. Overspending costs the team 5% of the project grade.
+
+Raise it with the team before launching anything larger than the table above.
