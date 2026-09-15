@@ -1,0 +1,161 @@
+# Foursight — m6A RNA modification prediction
+
+Predicting N6-methyladenosine (m6A) RNA modifications from Nanopore direct
+RNA-seq signal data, for DSA4262 (NUS / Genome Institute of Singapore).
+
+Given nanopore signal features for every read aligned to a candidate DRACH site,
+the model predicts the probability that the site carries an m6A modification.
+
+---
+
+## Quick start: making predictions
+
+Tested on a clean Ubuntu machine with Python 3.10+. Nothing below needs
+credentials, network access, or a GPU.
+
+```bash
+git clone https://github.com/TEAM/DSA4262-Foursight.git
+cd DSA4262-Foursight
+
+python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -e .
+
+python scripts/predict.py \
+    --model models/final \
+    --input data/sample/sample.json.gz \
+    --output predictions.csv
+```
+
+Expected output:
+
+```
+1,000 sites scored -> predictions.csv  (0.5s, model=lightgbm_quantiles)
+```
+
+`data/sample/sample.json.gz` is a 1,000-site test dataset included in this repo
+so the above runs immediately. To predict on your own data, point `--input` at
+any `data.json` or `data.json.gz` in m6Anet's processed format.
+
+> The sample is drawn from the training set, so scores on it are optimistic. It
+> is there to prove the code runs, not to measure accuracy.
+
+### Output format
+
+```csv
+transcript_id,transcript_position,score
+ENST00000000412,769,0.0010114002630883252
+ENST00000000412,2195,0.006718969056015129
+```
+
+One row per site in the input, with `score` the probability of m6A in `[0, 1]`.
+
+---
+
+## Results
+
+Out-of-fold performance on the Hct116 training set (121,838 sites, 4.49%
+positive), 5-fold cross-validation **grouped by gene** so no gene appears in
+both training and validation.
+
+| Model | Features | ROC AUC | PR AUC | vs. random |
+|---|---|---:|---:|---:|
+| Random classifier | — | 0.500 | 0.045 | 1.0× |
+| Logistic regression (baseline) | pooled mean/std | 0.9008 | 0.4121 | 9.2× |
+| LightGBM | pooled mean/std | 0.9125 | 0.4634 | 10.3× |
+| **LightGBM (shipped)** | **read quantiles** | **0.9169** | **0.4759** | **10.6×** |
+
+At 4.49% positives, **PR AUC is the metric that discriminates.** ROC AUC
+flatters everything here — all three models sit above 0.90, while their PR AUCs
+differ by a much wider margin. Rank experiments on PR AUC.
+
+Reproduce any row:
+
+```bash
+python scripts/train.py --config configs/quantiles.yaml
+```
+
+---
+
+## Training a new model
+
+Needs the training extras and access to the data:
+
+```bash
+pip install -e ".[train]"
+cp .env.example .env               # fill in — ask in the Telegram groupchat
+python scripts/download_data.py    # pulls the training set from R2
+python scripts/train.py --config configs/quantiles.yaml
+```
+
+Or on a fresh VM, all of the above in one command from your laptop:
+
+```bash
+./setup_remote.sh ubuntu@<instance-ip>
+```
+
+See [docs/setup.md](docs/setup.md) — **read the platform notes there first if
+you are on Windows or macOS.**
+
+### Everyday commands
+
+| Command | What it does |
+|---|---|
+| `make doctor` | Check this machine is set up; says what is missing |
+| `make smoke CONFIG=configs/x.yaml` | Full pipeline on 5,000 sites, ~4s, no W&B |
+| `make train CONFIG=configs/x.yaml` | Full run (~40s), logs to W&B |
+| `make predict INPUT=... OUTPUT=...` | Score a dataset |
+| `make test` | Run the test suite |
+| `make sample` | Rebuild `data/sample/` |
+
+---
+
+## Repository layout
+
+```
+src/m6a/              the package — production code
+  data.py             reading signal JSON and labels, the gene-level split
+  features/           feature extractors (one file per idea)
+  models/             models (one file per idea)
+  evaluation.py       metrics and submission validation
+  registry.py         name -> implementation lookup
+scripts/              command-line entry points
+configs/              one YAML per experiment
+models/final/         the model used for grading
+data/sample/          the committed test dataset
+analysis/             exploratory work: SG-NEx (Task 2), m6Anet benchmark
+tests/                guardrails, including an end-to-end smoke test
+docs/                 setup, data dictionary, workflow
+```
+
+Adding an experiment means adding one file to `features/` or `models/` plus one
+config YAML. Nothing existing gets edited. See [AGENTS.md](AGENTS.md).
+
+---
+
+## The data
+
+Each line of `data.json` is one transcript position and every read aligned to it:
+
+```json
+{"ENST00000000233": {"244": {"AAGACCA": [[0.00299, 2.06, 125.0, ...], ...]}}}
+```
+
+Nine features per read — dwell time, signal standard deviation and mean current
+— for each of the three positions in the 7-mer window (−1, 0, +1). The central
+5-mer is always one of the 18 DRACH motifs.
+
+Training set: 121,838 sites, 11.0M reads, 3,852 genes, from the Hct116 colon
+cancer cell line. Labels come from m6ACE-Seq. Full dictionary in
+[docs/data.md](docs/data.md).
+
+Raw data is never committed — it lives in a private R2 bucket and is fetched by
+`scripts/download_data.py`.
+
+---
+
+## License and attribution
+
+Coursework for DSA4262, National University of Singapore. The SG-NEx data is
+described in Chen et al., *Nature Methods* 22, 801–812 (2025). m6Anet is
+described in Hendra et al., *Nature Methods* 19, 1590–1598 (2022).

@@ -1,0 +1,15 @@
+# The simple baseline the handout requires us to compare against.
+# Mean/std pooling + logistic regression. Every other experiment has to beat this.
+name: baseline_logistic
+features: pooled_v1
+model: logistic
+model_params:
+  C: 1.0
+  max_iter: 1000
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: >
+  Reference point, not a contender. Mean-pooling across reads discards the
+  fact that only a fraction of reads at a modified site carry the modification.

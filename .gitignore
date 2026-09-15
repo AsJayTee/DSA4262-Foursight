@@ -1,0 +1,42 @@
+# --- data: never commit. This file is load-bearing. ---
+data/*
+data0/
+*.json.gz
+*.parquet
+
+# ...except the small test dataset the handout requires us to ship.
+# These re-includes MUST come after the *.json.gz rule above, or the rule
+# wins and the sample silently never gets committed.
+!data/sample/
+!data/sample/**
+
+# scratch prediction output
+predictions.csv
+*.predictions.csv
+
+# --- secrets ---
+.env
+
+# --- course materials (public repo; these came from Canvas) ---
+*.pdf
+handout_*.html
+
+# --- trained models: only the final one is committed, by hand ---
+models/*
+!models/final/
+!models/final/**
+
+# --- python ---
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# --- tooling ---
+wandb/
+.DS_Store

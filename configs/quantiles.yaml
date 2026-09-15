@@ -1,0 +1,17 @@
+# Read-distribution quantiles + GBT.
+# The MIL-flavoured alternative: a shifted tail survives aggregation in a way
+# a mean does not, which is what "only some reads are modified" looks like.
+name: lightgbm_quantiles
+features: quantiles_v1
+model: lightgbm
+model_params:
+  learning_rate: 0.05
+  num_leaves: 63
+  n_estimators: 600
+  min_child_samples: 40
+  feature_fraction: 0.7
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: Quantile features over the read distribution at each site.

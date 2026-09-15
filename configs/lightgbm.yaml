@@ -1,0 +1,14 @@
+# Pooled features + gradient-boosted trees. The default starting point.
+name: lightgbm_pooled
+features: pooled_v1
+model: lightgbm
+model_params:
+  learning_rate: 0.05
+  num_leaves: 63
+  n_estimators: 400
+  min_child_samples: 40
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: Straightforward GBT over mean/std-pooled read features.
