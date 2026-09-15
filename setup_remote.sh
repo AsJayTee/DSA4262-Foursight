@@ -13,9 +13,20 @@
 
 set -euo pipefail
 
-REPO_URL="https://github.com/TEAM/DSA4262-Foursight.git"
 REMOTE_DIR="~/foursight"
 KEY=""
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Take the repo URL from this clone's own origin, so there is no placeholder to
+# forget to update and no way for it to drift from where you actually push.
+REPO_URL="$(git -C "$SCRIPT_DIR" remote get-url origin 2>/dev/null || true)"
+if [ -z "$REPO_URL" ]; then
+  echo "ERROR: could not read the git remote for this repo."
+  echo "Run this from a clone that has an 'origin' remote:"
+  echo "    git remote -v"
+  exit 1
+fi
 
 usage() {
   echo "Usage: ./setup_remote.sh [-i <keyfile>] user@host"
@@ -51,7 +62,6 @@ if [ -n "$KEY" ]; then
   SSH_OPTS+=(-i "$KEY")
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="$SCRIPT_DIR/.env"
 
 if [ ! -f "$ENV_FILE" ]; then

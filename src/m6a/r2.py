@@ -71,9 +71,20 @@ def download(key: str, dest: Path, expected: dict | None = None, s3=None) -> str
     s3 = s3 or client()
     dest.parent.mkdir(parents=True, exist_ok=True)
 
-    if dest.exists() and expected:
-        if dest.stat().st_size == expected.get("size") and sha256(dest) == expected.get("sha256"):
-            return "skipped"
+    if dest.exists():
+        if expected:
+            if dest.stat().st_size == expected.get("size") and sha256(dest) == expected.get("sha256"):
+                return "skipped"
+        else:
+            # No manifest: fall back to comparing sizes against the remote
+            # object. Weaker than a checksum, but it keeps re-running setup
+            # cheap instead of re-fetching 180 MB every time.
+            try:
+                remote_size = s3.head_object(Bucket=bucket(), Key=key)["ContentLength"]
+                if dest.stat().st_size == remote_size:
+                    return "skipped (size match)"
+            except Exception:  # noqa: BLE001 - fall through to a fresh download
+                pass
 
     s3.download_file(bucket(), key, str(dest))
 

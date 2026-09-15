@@ -26,11 +26,24 @@ from m6a import r2
 from m6a.data import resolve_data_dir
 from m6a.env import load_env
 
+# The course training data sits at the root of the bucket; everything added
+# later (SG-NEx, evaluation releases) goes under its own prefix. So "course"
+# means "objects not in any folder" rather than a prefix of its own.
 PREFIXES = {
-    "course": "course/",
+    "course": None,  # root-level objects only
     "sgnex": "sgnex/",
     "all": "",
 }
+
+
+def select_keys(which: str, client) -> tuple[list[str], str]:
+    """Keys to fetch, and the prefix to strip when building local paths."""
+    prefix = PREFIXES[which]
+    if prefix is None:
+        keys = [k for k in r2.list_keys("", s3=client) if "/" not in k]
+        return keys, ""
+    keys = r2.list_keys(prefix, s3=client)
+    return keys, prefix
 
 
 def parse_args() -> argparse.Namespace:
@@ -58,29 +71,33 @@ def main() -> int:
         return 0
 
     dest_root = Path(args.dest) if args.dest else resolve_data_dir()
-    prefix = PREFIXES[args.which]
 
     try:
         manifest = r2.load_manifest(client)
-    except Exception as exc:  # noqa: BLE001
-        print(f"  no usable manifest.json ({type(exc).__name__}) - downloading without checksums")
+    except Exception:  # noqa: BLE001
+        # No manifest yet: downloads still work, they just are not checksummed.
+        print("  no manifest.json in the bucket - downloading without checksum verification")
         manifest = {}
 
-    keys = [key for key in r2.list_keys(prefix, s3=client) if key != r2.MANIFEST_KEY]
+    keys, prefix = select_keys(args.which, client)
+    keys = [key for key in keys if key != r2.MANIFEST_KEY]
     if not keys:
-        raise SystemExit(f"Nothing under prefix {prefix!r} in bucket {r2.bucket()}.")
+        raise SystemExit(
+            f"No objects found for --set {args.which} in bucket {r2.bucket()}.\n"
+            "Run `python scripts/download_data.py --list` to see what is there."
+        )
 
-    print(f"{len(keys)} object(s) under {prefix!r} -> {dest_root}/")
+    print(f"{len(keys)} object(s) for --set {args.which} -> {dest_root}/")
     downloaded = skipped = 0
     for key in keys:
-        # course/dataset0.json.gz lands at data/raw/dataset0.json.gz;
-        # sgnex/A549/x.json.gz keeps its sub-path.
+        # Root objects land directly in data/raw/; sgnex/A549/x.json.gz keeps
+        # its sub-path so cell lines stay separated on disk.
         relative = key[len(prefix):] if prefix else key
         dest = dest_root / relative
         outcome = r2.download(key, dest, expected=manifest.get(key), s3=client)
         size_mb = dest.stat().st_size / 1e6
         print(f"  [{outcome:>10}] {relative}  ({size_mb:.1f} MB)")
-        if outcome == "downloaded":
+        if outcome.startswith("downloaded"):
             downloaded += 1
         else:
             skipped += 1

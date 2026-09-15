@@ -110,6 +110,19 @@ you are on Windows or macOS.**
 
 ---
 
+## For the team
+
+| File | What it gives you |
+|---|---|
+| [docs/project-requirements.md](docs/project-requirements.md) | What the project is graded on — tasks, formats, deadlines, assessment |
+| [GAPS.md](GAPS.md) | The backlog: what is missing, weak, or untested, with evidence |
+| [docs/data.md](docs/data.md) | Data dictionary and measured statistics |
+| [docs/setup.md](docs/setup.md) | Local and VM setup — **read the platform notes if you are on Windows** |
+| [AGENTS.md](AGENTS.md) | Conventions for coding agents and people |
+| [analysis/m6anet/README.md](analysis/m6anet/README.md) | The m6Anet benchmark, and two traps waiting in it |
+
+---
+
 ## Repository layout
 
 ```

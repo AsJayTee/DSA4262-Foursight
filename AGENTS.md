@@ -9,6 +9,22 @@ keeps working.
 
 ---
 
+## Start here
+
+Before planning any work, read:
+
+| File | What it gives you |
+|---|---|
+| [docs/project-requirements.md](docs/project-requirements.md) | What the project is graded on — tasks, formats, deadlines, assessment weights. The authoritative brief. |
+| [GAPS.md](GAPS.md) | What is currently missing, weak, or untested, with evidence. Deliberately records no solutions — work out your own. |
+| [docs/data.md](docs/data.md) | The data dictionary: file formats, feature meanings, measured statistics. |
+| [docs/setup.md](docs/setup.md) | Running things locally or on a VM. |
+
+`GAPS.md` is the backlog. If you close a gap, delete the entry. If you find a
+new one, add it with whatever evidence you have.
+
+---
+
 ## 1. Experiments are additive
 
 **A new experiment is a new file plus a new config YAML. Do not edit existing
