@@ -155,6 +155,14 @@ scores.
   cannot read a traceback should still know what to do next.
 - No new dependencies without saying so — every one is something that can fail
   on someone else's machine.
+- **Explain a domain term the first time it appears in a document**, and link
+  to the fuller definition rather than restating it. Most people here are data
+  scientists, not biologists, and a term that is silently assumed is a term
+  someone will quietly misread. `depth` is the worst offender — it is a count
+  of distinct RNA molecules measured at one site, not repeated readings of one
+  molecule, and nearly every conclusion in `GAPS.md` depends on that
+  distinction. It is defined once in
+  [docs/data.md](docs/data.md#read-depth); point at it.
 
 ---
 

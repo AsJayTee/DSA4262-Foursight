@@ -78,10 +78,51 @@ ENSG00000004059,ENST00000000233,244,0
 
 Reads per site: min 20, p25 32, median 47, p75 84, p95 304, max 991, mean 90.5.
 
+## Read depth
+
+**Depth is the single most important variable in this dataset, so it is worth
+being precise about what it means before any number below is read.**
+
+Depth is *how many separate RNA molecules gave us a measurement for this exact
+site.* Take one particular `A` on one transcript:
+
+| | |
+|---|---|
+| **depth = 1** | Exactly 1 RNA molecule passed through the nanopore covering that position. We have a single observation of what that site looked like. |
+| **depth = 3** | We measured that exact position on 3 separate RNA molecules. |
+| **depth = 50** | We measured it on 50 separate RNA molecules. |
+
+**The part that is easy to get wrong:** those 50 reads are *not* 50
+measurements of the same physical molecule. They are 50 **different copies** of
+that RNA from the cell, each one passing through the pore once and being
+measured once. Depth is a count of molecules, not a count of repeated readings.
+
+That distinction is what makes this a Multiple Instance Learning problem. The
+m6A tag is attached to *individual molecules*, and only some copies of a
+modified site carry it. So at a site labelled positive, some of those 50 reads
+come from modified molecules and some do not — and we are never told which.
+
+Two consequences follow, and both are load-bearing:
+
+- **Depth sets how much evidence we have.** At depth 1, if the site is modified
+  at 50% stoichiometry, there is roughly a coin-flip chance the one molecule we
+  measured was not modified at all. At depth 50 we have almost certainly
+  sampled several modified molecules. Low depth is genuinely less information,
+  not merely noisier information.
+- **Depth is a property of the sequencing run, not of the site.** It is driven
+  by how abundant that transcript was in the cell and how much sequencing was
+  done. Abundant transcripts get hundreds of reads; rare ones get one or two.
+  The same site can have depth 200 in one dataset and depth 1 in another.
+
+**Every site in this training set has at least 20 reads, and that floor is an
+artefact of how the course prepared the data, not a property of nanopore
+sequencing.** Real datasets have no such floor — SG-NEx samples have a median
+depth of about 3. Any claim about model performance made on this data is a
+claim about the depth ≥ 20 regime only. See [../GAPS.md](../GAPS.md).
+
 **This variance is the modelling problem.** Only a fraction of reads at a
 modified site actually carry the modification, so mean-pooling washes out the
-signal — this is a Multiple Instance Learning problem in disguise. See
-`src/m6a/features/quantiles.py`.
+signal. See `src/m6a/features/quantiles.py`.
 
 ## Joining the two files
 
