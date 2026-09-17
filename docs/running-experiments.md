@@ -118,12 +118,51 @@ python scripts/evaluate.py --config configs/your_experiment.yaml \
 fold
 0           0.4548           0.4700      0.0152
 ...
-paired   mean difference +0.0148  95% CI [+0.0004, +0.0292]  p = 0.0465  wins 5/5
+unpaired  (wrong)      Welch p = 0.3095
+paired    (optimistic) mean +0.0148  95% CI [+0.0004, +0.0292]  p = 0.0465  wins 5/5
+corrected (quote this) 95% CI [-0.0068, +0.0364]  p = 0.1305
 ```
 
-Read the **win count** as well as the p-value. Five folds is five observations,
-so a difference that is positive on all five is worth more than the p-value
-alone suggests, and one that flips sign is worth much less.
+**Quote the corrected row.** The middle row assumes the five folds are five
+independent observations. They are not — each fold's model trains on the other
+four, so 73% of any two folds' training rows are shared, and the p-value comes
+out smaller than the evidence supports. The correction inflates the variance to
+account for that. It is always the largest of the three numbers.
+
+Note what that does to the example: the improvement that looked significant at
+p = 0.0465 is p = 0.1305 corrected, and the corrected interval includes zero.
+The effect is probably real — it wins on all five folds — but five folds cannot
+establish it.
+
+Read the **win count** as well. 5/5 does not depend on the scatter estimate, so
+it is the more trustworthy signal when you only have five observations.
+
+**When the two are too close to call, get more observations:**
+
+```bash
+python scripts/evaluate.py --config configs/your_experiment.yaml \
+       --compare-features quantiles_v1 --repeats 10
+```
+
+That runs the whole cross-validation ten times over independently seeded splits
+— 50 paired observations instead of 5. Repetition 0 is always the canonical
+seed-4262 split, so every number already recorded stays exactly as it was. It
+costs ten times the model fits and no extra feature extraction: about 25 minutes
+on the full set against 100 seconds.
+
+It is worth it when the answer matters. On `quantiles_v1` vs `pooled_v1`, five
+folds gives corrected p = 0.1305 with an interval spanning zero — no conclusion.
+Fifty observations gives +0.0164, **50 wins out of 50**, corrected p = 0.000095.
+Same data, same models; the five-fold test was simply underpowered.
+
+Want an error bar on the headline number itself rather than on a comparison?
+
+```bash
+python scripts/evaluate.py --config configs/your_experiment.yaml --bootstrap 2000
+```
+
+That resamples the *sites* rather than the split, which is a different question:
+how much does 0.4759 depend on which 121,838 sites we happen to have?
 
 The same command answers two other questions worth asking of anything you build:
 
@@ -156,8 +195,13 @@ profile is thorough. See
 which.** Fold-to-fold variation in PR AUC is about 0.020, larger than the gap
 between our two current feature sets. That used to be read as "the two cannot be
 distinguished", and it was wrong: on the *paired* per-fold differences
-`quantiles_v1` beats `pooled_v1` by +0.0148, winning 5 folds out of 5,
-p = 0.0465. Use `--compare-features`; do not eyeball two pooled numbers.
+`quantiles_v1` beats `pooled_v1` by +0.0148, winning 5 folds out of 5. Use
+`--compare-features`; do not eyeball two pooled numbers.
+
+**But do not quote that comparison's p-value as 0.0465.** Corrected for the
+overlap between training folds it is 0.1305, and the interval includes zero — not
+established at five folds. It *is* established at fifty: `--repeats 10` gives
++0.0164, 50/50 wins, corrected p = 0.000095. Quote that one.
 
 **A score of 0.6 does not mean 60%.** It means about 33% — the model overcounts
 positives by 1.80×. That does not affect PR AUC or ROC AUC, which are rank-based,

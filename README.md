@@ -129,7 +129,8 @@ permissions and the Windows notes. **On Windows, use Git Bash, not PowerShell.**
 | `make doctor` | Check this machine is set up; says what is missing |
 | `make smoke CONFIG=configs/x.yaml` | Full pipeline on 5,000 sites, ~4s, no W&B |
 | `make train CONFIG=configs/x.yaml` | Train **and** evaluate (~100s); both go to one W&B run |
-| `make evaluate CONFIG=configs/x.yaml EVAL='--compare-features pooled_v1'` | Compare two runs, paired fold by fold |
+| `make evaluate CONFIG=configs/x.yaml EVAL='--compare-features pooled_v1'` | Compare two runs, paired fold by fold and within each depth band |
+| `... EVAL='--compare-features pooled_v1 --repeats 10'` | 50 paired observations instead of 5, when it is too close to call |
 | `make predict INPUT=... OUTPUT=...` | Score a dataset |
 | `make test` | Run the test suite |
 | `make sample` | Rebuild `data/sample/` |

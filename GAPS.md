@@ -61,25 +61,72 @@ regenerated, and the JSON reports behind the current ones are in
   as probabilities is contradicted by this, and is still there. Nothing has been
   tried to fix it: no isotonic or Platt scaling, no threshold work, no
   alternative to `is_unbalance`.
-- **The paired t-test over folds is anti-conservative, so its p-value reads
-  stronger than it is.** Each fold's model trains on the other four, so any two
-  training sets overlap heavily - measured here, 73.4% of fold 0's training rows
-  are also in fold 1's. The five differences are therefore correlated, the
-  observed scatter understates the true uncertainty, and p comes out too small
-  (Dietterich 1998; Nadeau & Bengio 2003). The test sets are fine; it is the
-  training sets that overlap. Read the win count (5/5) alongside any p-value,
-  and do not quote `p = 0.0465` unqualified. The agreed fix is recorded in
-  [docs/decisions/0006](docs/decisions/0006-strengthening-the-comparison-test.md)
-  and is **not built**.
-- **There is no error bar on the headline number itself.** 0.4759 is a point
-  estimate. Nothing says how much it depends on which 121,838 sites happened to
-  be in the dataset. The per-site scores are no longer stored
-  ([0009](docs/decisions/0009-distributions-not-per-site-scores.md)), so a
-  paired bootstrap over sites has to run in-process during the run; see
-  [0006](docs/decisions/0006-strengthening-the-comparison-test.md) #1.
-- **Comparisons between runs stop at PR AUC.** `--compare-features` pairs two
-  runs fold by fold on one metric. It cannot say *which sites* two models
-  disagree about, which is the question behind "should we ensemble these".
+- **The repo's headline comparison does not survive a correct significance
+  test, and the claim needs restating wherever it appears.** The paired t-test
+  over five folds is anti-conservative: each fold's model trains on the other
+  four, so 73.4% of fold 0's training rows are also in fold 1's, the five
+  differences are correlated, and the observed scatter understates the true
+  uncertainty (Dietterich 1998; Nadeau & Bengio 2003). The Nadeau & Bengio
+  corrected test is now built and reported alongside the naive one. On
+  `quantiles_v1` vs `pooled_v1`:
+
+  | | mean difference | 95% CI | p |
+  |---|---:|---|---:|
+  | unpaired (wrong) | +0.0148 | - | 0.3095 |
+  | paired, naive (optimistic) | +0.0148 | [+0.0004, +0.0292] | **0.0465** |
+  | paired, corrected (quote this) | +0.0148 | [-0.0068, +0.0364] | **0.1305** |
+
+  So the improvement that has been quoted at `p = 0.0465` is `p = 0.1305` once
+  the overlap is accounted for, and the corrected interval includes zero. **Five
+  folds cannot establish it**, and anywhere the report quotes 0.0465 as
+  significant is wrong.
+
+  Fifty can. `--repeats 10` runs the whole cross-validation over ten
+  independently seeded splits (repetition 0 is the canonical seed-4262 one, so
+  every number above is unchanged):
+
+  | | observations | mean difference | corrected 95% CI | corrected p | wins |
+  |---|---:|---:|---|---:|---:|
+  | 5 folds | 5 | +0.0148 | [-0.0068, +0.0364] | 0.1305 | 5/5 |
+  | 10 x 5 folds | 50 | +0.0164 | [+0.0086, +0.0241] | **0.000095** | **50/50** |
+
+  **The result holds.** `quantiles_v1` beats `pooled_v1` on every one of fifty
+  splits, and it survives the correction comfortably. The five-fold test was not
+  wrong about the direction, it was underpowered. Regenerate with
+  `evaluate.py --config configs/quantiles.yaml --compare-features pooled_v1 --repeats 10`
+  (about 25 minutes on a warm cache; the 5-fold version is 100 seconds).
+- **The headline number now has two error bars, and they answer different
+  questions.** 0.4759 used to be a bare point estimate. Measured
+  (`--bootstrap 2000`, resampling the 121,838 sites; and `--repeats 10`,
+  resplitting them):
+
+  | | what varies | `quantiles_v1` | `pooled_v1` |
+  |---|---|---|---|
+  | bootstrap over sites | which sites are in the dataset | 0.4761, 95% CI [0.4609, 0.4908] | 0.4616, [0.4460, 0.4765] |
+  | repeated CV | which split was used | mean 0.4785, sd 0.0229, range [0.4263, 0.5264] | - |
+
+  **Do not use the bootstrap to dodge the corrected t-test.** On the difference
+  between the two feature sets the bootstrap gives +0.0145, 95% CI
+  [+0.0074, +0.0217], positive in 100% of 2,000 resamples - which looks far more
+  decisive than the corrected 5-fold test's p = 0.1305, and is not a
+  contradiction. The bootstrap **holds the split fixed**: it resamples sites
+  against one set of fold models, so it cannot see split-to-split variation at
+  all. The corrected t-test is the one that carries the train/test overlap. Quote
+  the repeated-CV result (50/50, corrected p = 0.000095) as the answer to "is
+  this better"; quote the bootstrap as the answer to "how precise is 0.4759".
+
+  What neither can tell you: every resample and every split inherits the
+  depth >= 20 floor, so none of them says anything about how the model behaves
+  on SG-NEx.
+- **No comparison can say *which sites* two models disagree about**, which is
+  the question behind "should we ensemble these". It was never supported, and
+  it is now structurally impossible after the fact: per-site scores are not
+  stored at all
+  ([0009](docs/decisions/0009-distributions-not-per-site-scores.md)), so
+  answering it means adding it to the run that computes the scores, while they
+  are still in memory. A comparison does now test *inside* strata - by read depth
+  band and by motif - so "is this better at low depth" is answerable even though
+  "which sites" is not.
 - **Every model is badly miscalibrated, and the size of the error tracks the
   rebalancing trick each one uses.** Measured with `evaluate.py --config ...`:
 
@@ -114,13 +161,6 @@ regenerated, and the JSON reports behind the current ones are in
   has looked.
 - **Only single models are evaluated.** There is no way to score an ensemble, a
   rule combining two models, or a threshold choice.
-- **A paired comparison reports only overall PR AUC, and only for the primary
-  run.** `--compare-with` prints the comparison arm's per-fold numbers and
-  nothing else - no calibration, no strata, no stored out-of-fold table - so
-  answering "is the new model better *at low depth*" currently means running
-  both configs separately and eyeballing two tables. That is the question the
-  next round of work is about, so this is the most load-bearing thing the
-  harness cannot do.
 - **Cross-cell-line shift is smaller than this file previously assumed; depth
   shift is much larger.** Comparing the training data (Hct116) against SG-NEx
   A549 with depth held constant (both restricted to >=20 reads), the median of
@@ -153,11 +193,15 @@ regenerated, and the JSON reports behind the current ones are in
 
 - **Two feature sets exist**, both summary statistics over reads:
   `pooled_v1` (mean/std) and `quantiles_v1` (quantiles, IQR, tail spread).
-  `quantiles_v1` is the better of the two: +0.0148 mean per-fold PR AUC, 5/5
-  folds, paired p = 0.0465, 95% CI [+0.0004, +0.0292]. (The pooled gap is
-  +0.0145; the mean of the per-fold differences is +0.0148. The paired test uses
-  the latter.) Regenerate with
-  `evaluate.py --config configs/quantiles.yaml --compare-features pooled_v1`.
+  `quantiles_v1` is the better of the two, and this is now **properly
+  established** - though not by the number this file used to quote. Over ten
+  repetitions of the 5-fold split (50 paired observations): mean difference
+  **+0.0164**, winning **50 out of 50**, corrected paired p = **0.000095**, 95%
+  CI [+0.0086, +0.0241]. On the canonical five folds alone it is +0.0148, 5/5,
+  and corrected p = 0.1305 - directionally right but underpowered, so
+  `p = 0.0465` should not be quoted anywhere. (The pooled gap is +0.0145; the
+  paired test uses the mean of the per-fold differences.) Regenerate with
+  `evaluate.py --config configs/quantiles.yaml --compare-features pooled_v1 --repeats 10`.
 - **The depth problem is not addressable by choosing between the existing
   feature sets.** Both collapse at the same rate: retention of full-depth PR
   AUC is 0.314 (pooled) vs 0.324 (quantiles) at one read, 0.524 vs 0.503 at
@@ -209,8 +253,9 @@ regenerated, and the JSON reports behind the current ones are in
   depth, where the probe above currently loses.
 - **Sequence information is barely used.** Only the central 5-mer is encoded,
   as an 18-way one-hot. The flanking bases of the 7-mer are discarded. The
-  motif contributes +0.0123 PR AUC over signal-only features (5/5 folds, paired
-  p = 0.0433), and 0.1537 on its own. Both from
+  motif contributes +0.0123 PR AUC over signal-only features (5/5 folds, naive
+  paired p = 0.0433 - which carries the same correction problem as every other
+  five-fold p-value here, see Evaluation), and 0.1537 on its own. Both from
   `evaluate.py --config configs/quantiles.yaml --ablate`.
 - **No hyperparameter search has been run.** Every value in `configs/` was
   chosen by hand and none has been tuned.

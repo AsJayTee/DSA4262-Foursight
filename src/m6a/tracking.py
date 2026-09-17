@@ -299,6 +299,15 @@ def flat_metrics(report: dict) -> dict[str, float]:
         flat["rep/n_observations"] = float(repeated["n_observations"])
         flat["rep/pr_auc_mean"] = float(repeated["pr_auc_mean"])
         flat["rep/pr_auc_sd"] = float(repeated["pr_auc_sd"])
+        flat["rep/pr_auc_min"] = float(repeated["pr_auc_min"])
+        flat["rep/pr_auc_max"] = float(repeated["pr_auc_max"])
+        # Every observation individually, so two runs can be paired from the run
+        # table alone without either still existing on disk. fold/{f}/pr_auc
+        # above stays repetition 0 and keeps meaning exactly what it always did.
+        for row in repeated["observations"]:
+            key = f"rep/{int(row['repetition'])}/fold/{int(row['fold'])}"
+            flat[f"{key}/pr_auc"] = float(row["pr_auc"])
+            flat[f"{key}/roc_auc"] = float(row["roc_auc"])
 
     sweep = report.get("depth_sweep")
     if sweep:
@@ -327,11 +336,40 @@ def flat_metrics(report: dict) -> dict[str, float]:
     for which, ablation in (report.get("ablations") or {}).items():
         flat[f"ablation/{which}/pr_auc"] = float(ablation["pooled"]["pr_auc"])
 
+    boot = report.get("bootstrap")
+    if boot:
+        flat["boot/n_resamples"] = float(boot["n_resamples"])
+        for name, stats in boot["arms"].items():
+            flat[f"boot/{name}/ci_low"] = float(stats["ci_low"])
+            flat[f"boot/{name}/ci_high"] = float(stats["ci_high"])
+        if "difference" in boot:
+            flat["boot/difference/mean"] = float(boot["difference"]["mean"])
+            flat["boot/difference/ci_low"] = float(boot["difference"]["ci_low"])
+            flat["boot/difference/ci_high"] = float(boot["difference"]["ci_high"])
+
+    # A comparison arm gets the identical key structure under its own prefix, so
+    # the baseline's calibration and depth numbers are recorded rather than
+    # thrown away - and the run's own headline keeps the unprefixed names.
+    for name, arm in (report.get("arms") or {}).items():
+        for key, value in flat_metrics(arm).items():
+            flat[f"arm/{name}/{key}"] = value
+
     for key, result in (report.get("comparisons") or {}).items():
         flat[f"compare/{key}/mean_difference"] = float(result["mean_difference"])
         flat[f"compare/{key}/p_value"] = float(result["p_value"])
         flat[f"compare/{key}/wins"] = float(result["wins"])
         if result.get("p_value_corrected") is not None:
             flat[f"compare/{key}/p_value_corrected"] = float(result["p_value_corrected"])
+
+    # Per-stratum differences. Sortable, and labelled `descriptive` in the report
+    # for the reason stated there: ten correlated tests, uncorrected by design.
+    for key, block in (report.get("stratified_comparisons") or {}).items():
+        for row in block["rows"]:
+            stratum = row["stratum"]
+            flat[f"compare/{key}/{stratum}/mean_difference"] = float(row["mean_difference"])
+            flat[f"compare/{key}/{stratum}/p_value_corrected"] = float(
+                row["p_value_corrected"]
+            )
+            flat[f"compare/{key}/{stratum}/wins"] = float(row["wins"])
 
     return flat

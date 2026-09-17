@@ -78,8 +78,12 @@ So:
 - Five folds is four degrees of freedom either way. Only large, consistent
   effects are detectable.
 
-[0006](0006-strengthening-the-comparison-test.md) is the agreed fix and is not
-built yet.
+[0006](0006-strengthening-the-comparison-test.md) is the fix, and **it is built
+now** (2026-09-17). The corrected paired t-test is reported alongside the
+uncorrected one and is the value to quote; `--repeats` turns the five paired
+observations this record laments into fifty. The consequence for the number
+above: corrected, `quantiles_v1` vs `pooled_v1` over the canonical five folds is
+p = 0.1305, not 0.0465. The caveat below was right.
 
 Also: comparison is PR AUC only. It cannot say *which sites* two models disagree
 about, which is the question behind "should we ensemble these".

@@ -1,12 +1,12 @@
 # 0006. Three additions to make "is this model actually better?" defensible
 
 - **Date:** 2026-09-16
-- **Status:** **Proposed — agreed, not built.** Nothing below exists in the code yet.
-  Priority reordered by [0009](0009-distributions-not-per-site-scores.md): the
-  corrected t-test (#3) is promoted to the tie-breaker for overlaid
-  distributions, repeated CV (#2) is what makes those distributions real, and
-  the bootstrap (#1) drops to last and must run in-process.
-- **Affects:** will affect `src/m6a/compare.py`, `src/m6a/crossval.py`, `scripts/evaluate.py`
+- **Status:** Accepted — all three built 2026-09-17, in the order
+  [0009](0009-distributions-not-per-site-scores.md) set: repeated CV (#2) first,
+  then the corrected t-test (#3), then the bootstrap (#1). How repeated CV is
+  keyed and logged is [0012](0012-repeated-cv-is-one-run-keyed-by-rep-and-fold.md),
+  which this record left open.
+- **Affects:** `src/m6a/compare.py`, `src/m6a/crossval.py`, `src/m6a/report.py`, `scripts/evaluate.py`, `--repeats`, `--bootstrap`
 
 ## Context
 
@@ -107,7 +107,46 @@ they do not manufacture new data.
 
 ## How to check it still holds
 
-Not built. When it is: the bootstrap CI on the `quantiles_v1` vs `pooled_v1`
-difference should exclude zero, consistent with the current 5/5 win count, and
-the corrected t-test's p-value should be **larger** than the uncorrected 0.0465
-— if it is smaller, the correction is applied the wrong way round.
+The direction check, which is the one that catches the correction being applied
+the wrong way round: **the corrected p-value must always exceed the uncorrected
+one.** On `quantiles_v1` vs `pooled_v1` over the canonical five folds the
+uncorrected paired test gives 0.0465 and the corrected test gives 0.1305. If you
+ever see the corrected value come out smaller, the variance is being deflated
+rather than inflated.
+
+```bash
+python scripts/evaluate.py --config configs/quantiles.yaml --repeats 10 \
+       --compare-features pooled_v1 --bootstrap 2000
+```
+
+Measured on that command (W&B run `y2lk7ilf`, full training set):
+
+| | observations | mean difference | corrected p | wins |
+|---|---:|---:|---:|---:|
+| canonical 5 folds | 5 | +0.0148 | 0.1305 | 5/5 |
+| 10 repetitions | 50 | +0.0164 | 0.000095 | 50/50 |
+
+- `compare/features/p_value_corrected` > `compare/features/p_value`, always. At
+  50 observations the naive test gives 1.1e-20 against the corrected 9.5e-5 —
+  sixteen orders of magnitude, which is how badly the naive test misreads fifty
+  correlated numbers.
+- `rep/n_observations` = 50, and `fold/{0..4}/pr_auc` unchanged from the
+  canonical split ([0012](0012-repeated-cv-is-one-run-keyed-by-rep-and-fold.md)).
+- `boot/difference/ci_low` and `ci_high` bracket the mean difference: measured
+  +0.0145, 95% CI [+0.0074, +0.0217], positive in 100% of 2,000 resamples. The
+  headline number itself comes out at 0.4761, 95% CI [0.4609, 0.4908].
+
+**A trap this record did not anticipate.** The bootstrap interval on the
+difference excludes zero decisively while the corrected 5-fold t-test does not.
+That is not a contradiction and the bootstrap does not win: it **holds the split
+fixed**, resampling sites against one set of fold models, so it is blind to
+split-to-split variation - which is the entire thing the corrected test is
+correcting for. Quoting the bootstrap in place of the corrected test would be
+exactly the anti-conservatism this record exists to remove, arrived at by a
+different route. The two are reported side by side and the printed output now
+says so.
+
+`corrected_variance` reduces to the naive `var(d)/n` only as `n_folds` goes to
+infinity; at k = 5 it can never fall below `var(d)/4`, however many repetitions
+are run. That floor is the point — repeating a split does not make the training
+sets stop overlapping.

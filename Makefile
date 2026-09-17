@@ -18,6 +18,7 @@ help:
 	@echo "make evaluate CONFIG=... EVAL='--compare-features pooled_v1'"
 	@echo "                         - re-evaluate, or compare against a baseline"
 	@echo "                           (train already does the standard profile)"
+	@echo "                           add --repeats 10 when it is too close to call"
 	@echo "make predict MODEL=... INPUT=... OUTPUT=..."
 	@echo "make test                - pytest, incl. end-to-end smoke test"
 	@echo "make sample              - regenerate data/sample/ (committed test data)"

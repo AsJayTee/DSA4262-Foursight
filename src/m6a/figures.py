@@ -466,6 +466,59 @@ def depth_bands(rows: list[dict]) -> Any:
     return figure
 
 
+def stratum_differences(rows: list[dict], stratum_label: str, title: str) -> Any:
+    """The paired difference inside each stratum, with its corrected interval.
+
+    The figure for "is it better *where we are currently weak*". A model that
+    trades a little pooled PR AUC for a real gain at low read depth is what
+    Task 2 needs, and a single pooled number cannot show it.
+
+    Intervals are the corrected ones, which are wide - that is the honest width.
+    Bands whose interval crosses zero are drawn in the neutral ink rather than a
+    side's colour, because colouring them by the sign of a difference the data
+    cannot resolve is how a reader talks themselves into a finding.
+    """
+    if not rows:
+        return None
+
+    figure, axes = _canvas(
+        title, f"difference in PR AUC", stratum_label,
+        figsize=(FIGSIZE[0], max(3.0, 0.44 * len(rows) + 2.3)),
+    )
+    axes.axvline(0, color=INK_SOFT, linewidth=1.2, zorder=2)
+
+    for position, row in enumerate(rows):
+        y = len(rows) - 1 - position
+        low, high = float(row["ci_low_corrected"]), float(row["ci_high_corrected"])
+        difference = float(row["mean_difference"])
+        resolved = np.isfinite(low) and np.isfinite(high) and (low > 0 or high < 0)
+        colour = (BLUE if difference > 0 else RED) if resolved else MUTED
+
+        if np.isfinite(low) and np.isfinite(high):
+            axes.plot([low, high], [y, y], color=colour, linewidth=2, zorder=3)
+            for edge in (low, high):
+                axes.plot([edge, edge], [y - 0.14, y + 0.14],
+                          color=colour, linewidth=1.3, zorder=3)
+        axes.scatter([difference], [y], s=58, color=colour, zorder=4,
+                     edgecolors=SURFACE, linewidths=1.6)
+        axes.annotate(
+            row["win_ratio"], xy=(difference, y + 0.22), color=MUTED,
+            fontsize=7.5, ha="center", va="bottom",
+        )
+
+    axes.set_yticks(range(len(rows)))
+    axes.set_yticklabels([row["stratum"] for row in rows][::-1], color=INK, fontsize=9)
+    axes.set_ylim(-0.7, len(rows) - 0.3)
+    axes.grid(axis="y", visible=False)
+    figure.subplots_adjust(left=0.2)
+    _caption(
+        figure,
+        "95% intervals, corrected for the overlap between training sets. Grey means the\n"
+        "interval crosses zero. These are the weakest numbers the harness produces:\n"
+        "one test per band, strongly correlated, uncorrected for multiplicity by design.\n"
+        "Descriptive - where a difference concentrates - not confirmatory.",
+    )
+    return figure
 def feature_importance(importances: dict[str, float], top_n: int = 20) -> Any:
     """The columns the shipped model actually splits on."""
     ranked = sorted(importances.items(), key=lambda kv: -kv[1])[:top_n]

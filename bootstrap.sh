@@ -29,6 +29,10 @@ source .venv/bin/activate
 
 python -m pip install --quiet --upgrade pip
 echo "--> Installing m6a and dependencies"
+# [train] carries wandb, scipy, boto3 and matplotlib. matplotlib is needed for
+# the figures every standard evaluation logs; it renders headless via the Agg
+# backend (src/m6a/figures.py), so the VM needs no display and no extra apt
+# packages.
 pip install --quiet -e ".[train,dev]"
 
 if [ -f .env ]; then
@@ -55,4 +59,20 @@ fi
 
 echo
 echo "================ make doctor ================"
-python scripts/doctor.py || true
+# doctor exits non-zero only when something essential is broken, and since
+# docs/decisions/0007 a W&B key that does not work counts as essential: on an
+# instance that gets terminated, a run that logs nowhere durable is a run you
+# did not do. Say so at the top of the output rather than leaving it twenty
+# lines up, but do not abort - a broken key still lets you train and predict.
+if python scripts/doctor.py; then
+  echo
+  echo "Setup complete. Next:  make smoke CONFIG=configs/lightgbm.yaml"
+else
+  echo
+  echo "############################################################"
+  echo "# doctor reported a PROBLEM above. Fix it BEFORE you start #"
+  echo "# a real run - this instance will be terminated with        #"
+  echo "# nothing pulled off it, so anything that does not reach    #"
+  echo "# W&B is lost. See docs/decisions/0007.                     #"
+  echo "############################################################"
+fi

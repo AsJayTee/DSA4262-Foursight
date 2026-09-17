@@ -198,6 +198,70 @@ def per_fold(report: Report, oof: pd.DataFrame, name: str = "") -> list[dict]:
     return folds
 
 
+def repeated(report: Report, result, name: str = "") -> None:
+    """The repeated-CV distribution: n_repeats x n_folds observations of each metric.
+
+    Repetition 0 is the canonical seed-4262 split, so everything else in the
+    report - pooled, strata, calibration, the sweep - still comes from it and
+    still matches what a plain run reports. What the extra repetitions buy is a
+    *distribution* wide enough to compare another model against.
+    """
+    summary = result.summary()
+    frame = result.frame()
+
+    report.heading(
+        f"Repeated cross-validation: {result.n_repeats} x {summary['n_folds']} folds"
+    )
+    report.log(
+        "Repetition 0 is the canonical split (seed 4262); the rest are spawned\n"
+        "children of it. Every other number in this report comes from repetition\n"
+        "0, so running more of them changes none of them."
+    )
+    report.show(frame[["n", "n_positive", "roc_auc", "pr_auc"]])
+    report.log(
+        f"\n{summary['n_observations']} observations: PR AUC mean "
+        f"{summary['pr_auc_mean']:.4f}  sd {summary['pr_auc_sd']:.4f}  "
+        f"range [{summary['pr_auc_min']:.4f}, {summary['pr_auc_max']:.4f}]"
+    )
+    report.log(
+        "That sd is wider than a single split's, and it should be: more splits\n"
+        "sample more of the split-to-split variation rather than averaging it\n"
+        "away. It is still one dataset sliced many ways, not many datasets -\n"
+        "which is what the corrected t-test exists to keep honest."
+    )
+
+    report.data["repeated_cv"] = {
+        **summary,
+        "observations": [
+            {
+                key: row[key]
+                for key in ("repetition", "split_seed", "fold", "n", "n_positive",
+                            "roc_auc", "pr_auc")
+                if key in row
+            }
+            for row in result.observations
+        ],
+    }
+
+    if report.profile.plots:
+        from m6a import figures
+
+        # Replaces the single-split distribution figure rather than adding a
+        # second one under a different key: they answer the same question, and
+        # two figures called "PR AUC across folds" in one run is how someone
+        # quotes the five-point version of a fifty-point result.
+        report.figure(
+            "fig/pr_auc_distribution",
+            figures.metric_distribution(
+                {name or "this run": result.vector("pr_auc").tolist()},
+                title=f"PR AUC across {result.n_repeats} repetitions "
+                      f"x {summary['n_folds']} folds",
+                caption="Each point is one fold of one repetition. Repetition 0 is the\n"
+                        "canonical seed-4262 split; the rest are additive evidence.",
+            ),
+        )
+
+
 def strata(report: Report, oof: pd.DataFrame, which: list[str], min_positive: int) -> None:
     """Metrics inside read-depth bands, DRACH motifs and folds - where it fails."""
     y = oof["label"].to_numpy()
@@ -326,6 +390,228 @@ def depth_sweep(
         )
 
 
+# --------------------------------------------------------------------------
+# comparing two runs
+# --------------------------------------------------------------------------
+
+def bootstrap(
+    report: Report,
+    y_true,
+    scores: dict[str, "np.ndarray"],
+    n_resamples: int,
+    seed: int,
+) -> None:
+    """A confidence interval on the headline number, and on a gap if there is one.
+
+    Every other uncertainty in this report is about the *split*. This one is
+    about the *sample*: how much does 0.4759 depend on which 121,838 sites we
+    happen to have? Nothing else in the harness answers that.
+    """
+    from m6a.compare import paired_bootstrap
+
+    report.heading(f"Bootstrap over sites ({n_resamples:,} resamples, seed {seed})")
+    result = paired_bootstrap(y_true, scores, n_resamples=n_resamples, seed=seed)
+
+    rows = [
+        {"arm": name, "mean": stats["mean"], "sd": stats["sd"],
+         "ci_low": stats["ci_low"], "ci_high": stats["ci_high"]}
+        for name, stats in result["arms"].items()
+    ]
+    report.show(pd.DataFrame(rows).set_index("arm"))
+
+    if "difference" in result:
+        gap = result["difference"]
+        report.log(
+            f"\ndifference ({gap['candidate']} minus {gap['baseline']}): "
+            f"{gap['mean']:+.4f}  95% CI [{gap['ci_low']:+.4f}, {gap['ci_high']:+.4f}]  "
+            f"positive in {100 * gap['fraction_positive']:.1f}% of resamples"
+        )
+    report.log(
+        "\nThis is uncertainty about the *sites*, not about the split - a different\n"
+        "question from the per-fold spread, and not interchangeable with it."
+        + (
+            " Both\narms are resampled together, so site difficulty cancels in the"
+            " difference."
+            if "difference" in result
+            else ""
+        )
+        + "\nIt does not make the estimate independent of this dataset: every resample\n"
+        "inherits the depth >= 20 floor, so none of them says anything about SG-NEx."
+    )
+    if "difference" in result:
+        report.log(
+            "\n**This interval is not the answer to 'is this better'.** It holds the\n"
+            "split fixed - one set of fold models, resampled sites - so it cannot see\n"
+            "split-to-split variation, and it will look more decisive than the\n"
+            "corrected paired t-test does. The corrected test is the one that carries\n"
+            "the overlap between training folds. Read this as 'how precise is the\n"
+            "number', and the corrected test as 'is the difference real'."
+        )
+    if result["n_skipped"]:
+        report.log(
+            f"{result['n_skipped']} resample(s) came out single-class and were dropped."
+        )
+    report.data["bootstrap"] = result
+
+def arm(
+    report: Report,
+    name: str,
+    oof: pd.DataFrame,
+    *,
+    by: list[str],
+    min_positive: int,
+    sweep: dict | None = None,
+) -> None:
+    """Evaluate a comparison arm in full, not as a column of per-fold numbers.
+
+    `--compare-with` used to fit the baseline's five models, print their PR AUC
+    and throw the rest away - so finding out that `baseline_logistic` overcounts
+    positives by 6.10x meant running the whole thing again standalone. Fitting the
+    same five models twice to recover numbers that were available the first time
+    is the waste docs/decisions/0001 was written to stop.
+
+    The arm is evaluated through the *same* section functions as the primary run,
+    into a sub-report, so the two cannot drift into computing different things.
+    Its results land under `arms/<name>` in the JSON and `arm/<name>/...` in W&B,
+    leaving the unprefixed keys to the run's own headline.
+    """
+    sub = Report(profile=report.profile, log=report.log)
+    report.heading(f"Comparison arm in full: {name}")
+
+    per_fold(sub, oof, name=name)
+    if report.profile.strata:
+        strata(sub, oof, by, min_positive)
+    calibration(sub, oof)
+    curves(sub, {name: (oof["label"].to_numpy(), oof["score"].to_numpy())})
+    if sweep is not None:
+        depth_sweep(sub, sweep["datasets"], sweep["models"], sweep["columns"],
+                    oof, sweep["subsample_seed"])
+
+    report.data.setdefault("arms", {})[name] = sub.data
+    for key, figure in sub.figures.items():
+        report.figures[key.replace("fig/", f"fig/arm/{name}/", 1)] = figure
+
+def stratified_observations(
+    result,
+    y: np.ndarray,
+    groups,
+    metric: str = "pr_auc",
+    min_positive: int = 10,
+) -> dict[str, list[dict]]:
+    """One metric value per (repetition, fold) **within each stratum**.
+
+    The question this exists for is not "is this model better on average" but
+    "is it better *where we are currently weak*" - at low read depth, which is
+    where Task 2 lives. A model that trades 0.01 of pooled PR AUC for a real gain
+    at depth 3 is exactly what Task 2 needs and exactly what a comparison on
+    pooled PR AUC alone would reject.
+
+    Strata too thin to score in a given fold are dropped from that fold rather
+    than scored as zero: PR AUC over three positives is noise with a decimal
+    point on it, and averaging that in would be worse than leaving it out. A
+    stratum that survives in one arm's fold but not the other's is dropped from
+    both, which `m6a.compare` then sees as matched observation ids.
+    """
+    groups = np.asarray(groups)
+    out: dict[str, list[dict]] = {}
+
+    for repetition, (scores, folds) in enumerate(zip(result.scores, result.fold_ids)):
+        for fold in sorted(np.unique(folds)):
+            inside = folds == fold
+            table = metrics_by(
+                y[inside], scores[inside], groups[inside], min_positive=min_positive
+            )
+            for stratum, row in table.iterrows():
+                if not np.isfinite(row[metric]):
+                    continue
+                out.setdefault(str(stratum), []).append(
+                    {
+                        "repetition": repetition,
+                        "fold": int(fold),
+                        "n": int(row["n"]),
+                        "n_positive": int(row["n_positive"]),
+                        metric: float(row[metric]),
+                    }
+                )
+    return out
+
+
+def stratified_comparison(
+    report: Report,
+    baseline: dict[str, list[dict]],
+    candidate: dict[str, list[dict]],
+    name_baseline: str,
+    name_candidate: str,
+    stratum_label: str,
+    key: str,
+    n_folds: int,
+    order: list[str] | None = None,
+) -> None:
+    """Pair the two arms fold by fold inside every stratum, and print the caveat.
+
+    **These are the weakest numbers the harness produces.** They sit on top of
+    the train/test overlap already corrected for in the overall test, they are
+    computed on a fraction of the sites each, and there is one per band. Read
+    them as *descriptive* - where a difference concentrates - and the overall
+    paired test as the confirmatory one.
+    """
+    from m6a.compare import stratified_paired_comparison
+
+    rows, skipped = stratified_paired_comparison(
+        baseline, candidate, name_baseline, name_candidate,
+        n_folds=n_folds, order=order,
+    )
+    if not rows:
+        report.log(
+            f"\nNo {stratum_label} stratum had enough positives in enough folds to "
+            "pair the two runs inside it."
+        )
+        return
+
+    frame = pd.DataFrame(rows).set_index("stratum")
+    report.heading(f"Paired within {stratum_label}: {name_candidate} vs {name_baseline}")
+    report.show(
+        frame[["baseline_mean", "candidate_mean", "mean_difference", "win_ratio",
+               "p_value_corrected"]]
+    )
+    report.log(
+        f"\n{len(rows)} strata means {len(rows)} p-values, and at least one will look\n"
+        "significant by chance. They are NOT corrected for that here, deliberately:\n"
+        "these tests are strongly correlated - the same models, the same folds,\n"
+        "overlapping evidence - so a Bonferroni factor calibrated for independent\n"
+        "tests would be wrong in the other direction. Treat a per-stratum p-value as\n"
+        "descriptive, pointing at where a difference concentrates, and the overall\n"
+        "paired test as the confirmatory one. Do not quote a band p-value as a\n"
+        "headline; picking the band after seeing the result is how a significant\n"
+        "finding gets manufactured."
+    )
+    if skipped:
+        report.log(
+            f"\nNot tested (too thin, or scored in only one arm): {', '.join(skipped)}"
+        )
+
+    if report.profile.plots:
+        from m6a import figures
+
+        report.figure(
+            f"fig/compare/{key}/by_stratum",
+            figures.stratum_differences(
+                rows, stratum_label,
+                f"{name_candidate} minus {name_baseline}, within {stratum_label}",
+            ),
+        )
+
+    report.data.setdefault("stratified_comparisons", {})[key] = {
+        "stratum": stratum_label,
+        "baseline": name_baseline,
+        "candidate": name_candidate,
+        "multiplicity": (
+            f"{len(rows)} correlated tests, uncorrected by design - descriptive only"
+        ),
+        "skipped": skipped,
+        "rows": rows,
+    }
+
 def comparison(report: Report, result: dict, title: str, key: str) -> None:
     """A paired fold-by-fold comparison between two runs, printed and plotted."""
     from m6a.compare import comparison_frame, verdict
@@ -341,16 +627,31 @@ def comparison(report: Report, result: dict, title: str, key: str) -> None:
         f"sd {result['candidate_sd']:.4f}"
     )
     report.log(
-        f"\nunpaired (wrong)  gap {result['mean_difference']:+.4f} against a fold sd "
+        f"\nunpaired  (wrong)     gap {result['mean_difference']:+.4f} against a fold sd "
         f"of ~{result['baseline_sd']:.4f}, Welch p = {result['unpaired_p_value']:.4f}"
     )
     report.log(
-        f"paired   (right)  mean difference {result['mean_difference']:+.4f}  "
+        f"paired    (optimistic) mean difference {result['mean_difference']:+.4f}  "
         f"sd {result['sd_difference']:.4f}  "
         f"95% CI [{result['ci_low']:+.4f}, {result['ci_high']:+.4f}]  "
         f"t = {result['t_statistic']:.2f}  p = {result['p_value']:.4f}  "
         f"wins {result['wins']}/{result['n_folds']}"
     )
+    if result.get("p_value_corrected") is not None:
+        report.log(
+            f"corrected (quote this) "
+            f"95% CI [{result['ci_low_corrected']:+.4f}, "
+            f"{result['ci_high_corrected']:+.4f}]  "
+            f"t = {result['t_statistic_corrected']:.2f}  "
+            f"p = {result['p_value_corrected']:.4f}"
+        )
+        report.log(
+            f"\nThe corrected row is Nadeau & Bengio: it inflates the variance to admit\n"
+            f"that each fold's model trains on the other {result['cv_folds'] - 1}, so the "
+            f"observations are not\nindependent. Its p-value is always the larger of the "
+            f"two, and it is the one to\nquote - a difference that only clears 0.05 "
+            f"uncorrected has not cleared it."
+        )
     report.log(f"\n{verdict(result)}")
     report.data.setdefault("comparisons", {})[key] = result
 
@@ -412,6 +713,23 @@ def publish(report: Report, tracker, report_path: Path | None = None, name: str 
             tracker.log_table(title, pd.DataFrame(report.data[key]))
     if report.data.get("depth_sweep"):
         tracker.log_table("depth_sweep", pd.DataFrame(report.data["depth_sweep"]["rows"]))
+
+    # The metric vector itself - the thing docs/decisions/0009 says survives a
+    # run. Fifty rows, and everything a paired test against another run needs.
+    if report.data.get("repeated_cv"):
+        tracker.log_table(
+            "repeated_cv", pd.DataFrame(report.data["repeated_cv"]["observations"])
+        )
+    for key, block in (report.data.get("stratified_comparisons") or {}).items():
+        tracker.log_table(f"stratified/{key}", pd.DataFrame(block["rows"]))
+    # A comparison arm's per-fold vector, so the baseline can be paired against a
+    # third run later without refitting it (docs/decisions/0008).
+    for arm_name, arm_data in (report.data.get("arms") or {}).items():
+        if arm_data.get("per_fold"):
+            tracker.log_table(
+                f"arm/{arm_name}/per_fold",
+                crossval.per_fold_frame(arm_data["per_fold"]),
+            )
 
     if report_path is not None and report_path.exists():
         tracker.log_artifact(

@@ -1,8 +1,8 @@
 # 0008. A comparison reports both arms in full, and can be made inside a stratum
 
 - **Date:** 2026-09-16
-- **Status:** **Proposed — not built.** Nothing below exists yet.
-- **Affects:** will affect `scripts/evaluate.py`, `src/m6a/compare.py`
+- **Status:** Accepted — built 2026-09-17
+- **Affects:** `scripts/evaluate.py`, `src/m6a/compare.py`, `src/m6a/report.py`, `src/m6a/figures.py`, the `arm/*` metric keys
 
 ## Context
 
@@ -99,6 +99,26 @@ per stratum too once both exist.
 
 ## How to check it still holds
 
-Not built. When it is: a comparison of a config against itself must report a
-mean difference of exactly zero in every stratum, and comparing two runs whose
-strata differ must fail loudly rather than pair mismatched bands.
+```bash
+python scripts/evaluate.py --config configs/lightgbm.yaml --compare-features pooled_v1
+```
+
+compares a config against its own feature set, and must report a mean difference
+of **exactly** zero in every stratum, with no p-value (a zero-variance difference
+has no t-test, and saying so is not the same as failing one). Checked: it does.
+
+Two runs whose folds differ inside a stratum fail loudly —
+`stratified_paired_comparison` passes each stratum through `paired_comparison`,
+which refuses mismatched `(repetition, fold)` ids rather than pairing on the
+overlap. A stratum that only one arm could score is named in the `Not tested`
+line rather than dropped silently: a band missing from the table reads as "no
+difference" to anyone skimming, and that is not what it means.
+
+The baseline arm's own numbers land under `arm/<name>/` in W&B and `arms.<name>`
+in the report JSON — so the 6.10x overcount that started this record is now
+recorded by the comparison run that produced it, with no standalone re-run.
+
+**Shipped detail this record did not specify:** the arm keys are prefixed
+`arm/<name>/` rather than sharing the run's own key names, because one W&B run
+cannot hold two values under `oof/pr_auc`. The run's headline keys stay
+unprefixed and keep meaning the primary arm.

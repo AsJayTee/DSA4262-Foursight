@@ -437,6 +437,8 @@ def test_training_evaluates_inline_and_leaves_no_per_site_table(tmp_path):
     json_path, labels_path = make_fake_dataset(tmp_path, n_sites=360, seed=5)
     model_dir = tmp_path / "model"
     reports = tmp_path / "reports"
+    # M6A_REPORT_DIR is set session-wide in conftest.py so no test can write
+    # where a real run writes; this one needs to know where that is.
     environment = {
         **dict(__import__("os").environ),
         "M6A_CACHE_DIR": str(tmp_path / "cache"),

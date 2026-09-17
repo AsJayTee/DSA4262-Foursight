@@ -7,6 +7,13 @@
     # is quantiles really better than pooled, or is that fold noise?
     python scripts/evaluate.py --config configs/quantiles.yaml --compare-features pooled_v1
 
+    # too close to call on five folds? get fifty paired observations
+    python scripts/evaluate.py --config configs/quantiles.yaml
+                               --compare-features pooled_v1 --repeats 10
+
+    # an error bar on the headline number, over the sites rather than the split
+    python scripts/evaluate.py --config configs/quantiles.yaml --bootstrap 2000
+
     # what happens at SG-NEx's read depths?
     python scripts/evaluate.py --config configs/quantiles.yaml --depth-sweep
 
@@ -23,6 +30,11 @@ Two input modes, one report:
             do a depth sweep, because that needs live fold models.
   --model   score an already-fitted model on a labelled dataset it did not train
             on. No folds, so no per-fold metrics and no paired test.
+
+A comparison evaluates **both** arms in full - strata, calibration, depth sweep,
+figures - and then pairs them overall and again inside each read-depth band and
+motif. Three numbers come out of every comparison: unpaired (wrong), paired
+(optimistic), and the Nadeau & Bengio corrected test, which is the one to quote.
 
 `--profile` decides how much is computed; `standard` is the default and includes
 the depth sweep. Everything durable goes to W&B - on a Ronin instance the local
@@ -54,10 +66,14 @@ from m6a import crossval, registry, report as reporting, tracking
 from m6a.config import Config
 from m6a.data import SUBSAMPLE_SEED, resolve_data_dir
 from m6a.env import load_env
-from m6a.evaluation import metrics
+from m6a import evaluation
+from m6a.evaluation import depth_bands, metrics
 
 SMOKE_SITES = 5000
 DEFAULT_DEPTHS = "1,3,5,10,20,full"
+# Mirrors m6a.compare.BOOTSTRAP_SEED rather than importing it: m6a.compare
+# pulls in scipy, and this script should not do that just to print a default.
+BOOTSTRAP_SEED = 4262
 
 
 # --------------------------------------------------------------------------
@@ -110,6 +126,40 @@ def parse_args() -> argparse.Namespace:
              "held-out data. On by default at --profile standard and above.",
     )
     sweep.add_argument("--depths", default=DEFAULT_DEPTHS, help=f"Default: {DEFAULT_DEPTHS}")
+
+    boot = ap.add_argument_group("bootstrap")
+    boot.add_argument(
+        "--bootstrap",
+        type=int,
+        default=0,
+        metavar="N",
+        help="Resample the sites with replacement N times (2000 is the usual "
+             "number) for a confidence interval on the headline PR AUC, and on "
+             "the gap when there is a comparison. Off by default. This is the "
+             "only thing here that asks 'would this hold on a different sample "
+             "of sites' rather than 'a different split'. Runs in-process while "
+             "the out-of-fold vector is in memory; only the interval is kept.",
+    )
+    boot.add_argument(
+        "--bootstrap-seed",
+        type=int,
+        default=None,
+        help="Seed for the resampling (default 4262). A third knob, separate "
+             "from the split seed and the subsample seed; changing it is safe.",
+    )
+
+    repeat = ap.add_argument_group("repeated cross-validation")
+    repeat.add_argument(
+        "--repeats",
+        type=int,
+        default=1,
+        help="Cross-validate this many times over independently seeded splits "
+             "(default 1). Repetition 0 is always the canonical seed-4262 "
+             "split, so nothing already recorded moves. 10 turns 5 paired "
+             "observations into 50, which is what makes a comparison between "
+             "two close models mean anything. Costs one set of fits per "
+             "repetition; features are extracted once.",
+    )
     sweep.add_argument(
         "--subsample-seed",
         type=int,
@@ -163,6 +213,21 @@ def parse_args() -> argparse.Namespace:
             ap.error(f"--{flag.replace('_', '-')} needs --config.")
     if args.features and not args.config:
         ap.error("--features overrides the feature set named in --config, so it needs one.")
+    if args.repeats < 1:
+        ap.error("--repeats must be at least 1.")
+    if args.bootstrap < 0:
+        ap.error("--bootstrap must be 0 (off) or a positive number of resamples.")
+    if args.bootstrap and args.bootstrap < 200:
+        ap.error(
+            f"--bootstrap {args.bootstrap} is too few resamples for a 95% "
+            "interval - the 2.5th percentile would rest on a handful of draws. "
+            "Use at least 200, and 2000 for anything quoted."
+        )
+    if args.repeats > 1 and not args.config:
+        ap.error(
+            "--repeats needs --config: repeated cross-validation refits the "
+            "folds, which scoring a saved model cannot do."
+        )
     if args.model and not (args.json or args.data_dir):
         ap.error(
             "--model needs a dataset to score: --json <data.json.gz> "
@@ -229,6 +294,85 @@ def find_training_run(name: str) -> str | None:
 # --------------------------------------------------------------------------
 # modes
 # --------------------------------------------------------------------------
+
+def compare_arm(
+    report: reporting.Report,
+    args: argparse.Namespace,
+    key: str,
+    title: str,
+    primary,
+    primary_features: str,
+    baseline,
+    baseline_name: str,
+    n_folds: int,
+    y,
+    sites,
+    sweep: dict | None,
+) -> None:
+    """Report a comparison arm in full, pair it overall, then pair it per stratum.
+
+    Three things, in the order they should be read: the arm's own numbers (so
+    nobody has to re-run it standalone to find its calibration), the overall
+    paired test (confirmatory), and the per-stratum tests (descriptive - where a
+    difference concentrates). See docs/decisions/0008.
+    """
+    from m6a.compare import paired_comparison
+
+    reporting.arm(
+        report, baseline_name, baseline.canonical.oof,
+        by=[b for b in args.by.split(",") if b != "fold"],
+        min_positive=args.min_positive,
+        sweep=sweep,
+    )
+
+    reporting.comparison(
+        report,
+        paired_comparison(
+            baseline.observations, primary.observations,
+            baseline_name, primary_features, n_folds=n_folds,
+        ),
+        title,
+        key,
+    )
+
+    if args.bootstrap:
+        reporting.bootstrap(
+            report,
+            baseline.canonical.oof["label"].to_numpy(),
+            {baseline_name: baseline.canonical.oof["score"].to_numpy(),
+             primary_features: primary.canonical.oof["score"].to_numpy()},
+            args.bootstrap,
+            args.bootstrap_seed if args.bootstrap_seed is not None else BOOTSTRAP_SEED,
+        )
+
+    if not report.profile.strata:
+        return
+
+    # "Is it better *where we are currently weak*" is the question the next round
+    # of work asks, and low read depth is where the weakness is. Motifs are
+    # included because per-motif lift spans 2.8x to 19.5x and a change can move
+    # one without moving the average.
+    wanted = {
+        "read depth": ("depth", depth_bands(sites["n_reads"].to_numpy()),
+                       list(evaluation.DEPTH_BAND_LABELS)),
+        "DRACH motif": ("motif", sites["motif"].to_numpy(), None),
+    }
+    for label, (which, groups, order) in wanted.items():
+        if which not in args.by.split(","):
+            continue
+        reporting.stratified_comparison(
+            report,
+            reporting.stratified_observations(
+                baseline, y, groups, min_positive=args.min_positive
+            ),
+            reporting.stratified_observations(
+                primary, y, groups, min_positive=args.min_positive
+            ),
+            baseline_name, primary_features, label, f"{key}_{which}",
+            n_folds=n_folds,
+            order=order,
+        )
+
 
 def run_from_model(args: argparse.Namespace, report: reporting.Report) -> None:
     from m6a import feature_cache
@@ -382,11 +526,19 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
         f"{config.split.group_by} (seed {config.split.seed})"
     )
     report.heading("Fitting folds")
-    result = crossval.cross_validate(
-        dataset, model_class, config.model_params, label=config.name, log=report.log
+    repeated = crossval.repeated_cross_validate(
+        dataset, model_class, config.model_params,
+        n_repeats=args.repeats, seed=config.split.seed,
+        n_folds=config.split.n_folds, group_by=config.split.group_by,
+        label=config.name, log=report.log,
     )
+    # Everything except the comparison is computed from repetition 0, the
+    # canonical split, so a repeated run reports the same headline as a plain one.
+    result = repeated.canonical
 
     reporting.per_fold(report, result.oof, name=features)
+    if args.repeats > 1:
+        reporting.repeated(report, repeated, name=features)
     if report.profile.strata:
         reporting.strata(report, result.oof, args.by.split(","), args.min_positive)
     reporting.calibration(report, result.oof)
@@ -431,49 +583,65 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
             reporting.comparison(
                 report,
                 paired_comparison(
-                    ablations[which].per_fold, result.per_fold, f"{which}-only", config.name
+                    ablations[which].per_fold, result.per_fold, f"{which}-only",
+                    config.name, n_folds=config.split.n_folds,
                 ),
                 f"Paired: {config.name} vs {which}-only",
                 f"ablation_{which}",
             )
 
     if args.compare_features:
-        from m6a.compare import paired_comparison
-
-        other = crossval.build_datasets(
-            json_path, labels_path, args.compare_features, [None], **build
-        )[None]
+        # Every depth the sweep wants, because the arm is evaluated in full now.
+        # Features are cached per (feature set, depth), so a second sweep of a
+        # set someone has already swept costs a cache read.
+        other_sets = crossval.build_datasets(
+            json_path, labels_path, args.compare_features, depths, **build
+        )
         crossval.assert_same_folds(
             crossval.oof_table(dataset, np.zeros(len(dataset))),
-            crossval.oof_table(other, np.zeros(len(other))),
+            crossval.oof_table(other_sets[None], np.zeros(len(other_sets[None]))),
             features, args.compare_features,
         )
         report.heading(f"Fitting folds: {args.compare_features}")
-        baseline = crossval.cross_validate(
-            other, model_class, config.model_params,
-            label=args.compare_features, keep_models=False, log=report.log,
+        baseline = crossval.repeated_cross_validate(
+            other_sets[None], model_class, config.model_params,
+            n_repeats=args.repeats, seed=config.split.seed,
+            n_folds=config.split.n_folds, group_by=config.split.group_by,
+            label=args.compare_features, log=report.log,
         )
         reporting.show_pooled(
-            report.log, baseline.pooled, prefix=f"{args.compare_features} OOF"
+            report.log, baseline.canonical.pooled, prefix=f"{args.compare_features} OOF"
         )
         report.data["compare_features"] = {
             "features": args.compare_features,
-            "pooled": baseline.pooled,
-            "per_fold": baseline.per_fold,
+            "pooled": baseline.canonical.pooled,
+            "per_fold": baseline.canonical.per_fold,
         }
-        reporting.comparison(
-            report,
-            paired_comparison(
-                baseline.per_fold, result.per_fold, args.compare_features, features
-            ),
+        compare_arm(
+            report, args, "features",
             f"Paired: {features} vs {args.compare_features} "
             f"(same model, same parameters, same folds)",
-            "features",
+            repeated, features, baseline, args.compare_features,
+            config.split.n_folds, dataset.y, dataset.sites,
+            sweep=(
+                {"datasets": {d: other_sets[d] for d in depths},
+                 "models": baseline.canonical.models,
+                 "columns": baseline.canonical.columns,
+                 "subsample_seed": args.subsample_seed}
+                if sweep else None
+            ),
+        )
+
+    if args.bootstrap and not (args.compare_features or args.compare_with):
+        reporting.bootstrap(
+            report,
+            result.oof["label"].to_numpy(),
+            {features: result.oof["score"].to_numpy()},
+            args.bootstrap,
+            args.bootstrap_seed if args.bootstrap_seed is not None else BOOTSTRAP_SEED,
         )
 
     if args.compare_with:
-        from m6a.compare import paired_comparison
-
         other_config = Config.load(args.compare_with)
         if (other_config.split.seed, other_config.split.group_by) != (
             config.split.seed, config.split.group_by
@@ -484,29 +652,39 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
                 f"{other_config.split.seed}/{other_config.split.group_by}). "
                 "A paired comparison needs the same folds - see AGENTS.md section 3."
             )
-        other = crossval.build_datasets(
-            json_path, labels_path, other_config.features, [None], **build
-        )[None]
-        report.heading(f"Fitting folds: {other_config.name}")
-        baseline = crossval.cross_validate(
-            other, registry.get("models", other_config.model), other_config.model_params,
-            label=other_config.name, keep_models=False, log=report.log,
+        other_sets = crossval.build_datasets(
+            json_path, labels_path, other_config.features, depths, **build
         )
-        reporting.show_pooled(report.log, baseline.pooled, prefix=f"{other_config.name} OOF")
+        report.heading(f"Fitting folds: {other_config.name}")
+        baseline = crossval.repeated_cross_validate(
+            other_sets[None], registry.get("models", other_config.model),
+            other_config.model_params,
+            n_repeats=args.repeats, seed=config.split.seed,
+            n_folds=config.split.n_folds, group_by=config.split.group_by,
+            label=other_config.name, log=report.log,
+        )
+        reporting.show_pooled(
+            report.log, baseline.canonical.pooled, prefix=f"{other_config.name} OOF"
+        )
         report.data["compare_with"] = {
             "config": str(args.compare_with),
             "name": other_config.name,
-            "pooled": baseline.pooled,
-            "per_fold": baseline.per_fold,
+            "pooled": baseline.canonical.pooled,
+            "per_fold": baseline.canonical.per_fold,
         }
-        reporting.comparison(
-            report,
-            paired_comparison(
-                baseline.per_fold, result.per_fold, other_config.name, config.name
-            ),
+        compare_arm(
+            report, args, "config",
             f"Paired: {config.name} vs {other_config.name} "
             f"(these configs differ in more than one thing)",
-            "config",
+            repeated, config.name, baseline, other_config.name,
+            config.split.n_folds, dataset.y, dataset.sites,
+            sweep=(
+                {"datasets": {d: other_sets[d] for d in depths},
+                 "models": baseline.canonical.models,
+                 "columns": baseline.canonical.columns,
+                 "subsample_seed": args.subsample_seed}
+                if sweep else None
+            ),
         )
 
 
@@ -532,7 +710,8 @@ def main() -> int:
     tracker = tracking.start(
         run_name,
         enabled=not (args.no_wandb or args.smoke),
-        config={"profile": args.profile, "subsample_seed": args.subsample_seed},
+        config={"profile": args.profile, "subsample_seed": args.subsample_seed,
+                "repeats": args.repeats, "bootstrap": args.bootstrap},
         tags=[tracking.EVAL_TAG],
         job_type="evaluate",
         resume_id=find_training_run(run_name),

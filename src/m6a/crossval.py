@@ -283,6 +283,162 @@ def oof_table(dataset: Dataset, scores: np.ndarray) -> pd.DataFrame:
     return table[OOF_COLUMNS]
 
 
+# --------------------------------------------------------------------------
+# repeated cross-validation
+# --------------------------------------------------------------------------
+
+def repetition_seeds(n_repeats: int, base: int = 4262) -> list[int]:
+    """Split seeds for `n_repeats` repetitions. Element 0 is `base` itself.
+
+    Repetition 0 **is** the canonical split, not a derivative of it. AGENTS.md
+    section 3 freezes seed 4262, every per-fold number in GAPS.md was computed on
+    it, and `SeedSequence(4262).spawn(n)[0]` is 3903649664, not 4262 - so
+    deriving repetition 0 from the chain would quietly stop reproducing the
+    numbers this repo claims to reproduce. Repetitions 1 onward are spawned
+    children, which are independent streams rather than the correlated ones
+    consecutive integers can give you.
+
+    `spawn(n)[i]` does not depend on `n`, so asking for 10 repetitions yields the
+    same first 5 as asking for 5. Two runs with different `--repeats` can
+    therefore still be paired on the repetitions they share - the same property
+    the keyed subsample draw provides (docs/decisions/0003), for the same reason.
+    """
+    if n_repeats < 1:
+        raise ValueError(f"n_repeats must be >= 1, got {n_repeats}")
+    if n_repeats == 1:
+        return [base]
+    children = np.random.SeedSequence(base).spawn(n_repeats - 1)
+    return [base] + [int(child.generate_state(1)[0]) for child in children]
+
+
+def refold(dataset: Dataset, seed: int, n_folds: int = 5, group_by: str = "gene_id") -> Dataset:
+    """The same rows and features, re-split under a different seed.
+
+    Fold assignment depends on the labels and the seed; it does not touch feature
+    extraction. So a repetition costs five model fits and nothing else, which is
+    the only reason ten of them are affordable.
+    """
+    if group_by not in dataset.sites.columns:
+        raise ValueError(
+            f"Cannot regroup by {group_by!r}; the dataset carries "
+            f"{list(dataset.sites.columns)}. Repeated CV needs the grouping "
+            "column that build_datasets attached."
+        )
+    folds = assign_folds(
+        dataset.sites.reset_index(), seed=seed, n_folds=n_folds, group_by=group_by
+    ).to_numpy()
+    return Dataset(
+        X=dataset.X, y=dataset.y, folds=folds, sites=dataset.sites,
+        columns=dataset.columns, depth=dataset.depth,
+    )
+
+
+@dataclass(slots=True)
+class RepeatedResult:
+    """Every repetition's per-fold metrics, plus repetition 0 on its own.
+
+    `canonical` is repetition 0 - the seed-4262 split - and is what the pooled
+    numbers, the strata, the calibration and the depth sweep are all computed
+    from, so a repeated run reports the same headline as a plain one. The extra
+    repetitions are additive evidence for the comparison, nothing else.
+    """
+
+    canonical: CVResult
+    observations: list[dict]   # one per (repetition, fold), each a metrics dict
+    seeds: list[int]
+    # Per repetition: the out-of-fold score vector and the fold assignment that
+    # produced it, both in the dataset's row order. Two arrays of 121,838 floats
+    # per repetition is about 2 MB - cheap enough to keep, and the only way to
+    # ask a question *inside a stratum* afterwards without refitting. The
+    # per-site scores still never reach disk (docs/decisions/0009); this is the
+    # in-memory vector that record explicitly preserves.
+    scores: list[np.ndarray] = field(default_factory=list)
+    fold_ids: list[np.ndarray] = field(default_factory=list)
+
+    @property
+    def n_repeats(self) -> int:
+        return len(self.seeds)
+
+    def vector(self, metric: str = "pr_auc") -> np.ndarray:
+        return np.array([o[metric] for o in self.observations], dtype=float)
+
+    def frame(self) -> pd.DataFrame:
+        return pd.DataFrame(self.observations).set_index(["repetition", "fold"])
+
+    def summary(self, metric: str = "pr_auc") -> dict:
+        values = self.vector(metric)
+        return {
+            "n_repeats": self.n_repeats,
+            "n_folds": len(self.observations) // self.n_repeats,
+            "n_observations": len(values),
+            "seeds": list(self.seeds),
+            f"{metric}_mean": float(values.mean()),
+            f"{metric}_sd": float(values.std(ddof=1)) if values.size > 1 else float("nan"),
+            f"{metric}_min": float(values.min()),
+            f"{metric}_max": float(values.max()),
+        }
+
+
+def repeated_cross_validate(
+    dataset: Dataset,
+    model_class,
+    model_params: dict | None = None,
+    *,
+    n_repeats: int = 1,
+    seed: int = 4262,
+    n_folds: int = 5,
+    group_by: str = "gene_id",
+    columns: list[str] | None = None,
+    label: str = "",
+    keep_models: bool = True,
+    log=print,
+) -> RepeatedResult:
+    """Cross-validate `n_repeats` times over independently seeded splits.
+
+    Turns five paired observations into fifty, which is what makes a comparison
+    between two models something other than a coin flip with four degrees of
+    freedom. It does **not** make them independent: fifty splits of one dataset
+    are still one dataset, the training sets still overlap, and the corrected
+    t-test in `m6a.compare` is what keeps the resulting p-value honest about
+    that. See docs/decisions/0006 and 0012.
+
+    Repetition 0 uses `seed` unchanged, so the canonical result is a strict
+    subset of a repeated one and nothing recorded against the plain split moves.
+    """
+    seeds = repetition_seeds(n_repeats, seed)
+    observations: list[dict] = []
+    scores: list[np.ndarray] = []
+    fold_ids: list[np.ndarray] = []
+    canonical: CVResult | None = None
+
+    for repetition, rep_seed in enumerate(seeds):
+        if n_repeats > 1:
+            log(f"  repetition {repetition} of {n_repeats} (split seed {rep_seed})")
+        split = dataset if repetition == 0 else refold(dataset, rep_seed, n_folds, group_by)
+        result = cross_validate(
+            split, model_class, model_params, columns=columns, label=label,
+            # Only repetition 0's models are kept: the depth sweep scores with
+            # them, and holding fifty boosters in memory buys nothing.
+            keep_models=keep_models and repetition == 0,
+            log=log if n_repeats == 1 else (lambda *_: None),
+        )
+        if repetition == 0:
+            canonical = result
+        scores.append(result.oof["score"].to_numpy())
+        fold_ids.append(split.folds)
+        for fold in result.per_fold:
+            observations.append({"repetition": repetition, "split_seed": rep_seed, **fold})
+        if n_repeats > 1:
+            pr = result.per_fold_pr_auc
+            log(f"    PR AUC mean {pr.mean():.4f}  range [{pr.min():.4f}, {pr.max():.4f}]")
+
+    assert canonical is not None
+    return RepeatedResult(
+        canonical=canonical, observations=observations, seeds=seeds,
+        scores=scores, fold_ids=fold_ids,
+    )
+
+
 def per_fold_frame(per_fold: list[dict]) -> pd.DataFrame:
     """Per-fold metrics as a table, with the pooled-vs-noise summary attached."""
     frame = pd.DataFrame(per_fold).set_index("fold")

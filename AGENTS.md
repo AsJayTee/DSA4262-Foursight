@@ -183,15 +183,56 @@ python scripts/evaluate.py --config configs/your_experiment.yaml \
 ```
 
 That framing matters: on `pooled_v1` vs `quantiles_v1` the unpaired view gives
-p = 0.31 and the paired view p = 0.0465 on the identical numbers, and the
-paired one is the correct test. Five folds is still only five paired
-observations, so read the win count alongside the p-value.
+p = 0.31 and the naive paired view p = 0.0465 on the identical numbers, and
+pairing is the correct framing. But **five folds is five paired observations,
+and they are not independent** — each fold's model trains on the other four, so
+73.4% of fold 0's training rows are also in fold 1's. `evaluate.py` therefore
+reports a third number, and it is the one to quote:
+
+```
+unpaired  (wrong)      Welch p = 0.3095
+paired    (optimistic) p = 0.0465   wins 5/5
+corrected (quote this) p = 0.1305
+```
+
+The corrected row is the Nadeau & Bengio resampled t-test. **It is always the
+largest of the three**, and if you ever see it come out smaller than the
+uncorrected one, the correction is being applied the wrong way round — say so
+rather than quoting it.
+
+Read the corrected p-value *and* the win count. 5/5 does not depend on the
+scatter estimate and is the more trustworthy signal when there are only five
+observations; the corrected p-value is what stops five correlated numbers
+reading as five experiments.
+
+**When two distributions are too close to call, get more of them:**
+
+```bash
+python scripts/evaluate.py --config configs/your_experiment.yaml \
+       --compare-features quantiles_v1 --repeats 10
+```
+
+Ten repetitions of the 5-fold split is 50 paired observations instead of 5.
+Repetition 0 is always the canonical seed-4262 split, so nothing already
+recorded moves — see
+[docs/decisions/0012](docs/decisions/0012-repeated-cv-is-one-run-keyed-by-rep-and-fold.md).
+It costs ten times the model fits and no extra feature extraction: ~25 minutes
+on the full set against 100 seconds.
+
+This is not a formality. The `quantiles_v1` vs `pooled_v1` comparison is
+**unresolvable** on five folds (corrected p = 0.1305) and comfortably resolved
+on fifty (+0.0164, 50/50 wins, corrected p = 0.000095). If a result matters,
+run the repetitions rather than quoting the underpowered number.
 
 Three more things `scripts/evaluate.py` reports, all of which have changed a
 conclusion in this repo at least once:
 
 - **Per-stratum metrics** (`--by depth,motif`) — where the model fails, not
-  just how well it does on average.
+  just how well it does on average. A comparison tests inside each stratum too,
+  which is how you answer "is this better *at low depth*" rather than only "is
+  this better on average". Those per-stratum p-values are the weakest numbers
+  the harness produces — one per band, strongly correlated, deliberately not
+  corrected for multiplicity. Descriptive, never a headline.
 - **Calibration** — the scores are not probabilities. Mean predicted is 0.0809
   against a 0.0449 actual rate, a 1.80× overcount. Rank-based metrics cannot
   see this; any count of modified sites is wrong by that factor.
