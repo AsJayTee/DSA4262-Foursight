@@ -585,6 +585,13 @@ def stratified_comparison(
             "identically\nin every one of them, which is not the same as a "
             "difference that failed a test."
         )
+    elif len(tested) == 1:
+        report.log(
+            "\nOne testable stratum, so there is no multiplicity problem here - but it\n"
+            "is still descriptive rather than confirmatory. It rests on a fraction of\n"
+            "the sites, on top of the train/test overlap the overall test corrects for.\n"
+            "Read the overall paired test as the confirmatory one."
+        )
     else:
         report.log(
             f"\n{len(tested)} strata means {len(tested)} p-values, and at least one will\n"
