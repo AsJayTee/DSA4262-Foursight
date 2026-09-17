@@ -574,17 +574,29 @@ def stratified_comparison(
         frame[["baseline_mean", "candidate_mean", "mean_difference", "win_ratio",
                "p_value_corrected"]]
     )
-    report.log(
-        f"\n{len(rows)} strata means {len(rows)} p-values, and at least one will look\n"
-        "significant by chance. They are NOT corrected for that here, deliberately:\n"
-        "these tests are strongly correlated - the same models, the same folds,\n"
-        "overlapping evidence - so a Bonferroni factor calibrated for independent\n"
-        "tests would be wrong in the other direction. Treat a per-stratum p-value as\n"
-        "descriptive, pointing at where a difference concentrates, and the overall\n"
-        "paired test as the confirmatory one. Do not quote a band p-value as a\n"
-        "headline; picking the band after seeing the result is how a significant\n"
-        "finding gets manufactured."
-    )
+    # Only warn about multiplicity when there is actually more than one p-value.
+    # Comparing a config against itself produces a table of exact zeros and no
+    # tests at all, and printing "5 strata means 5 p-values" over that is
+    # nonsense that undermines the caveat where it does matter.
+    tested = [row for row in rows if np.isfinite(row["p_value_corrected"])]
+    if not tested:
+        report.log(
+            "\nNo stratum produced a testable difference - the two arms scored "
+            "identically\nin every one of them, which is not the same as a "
+            "difference that failed a test."
+        )
+    else:
+        report.log(
+            f"\n{len(tested)} strata means {len(tested)} p-values, and at least one will\n"
+            "look significant by chance. They are NOT corrected for that here,\n"
+            "deliberately: these tests are strongly correlated - the same models, the\n"
+            "same folds, overlapping evidence - so a Bonferroni factor calibrated for\n"
+            "independent tests would be wrong in the other direction. Treat a\n"
+            "per-stratum p-value as descriptive, pointing at where a difference\n"
+            "concentrates, and the overall paired test as the confirmatory one. Do not\n"
+            "quote a band p-value as a headline; picking the band after seeing the\n"
+            "result is how a significant finding gets manufactured."
+        )
     if skipped:
         report.log(
             f"\nNot tested (too thin, or scored in only one arm): {', '.join(skipped)}"
