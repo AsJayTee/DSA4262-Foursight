@@ -1,0 +1,464 @@
+{
+  "created": "2026-09-17T02:58:12+00:00",
+  "profile": "standard",
+  "subsample_seed": 4262,
+  "source": {
+    "kind": "config",
+    "path": "configs/quantiles.yaml",
+    "name": "lightgbm_quantiles",
+    "features": "quantiles_v1",
+    "model": "lightgbm",
+    "model_params": {
+      "learning_rate": 0.05,
+      "num_leaves": 63,
+      "n_estimators": 600,
+      "min_child_samples": 40,
+      "feature_fraction": 0.7
+    },
+    "split": {
+      "seed": 4262,
+      "n_folds": 5,
+      "group_by": "gene_id"
+    },
+    "data": "data\\raw\\dataset0.json.gz",
+    "limit": null
+  },
+  "per_fold": [
+    {
+      "fold": 0,
+      "roc_auc": 0.9271586255958767,
+      "pr_auc": 0.4547870400867884,
+      "positive_rate": 0.04100518219955581,
+      "pr_auc_lift": 11.090964987633072,
+      "n": 24314,
+      "n_positive": 997
+    },
+    {
+      "fold": 1,
+      "roc_auc": 0.9135665505528577,
+      "pr_auc": 0.5081083840414926,
+      "positive_rate": 0.0515372449176407,
+      "pr_auc_lift": 9.85905212537995,
+      "n": 25923,
+      "n_positive": 1336
+    },
+    {
+      "fold": 2,
+      "roc_auc": 0.9174119145779718,
+      "pr_auc": 0.46853638755007504,
+      "positive_rate": 0.044156621355903224,
+      "pr_auc_lift": 10.61078436625988,
+      "n": 23394,
+      "n_positive": 1033
+    },
+    {
+      "fold": 3,
+      "roc_auc": 0.9041452080179981,
+      "pr_auc": 0.47040809198481115,
+      "positive_rate": 0.045399892201169204,
+      "pr_auc_lift": 10.3614363201659,
+      "n": 24119,
+      "n_positive": 1095
+    },
+    {
+      "fold": 4,
+      "roc_auc": 0.9277465743951498,
+      "pr_auc": 0.4855347934331091,
+      "positive_rate": 0.04209564928595151,
+      "pr_auc_lift": 11.534084915401117,
+      "n": 24088,
+      "n_positive": 1014
+    }
+  ],
+  "per_fold_summary": {
+    "mean": 0.47747493941925523,
+    "sd": 0.020297462861452686,
+    "min": 0.4547870400867884,
+    "max": 0.5081083840414926
+  },
+  "pooled": {
+    "roc_auc": 0.9169071293472791,
+    "pr_auc": 0.47594076977013616,
+    "positive_rate": 0.044936719250151844,
+    "pr_auc_lift": 10.59135552643906,
+    "n": 121838,
+    "n_positive": 5475
+  },
+  "by_depth": [
+    {
+      "group": "20-31",
+      "n": 30138,
+      "n_positive": 1352,
+      "positive_rate": 0.0448603092,
+      "roc_auc": 0.9131566206,
+      "pr_auc": 0.4429279523,
+      "pr_auc_lift": 9.8734930679,
+      "note": ""
+    },
+    {
+      "group": "32-46",
+      "n": 29713,
+      "n_positive": 1286,
+      "positive_rate": 0.0432807189,
+      "roc_auc": 0.9299247353,
+      "pr_auc": 0.4624956778,
+      "pr_auc_lift": 10.6859518473,
+      "note": ""
+    },
+    {
+      "group": "47-83",
+      "n": 31276,
+      "n_positive": 1409,
+      "positive_rate": 0.045050518,
+      "roc_auc": 0.9247521595,
+      "pr_auc": 0.5013309381,
+      "pr_auc_lift": 11.1281947613,
+      "note": ""
+    },
+    {
+      "group": "84-303",
+      "n": 24616,
+      "n_positive": 1165,
+      "positive_rate": 0.0473269418,
+      "roc_auc": 0.9108691797,
+      "pr_auc": 0.5122300666,
+      "pr_auc_lift": 10.8232234506,
+      "note": ""
+    },
+    {
+      "group": "304+",
+      "n": 6095,
+      "n_positive": 263,
+      "positive_rate": 0.0431501231,
+      "roc_auc": 0.84501922,
+      "pr_auc": 0.4235987615,
+      "pr_auc_lift": 9.8168610326,
+      "note": ""
+    }
+  ],
+  "by_motif": [
+    {
+      "group": "AAACA",
+      "n": 10152,
+      "n_positive": 38,
+      "positive_rate": 0.0037431048,
+      "roc_auc": 0.6104305652,
+      "pr_auc": 0.0104088463,
+      "pr_auc_lift": 2.7808054592,
+      "note": ""
+    },
+    {
+      "group": "AAACC",
+      "n": 6502,
+      "n_positive": 11,
+      "positive_rate": 0.0016917871,
+      "roc_auc": 0.6344168849,
+      "pr_auc": 0.0069389939,
+      "pr_auc_lift": 4.101576202,
+      "note": ""
+    },
+    {
+      "group": "AAACT",
+      "n": 8627,
+      "n_positive": 255,
+      "positive_rate": 0.0295583633,
+      "roc_auc": 0.9013738606,
+      "pr_auc": 0.2609679515,
+      "pr_auc_lift": 8.8289039898,
+      "note": ""
+    },
+    {
+      "group": "AGACA",
+      "n": 7396,
+      "n_positive": 147,
+      "positive_rate": 0.0198756084,
+      "roc_auc": 0.9332809686,
+      "pr_auc": 0.3867925182,
+      "pr_auc_lift": 19.4606630268,
+      "note": ""
+    },
+    {
+      "group": "AGACC",
+      "n": 6785,
+      "n_positive": 60,
+      "positive_rate": 0.0088430361,
+      "roc_auc": 0.7582750929,
+      "pr_auc": 0.1156539123,
+      "pr_auc_lift": 13.0785299125,
+      "note": ""
+    },
+    {
+      "group": "AGACT",
+      "n": 6405,
+      "n_positive": 525,
+      "positive_rate": 0.0819672131,
+      "roc_auc": 0.9070025915,
+      "pr_auc": 0.4612220461,
+      "pr_auc_lift": 5.6269089619,
+      "note": ""
+    },
+    {
+      "group": "GAACA",
+      "n": 7934,
+      "n_positive": 187,
+      "positive_rate": 0.0235694479,
+      "roc_auc": 0.7734192777,
+      "pr_auc": 0.0857186507,
+      "pr_auc_lift": 3.636854412,
+      "note": ""
+    },
+    {
+      "group": "GAACC",
+      "n": 5719,
+      "n_positive": 124,
+      "positive_rate": 0.0216821123,
+      "roc_auc": 0.7597019228,
+      "pr_auc": 0.0794649021,
+      "pr_auc_lift": 3.6649981879,
+      "note": ""
+    },
+    {
+      "group": "GAACT",
+      "n": 6957,
+      "n_positive": 783,
+      "positive_rate": 0.1125485123,
+      "roc_auc": 0.8293893851,
+      "pr_auc": 0.4028513299,
+      "pr_auc_lift": 3.5793572185,
+      "note": ""
+    },
+    {
+      "group": "GGACA",
+      "n": 7727,
+      "n_positive": 691,
+      "positive_rate": 0.0894266856,
+      "roc_auc": 0.9232724158,
+      "pr_auc": 0.5792454202,
+      "pr_auc_lift": 6.477321797,
+      "note": ""
+    },
+    {
+      "group": "GGACC",
+      "n": 7353,
+      "n_positive": 552,
+      "positive_rate": 0.0750713994,
+      "roc_auc": 0.8869632876,
+      "pr_auc": 0.4808205988,
+      "pr_auc_lift": 6.4048439543,
+      "note": ""
+    },
+    {
+      "group": "GGACT",
+      "n": 6376,
+      "n_positive": 1440,
+      "positive_rate": 0.225846926,
+      "roc_auc": 0.8802312658,
+      "pr_auc": 0.6431103733,
+      "pr_auc_lift": 2.8475498196,
+      "note": ""
+    },
+    {
+      "group": "TAACA",
+      "n": 4695,
+      "n_positive": 1,
+      "positive_rate": 0.0002129925,
+      "roc_auc": null,
+      "pr_auc": null,
+      "pr_auc_lift": null,
+      "note": "only 1 positive(s)"
+    },
+    {
+      "group": "TAACC",
+      "n": 2966,
+      "n_positive": 2,
+      "positive_rate": 0.0006743088,
+      "roc_auc": null,
+      "pr_auc": null,
+      "pr_auc_lift": null,
+      "note": "only 2 positive(s)"
+    },
+    {
+      "group": "TAACT",
+      "n": 4433,
+      "n_positive": 71,
+      "positive_rate": 0.0160162418,
+      "roc_auc": 0.7740731413,
+      "pr_auc": 0.0572622437,
+      "pr_auc_lift": 3.5752609347,
+      "note": ""
+    },
+    {
+      "group": "TGACA",
+      "n": 7718,
+      "n_positive": 68,
+      "positive_rate": 0.0088105727,
+      "roc_auc": 0.7635178777,
+      "pr_auc": 0.1000304147,
+      "pr_auc_lift": 11.353452072,
+      "note": ""
+    },
+    {
+      "group": "TGACC",
+      "n": 7304,
+      "n_positive": 90,
+      "positive_rate": 0.0123220153,
+      "roc_auc": 0.6011859656,
+      "pr_auc": 0.0459934665,
+      "pr_auc_lift": 3.7326253256,
+      "note": ""
+    },
+    {
+      "group": "TGACT",
+      "n": 6789,
+      "n_positive": 430,
+      "positive_rate": 0.0633377522,
+      "roc_auc": 0.8626583089,
+      "pr_auc": 0.4230453094,
+      "pr_auc_lift": 6.6791967573,
+      "note": ""
+    }
+  ],
+  "calibration": {
+    "summary": {
+      "ece": 0.037482548385438685,
+      "mean_predicted": 0.08085137384338772,
+      "actual_rate": 0.044936719250151844,
+      "expected_positives": 9850.769686330674,
+      "actual_positives": 5475.0,
+      "count_ratio": 1.7992273399690728,
+      "brier": 0.038904816237561056,
+      "brier_baseline": 0.04291741051318487
+    },
+    "deciles": [
+      {
+        "decile": "1",
+        "n": 12184,
+        "n_positive": 26,
+        "mean_predicted": 0.0001935816,
+        "observed_rate": 0.0021339462,
+        "gap": -0.0019403646
+      },
+      {
+        "decile": "2",
+        "n": 12184,
+        "n_positive": 26,
+        "mean_predicted": 0.0007185692,
+        "observed_rate": 0.0021339462,
+        "gap": -0.001415377
+      },
+      {
+        "decile": "3",
+        "n": 12184,
+        "n_positive": 37,
+        "mean_predicted": 0.0015209813,
+        "observed_rate": 0.0030367695,
+        "gap": -0.0015157882
+      },
+      {
+        "decile": "4",
+        "n": 12183,
+        "n_positive": 68,
+        "mean_predicted": 0.0028338492,
+        "observed_rate": 0.0055815481,
+        "gap": -0.0027476989
+      },
+      {
+        "decile": "5",
+        "n": 12184,
+        "n_positive": 64,
+        "mean_predicted": 0.0050324534,
+        "observed_rate": 0.0052527905,
+        "gap": -0.0002203372
+      },
+      {
+        "decile": "6",
+        "n": 12184,
+        "n_positive": 105,
+        "mean_predicted": 0.009087851,
+        "observed_rate": 0.0086178595,
+        "gap": 0.0004699915
+      },
+      {
+        "decile": "7",
+        "n": 12183,
+        "n_positive": 143,
+        "mean_predicted": 0.0177043101,
+        "observed_rate": 0.0117376672,
+        "gap": 0.0059666428
+      },
+      {
+        "decile": "8",
+        "n": 12184,
+        "n_positive": 291,
+        "mean_predicted": 0.0399069996,
+        "observed_rate": 0.023883782,
+        "gap": 0.0160232176
+      },
+      {
+        "decile": "9",
+        "n": 12184,
+        "n_positive": 733,
+        "mean_predicted": 0.1233166736,
+        "observed_rate": 0.0601608667,
+        "gap": 0.0631558069
+      },
+      {
+        "decile": "10",
+        "n": 12184,
+        "n_positive": 3982,
+        "mean_predicted": 0.6081868834,
+        "observed_rate": 0.3268220617,
+        "gap": 0.2813648217
+      }
+    ]
+  },
+  "depth_sweep": {
+    "subsample_seed": 4262,
+    "note": "trained at full depth, scored at the stated depth",
+    "rows": [
+      {
+        "depth": "1",
+        "roc_auc": 0.6830804799,
+        "pr_auc": 0.1526763315,
+        "pr_auc_lift": 3.3975851821,
+        "retained": 0.3207885123
+      },
+      {
+        "depth": "3",
+        "roc_auc": 0.7871588911,
+        "pr_auc": 0.2458428381,
+        "pr_auc_lift": 5.4708675275,
+        "retained": 0.5165408256
+      },
+      {
+        "depth": "5",
+        "roc_auc": 0.8212845011,
+        "pr_auc": 0.2991113896,
+        "pr_auc_lift": 6.6562800897,
+        "retained": 0.6284634741
+      },
+      {
+        "depth": "10",
+        "roc_auc": 0.8668715459,
+        "pr_auc": 0.3715768227,
+        "pr_auc_lift": 8.2688907629,
+        "retained": 0.7807207248
+      },
+      {
+        "depth": "20",
+        "roc_auc": 0.895744905,
+        "pr_auc": 0.4276958771,
+        "pr_auc_lift": 9.5177370367,
+        "retained": 0.89863257
+      },
+      {
+        "depth": "full",
+        "roc_auc": 0.9169071293,
+        "pr_auc": 0.4759407698,
+        "pr_auc_lift": 10.5913555264,
+        "retained": 1.0
+      }
+    ]
+  },
+  "elapsed_seconds": 90.6
+}

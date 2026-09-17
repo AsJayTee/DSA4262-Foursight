@@ -20,6 +20,7 @@ Before planning any work, read:
 | [docs/data.md](docs/data.md) | The data dictionary: file formats, feature meanings, measured statistics. |
 | [docs/setup.md](docs/setup.md) | Getting a machine working, locally or on Ronin. |
 | [docs/running-experiments.md](docs/running-experiments.md) | The loop your user follows. Written for them, not you — but it tells you what they expect from you. |
+| [docs/decisions/](docs/decisions/) | Why the shared pipeline is shaped the way it is. Read before changing any of it; write one when you do. |
 
 Most people here work through you rather than by reading the source. When you
 are asked to explain or change something, assume the person has not read the
@@ -68,9 +69,31 @@ The registry finds new modules by scanning the package directory, so nothing
 needs registering in a shared table. That is what keeps four parallel agents
 from producing merge conflicts.
 
-Editing `data.py`, `registry.py`, `evaluation.py` or the scripts is sometimes
-right — but it is shared infrastructure, so say so explicitly rather than doing
-it as a side effect of adding an experiment.
+Editing `data.py`, `registry.py`, `evaluation.py`, `crossval.py`,
+`compare.py`, `feature_cache.py`, `report.py`, `tracking.py` or the scripts is
+sometimes right — but it is shared infrastructure, so say so explicitly rather
+than doing it as a side effect of adding an experiment.
+
+Adding a *figure* to `figures.py` is additive and does not need a record, the
+same way a feature set does not.
+
+**And write it down.** Any architectural change to the shared pipeline gets a
+decision record in [docs/decisions/](docs/decisions/) — one short file saying
+what you decided, why, what the alternatives were, and what it costs. Your
+teammates and their agents have to be able to find out *why* the pipeline works
+the way it does without reading the source or asking you, and "why" is the thing
+that never survives in code comments alone.
+
+This applies to: anything in `src/m6a/*.py` outside `features/` and `models/`,
+the scripts, the config schema, any file format, the split, the metrics, the
+comparison between runs, and any new dependency. It does **not** apply to adding
+an experiment — that is additive and explains itself.
+
+One file per decision, numbered, never one shared log: four agents appending to
+the same file is four merge conflicts. Same reason the registry scans a
+directory instead of keeping a table. The format is in
+[docs/decisions/README.md](docs/decisions/README.md); a record that takes ten
+minutes to write is one that actually gets written.
 
 ---
 
@@ -111,7 +134,12 @@ the base dependencies in `pyproject.toml`.
 So:
 
 - **Do not add imports to `predict.py`, `data.py`, `evaluation.py`, `registry.py`
-  or `features/`** beyond the base dependency list.
+  or `features/`** beyond the base dependency list. That includes matplotlib,
+  which is a `train` extra and lives behind `m6a.figures`.
+- **A direct import on the prediction path must be a declared base dependency**,
+  even if something else already installs it. See
+  [docs/decisions/0011](docs/decisions/0011-joblib-is-declared-not-inherited.md)
+  — joblib sat in `models/baseline.py` undeclared for exactly that reason.
 - **If a model needs a heavy dependency (torch), import it inside the methods
   that use it**, never at module level. The registry imports every module in
   `models/` to discover it; a module-level `import torch` would make torch a
@@ -144,6 +172,52 @@ A model at 1.0× has learned nothing, whatever its ROC AUC says.
 Always quote out-of-fold numbers from the gene-grouped split, never training
 scores.
 
+**Never claim one model beats another from two pooled numbers.** Folds differ
+in size and positive rate — 4.10% to 5.15% here — so fold-to-fold variation
+(sd 0.0203) is larger than most real improvements. Both runs are scored on the
+*same* folds, so pair them and compare the per-fold differences:
+
+```bash
+python scripts/evaluate.py --config configs/your_experiment.yaml \
+       --compare-features quantiles_v1
+```
+
+That framing matters: on `pooled_v1` vs `quantiles_v1` the unpaired view gives
+p = 0.31 and the paired view p = 0.0465 on the identical numbers, and the
+paired one is the correct test. Five folds is still only five paired
+observations, so read the win count alongside the p-value.
+
+Three more things `scripts/evaluate.py` reports, all of which have changed a
+conclusion in this repo at least once:
+
+- **Per-stratum metrics** (`--by depth,motif`) — where the model fails, not
+  just how well it does on average.
+- **Calibration** — the scores are not probabilities. Mean predicted is 0.0809
+  against a 0.0449 actual rate, a 1.80× overcount. Rank-based metrics cannot
+  see this; any count of modified sites is wrong by that factor.
+- **A depth sweep** (`--depth-sweep`) — every training site has ≥ 20 reads and
+  SG-NEx has a median of 3. At one read this model scores what a motif-only
+  classifier scores. Read [what depth means](docs/data.md#read-depth) first.
+
+Every run writes a JSON report to `analysis/evaluation/reports/` **and** uploads
+it to W&B. If you quote a number in `GAPS.md` or the report, quote one that a
+command can regenerate.
+
+**Ask before you prepare a run, not after.** Ronin instances are terminated with
+nothing pulled off them, so a comparison nobody asked for at the start is a
+comparison that needs the whole instance again. Before handing over a command,
+ask whether the run is:
+
+- **standalone** → `python scripts/train.py --config <cfg>`. Trains and
+  evaluates at the `standard` profile, everything to one W&B run.
+- **against a specific baseline** → add
+  `python scripts/evaluate.py --config <cfg> --compare-features <name>` (or
+  `--compare-with <other.yaml>`).
+
+Never hand over `--quick` for a run whose number will be quoted. It skips the
+depth sweep, and a run without depth numbers cannot be compared against one that
+has them — which is the failure the profiles exist to prevent.
+
 ---
 
 ## 7. Style
@@ -171,11 +245,17 @@ scores.
 | You are doing | It goes in |
 |---|---|
 | A new feature set or model | `src/m6a/features/`, `src/m6a/models/` |
+| Evaluating or comparing runs | `scripts/evaluate.py` — don't write your own |
+| A report section, or a profile | `src/m6a/report.py` (shared — write a record) |
+| A plot | `src/m6a/figures.py` (additive; matplotlib imported inside the function) |
+| Anything that talks to W&B | `src/m6a/tracking.py` — the flat metric keys are a schema |
 | Exploration, plots, one-off analysis | `analysis/notebooks/<initials>_<topic>.ipynb` |
 | Task 2 / SG-NEx work | `analysis/sgnex/` |
 | m6Anet benchmark | `analysis/m6anet/` (separate conda env — see its README) |
 | A figure for the report | `report/figures/`, generated by a script |
-| Shared infrastructure | `src/m6a/*.py` — flag it in the PR |
+| Shared infrastructure | `src/m6a/*.py` — flag it in the PR, **and write a `docs/decisions/` record** |
+| Why the pipeline is shaped as it is | `docs/decisions/NNNN-*.md` |
+| An evaluation number you want to quote | `analysis/evaluation/reports/*.json` |
 
 Notebooks: one owner per file, named with your initials. They are not shared
 editing surfaces.

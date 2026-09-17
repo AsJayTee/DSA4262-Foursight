@@ -12,6 +12,11 @@ Sites are streamed rather than loaded at once: the training set holds 11M reads,
 which is ~400 MB as float32 if you materialise it. Feature extractors consume
 an iterable of Site and emit one row each, so memory stays flat.
 
+Read subsampling lives here rather than in the evaluation code because it is a
+property of the data, not of how we score it: the depth sweep needs it to build
+low-depth *test* sets, and depth-augmented training will need the same function
+to build low-depth *training* rows. One implementation, one seed, one meaning.
+
 This module must not import boto3 or wandb — predict.py imports it, and runs on
 an evaluator's machine with neither installed. R2 access lives in m6a.r2.
 """
@@ -19,6 +24,7 @@ an evaluator's machine with neither installed. R2 access lives in m6a.r2.
 from __future__ import annotations
 
 import gzip
+import hashlib
 import json
 import os
 from dataclasses import dataclass
@@ -36,6 +42,13 @@ READ_FEATURE_NAMES = [
 ]
 
 LABEL_COLUMNS = ["gene_id", "transcript_id", "transcript_position", "label"]
+
+# Seed for read subsampling. This is NOT the split seed (4262, in config.py) and
+# changing it does not invalidate stored fold assignments - it only redraws which
+# reads a depth-sweep keeps. It is fixed and recorded in every report so a depth
+# number can be re-derived exactly; vary it deliberately to check a result is not
+# an artefact of one draw.
+SUBSAMPLE_SEED = 4262
 
 
 @dataclass(slots=True)
@@ -102,6 +115,40 @@ def iter_sites(path: str | Path, limit: int | None = None) -> Iterator[Site]:
                 )
 
             yield Site(transcript_id, int(position_str), kmer, reads)
+
+
+def subsample_reads(site: Site, depth: int, seed: int = SUBSAMPLE_SEED) -> Site:
+    """Return `site` with only `depth` of its reads, drawn without replacement.
+
+    Depth is a count of distinct RNA molecules measured at this position, not
+    repeated readings of one molecule - see docs/data.md#read-depth. Dropping
+    reads therefore simulates a shallower sequencing run honestly: what is lost
+    is evidence, which is exactly what makes low depth hard.
+
+    A site with `depth` reads or fewer is returned unchanged. You cannot
+    subsample upwards, so the sweep's low-depth rows are a mixture of genuinely
+    subsampled sites and already-shallow ones; on this training set nothing is
+    below 20 reads, so that only bites on external data.
+
+    The draw is keyed on (seed, depth, transcript, position) rather than taken
+    from one long RNG stream. That makes it independent of iteration order and
+    of which depths you happen to ask for: `subsample_reads(s, 3)` is the same
+    three reads whether you ran the sweep over [1, 3] or [1, 3, 5, 10, 20], and
+    the same on every machine. A shared stream is reproducible only if nobody
+    ever edits the depth list, which is not a property worth relying on.
+    """
+    if depth < 1:
+        raise ValueError(f"depth must be >= 1, got {depth}")
+    if site.n_reads <= depth:
+        return site
+
+    key = f"{seed}:{depth}:{site.transcript_id}:{site.position}".encode()
+    stream = int.from_bytes(hashlib.blake2b(key, digest_size=8).digest(), "big")
+    rng = np.random.default_rng(stream)
+    # Sorted so the kept reads stay in file order. Every feature we compute is
+    # order-invariant, but a diffable subsample is worth the free sort.
+    keep = np.sort(rng.choice(site.n_reads, size=depth, replace=False))
+    return Site(site.transcript_id, site.position, site.kmer, site.reads[keep])
 
 
 def load_labels(path: str | Path) -> pd.DataFrame:

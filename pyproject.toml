@@ -17,11 +17,29 @@ dependencies = [
     "scikit-learn>=1.3",
     "lightgbm>=4.0",
     "pyyaml>=6.0",
+    # Declared, not inherited. scikit-learn installs joblib anyway, which is why
+    # this was missing for so long - but m6a.models.baseline imports it directly
+    # in save/load, and predict.py calls load. A direct import on the graded path
+    # has to be a declared dependency. See docs/decisions/0011.
+    "joblib>=1.3",
 ]
 
 [project.optional-dependencies]
-# Training only: never imported by predict.py.
-train = ["wandb>=0.16", "boto3>=1.34", "python-dotenv>=1.0"]
+# Training and evaluation only: never imported by predict.py.
+# scipy is already installed on most machines as a transitive dependency of
+# scikit-learn. It is named here because m6a.compare imports it directly for
+# the paired t-test, and a direct import should be a declared dependency
+# rather than a lucky accident of someone else's dependency tree.
+# matplotlib is here and not in the base list for the same reason: the figures
+# an evaluation logs to W&B are training-side work, and predict.py must never
+# import a plotting library. m6a.figures imports it inside each function.
+train = [
+    "wandb>=0.16",
+    "boto3>=1.34",
+    "python-dotenv>=1.0",
+    "scipy>=1.10",
+    "matplotlib>=3.7",
+]
 # Experimental MIL models. Deliberately isolated — see AGENTS.md.
 mil = ["torch>=2.0"]
 dev = ["pytest>=7.4"]

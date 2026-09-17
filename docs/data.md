@@ -120,6 +120,21 @@ sequencing.** Real datasets have no such floor — SG-NEx samples have a median
 depth of about 3. Any claim about model performance made on this data is a
 claim about the depth ≥ 20 regime only. See [../GAPS.md](../GAPS.md).
 
+To find out what a model does outside that regime, drop reads from the held-out
+data and score it again:
+
+```bash
+python scripts/evaluate.py --config configs/quantiles.yaml --depth-sweep
+```
+
+`m6a.data.subsample_reads` does the dropping, keyed on
+(seed, depth, transcript, position) so the same site yields the same reads on
+every machine and regardless of what else is being computed. It is here rather
+than in the evaluation code because depth-augmented *training* will want the
+same function. Labels stay valid under subsampling: they come from m6ACE-Seq,
+not from the nanopore reads, so removing reads changes how much evidence the
+model has and not what is true about the site.
+
 **This variance is the modelling problem.** Only a fraction of reads at a
 modified site actually carry the modification, so mean-pooling washes out the
 signal. See `src/m6a/features/quantiles.py`.

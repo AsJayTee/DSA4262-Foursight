@@ -91,12 +91,28 @@ def main() -> int:
     else:
         check(OK, "R2 configured", os.environ.get("R2_BUCKET", ""))
 
+    # Asked of the server, not of the environment. A placeholder key passes a
+    # presence check, and on a disposable instance that costs a whole run: it
+    # trains to completion, logs nothing anywhere durable, and is terminated.
+    # W&B is the only place a result survives, so this is a FAIL, not a WARN.
     if os.environ.get("WANDB_API_KEY"):
-        entity = os.environ.get("WANDB_ENTITY", "?")
-        project = os.environ.get("WANDB_PROJECT", "?")
-        check(OK, "W&B configured", f"{entity}/{project}")
+        from m6a import tracking
+
+        ok, detail = tracking.check()
+        if ok:
+            check(OK, "W&B key works", detail)
+        else:
+            check(
+                FAIL,
+                "W&B key does not work",
+                f"{detail} - get yours from https://wandb.ai/authorize and put it in .env",
+            )
     else:
-        check(WARN, "WANDB_API_KEY not set", "training works, but nothing is tracked")
+        check(
+            WARN,
+            "WANDB_API_KEY not set",
+            "training works, but nothing survives the instance - see docs/decisions/0007",
+        )
 
     from m6a.data import resolve_data_dir
 

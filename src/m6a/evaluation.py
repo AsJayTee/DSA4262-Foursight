@@ -3,6 +3,18 @@
 At 4.49% positives, PR AUC is the metric that discriminates between models;
 ROC AUC flatters everything. Both are reported because the course evaluates on
 both, but rank your own experiments on PR AUC.
+
+`metrics` scores a whole set of predictions. `metrics_by` scores it inside
+strata (read depth, DRACH motif), which is how you find out *where* a model
+fails rather than only how well it does on average. `calibration_table` and
+`calibration_summary` ask a different question again: not whether the ranking is
+good, but whether a score of 0.6 means 60%.
+
+**Nothing here may grow a module-level import.** predict.py imports this module
+and runs on an evaluator's machine with only the base dependencies installed.
+That specifically rules out scipy, which is present today only as a transitive
+dependency of scikit-learn - the paired significance test lives in
+`m6a.compare`, which predict.py never touches. See AGENTS.md section 4.
 """
 
 from __future__ import annotations
@@ -32,6 +44,179 @@ def metrics(y_true: np.ndarray, y_score: np.ndarray) -> dict[str, float]:
         "pr_auc_lift": float(average_precision_score(y_true, y_score) / positive_rate),
         "n": int(y_true.size),
         "n_positive": int(y_true.sum()),
+    }
+
+
+# --------------------------------------------------------------------------
+# stratified metrics
+# --------------------------------------------------------------------------
+
+# Read-depth bands. The upper five boundaries are this training set's own depth
+# quartiles and p95 (32 / 47 / 84 / 304, see docs/data.md); the lower five cover
+# the regime SG-NEx actually lives in (median depth 3) and the depths the sweep
+# scores at. Fixed rather than computed per dataset, so a band means the same
+# thing in two reports and the numbers can be read side by side.
+#
+# Depth is the number of distinct RNA molecules measured at one site, not
+# repeated readings of one molecule: docs/data.md#read-depth.
+DEPTH_BAND_EDGES = [1, 2, 3, 5, 10, 20, 32, 47, 84, 304]
+DEPTH_BAND_LABELS = [
+    "1", "2", "3-4", "5-9", "10-19", "20-31", "32-46", "47-83", "84-303", "304+",
+]
+
+
+def depth_bands(n_reads) -> pd.Categorical:
+    """Bucket read depths into DEPTH_BAND_LABELS, ordered low to high."""
+    edges = DEPTH_BAND_EDGES + [np.inf]
+    binned = pd.cut(
+        np.asarray(n_reads, dtype=float),
+        bins=edges,
+        labels=DEPTH_BAND_LABELS,
+        right=False,
+        include_lowest=True,
+    )
+    return pd.Categorical(binned, categories=DEPTH_BAND_LABELS, ordered=True)
+
+
+def metrics_by(
+    y_true: np.ndarray,
+    y_score: np.ndarray,
+    groups,
+    min_positive: int = 10,
+) -> pd.DataFrame:
+    """`metrics` computed within each stratum of `groups`.
+
+    Strata with fewer than `min_positive` positives, or with no negatives, get
+    NaN metrics and a reason in `note` rather than a number: PR AUC over three
+    positives is noise with a decimal point on it.
+
+    **Do not compare pr_auc between strata.** PR AUC is bounded below by the
+    stratum's own positive rate, and the per-motif base rate here spans three
+    orders of magnitude (GGACT 22.6%, TAACA 0.02%). `pr_auc_lift` divides that
+    out and is the column to read across rows; `pr_auc` is the column to read
+    down a column, comparing two models on the same stratum.
+    """
+    y_true = np.asarray(y_true)
+    y_score = np.asarray(y_score)
+    frame = pd.DataFrame({"y": y_true, "score": y_score, "group": pd.Series(groups)})
+
+    rows = []
+    for name, part in frame.groupby("group", observed=True, sort=True):
+        n_positive = int(part["y"].sum())
+        row = {
+            "group": name,
+            "n": int(len(part)),
+            "n_positive": n_positive,
+            "positive_rate": float(part["y"].mean()),
+            "roc_auc": np.nan,
+            "pr_auc": np.nan,
+            "pr_auc_lift": np.nan,
+            "note": "",
+        }
+        if n_positive < min_positive:
+            row["note"] = f"only {n_positive} positive(s)"
+        elif n_positive == len(part):
+            row["note"] = "no negatives"
+        else:
+            row.update(
+                {k: v for k, v in metrics(part["y"].to_numpy(), part["score"].to_numpy()).items()
+                 if k in ("roc_auc", "pr_auc", "pr_auc_lift")}
+            )
+        rows.append(row)
+
+    return pd.DataFrame(rows).set_index("group")
+
+
+# --------------------------------------------------------------------------
+# calibration
+# --------------------------------------------------------------------------
+
+def calibration_table(y_true: np.ndarray, y_score: np.ndarray, n_bins: int = 10) -> pd.DataFrame:
+    """Reliability by score quantile: what we predicted against what happened.
+
+    A calibrated model's `mean_predicted` tracks `observed_rate` down every row.
+    ROC AUC and PR AUC cannot see this at all - both are rank-based, so a model
+    can be perfectly ordered and still wrong about magnitude by a factor of two.
+    That only matters when the scores are used as probabilities, which Task 2
+    does the moment it counts modified sites in a cell line.
+    """
+    y_true = np.asarray(y_true)
+    y_score = np.asarray(y_score)
+    frame = pd.DataFrame({"y": y_true, "score": y_score})
+
+    binned = pd.qcut(frame["score"], n_bins, duplicates="drop")
+    if binned.isna().any():
+        # qcut drops bin boundaries when scores tie heavily, and drops *every*
+        # boundary when they are all identical - which leaves the whole table
+        # empty and makes a broken model look like it has no calibration error
+        # at all. A degenerate score distribution is exactly when this number is
+        # worth having, so fall back to one bin covering everything.
+        binned = binned.cat.add_categories(["all"]).fillna("all")
+    frame["bin"] = binned
+
+    table = frame.groupby("bin", observed=True).agg(
+        n=("y", "size"),
+        n_positive=("y", "sum"),
+        mean_predicted=("score", "mean"),
+        observed_rate=("y", "mean"),
+    )
+    table["gap"] = table["mean_predicted"] - table["observed_rate"]
+    table.index = [f"{i}" for i in range(1, len(table) + 1)]
+    table.index.name = "decile"
+    return table
+
+
+def expected_calibration_error(
+    y_true: np.ndarray, y_score: np.ndarray, n_bins: int = 10
+) -> float:
+    """Size-weighted mean gap between predicted and observed rate, across bins.
+
+    The single number to read for "are these probabilities honest". Unlike
+    `count_ratio`, errors in opposite directions cannot cancel: a model that
+    over-predicts in the middle and under-predicts at the top scores badly here
+    and perfectly on the ratio.
+
+    0 is perfect. It says nothing at all about whether the model is any good -
+    predicting the base rate for every site scores 0.0 and is useless. Rank
+    models on PR AUC; read this only to decide whether a score may be used as a
+    probability.
+    """
+    table = calibration_table(y_true, y_score, n_bins)
+    if table.empty:
+        return float("nan")
+    weights = table["n"] / table["n"].sum()
+    return float((weights * table["gap"].abs()).sum())
+
+
+def calibration_summary(y_true: np.ndarray, y_score: np.ndarray) -> dict[str, float]:
+    """How far the scores are from being probabilities, in one line.
+
+    Read `ece` first - it is the honest summary. `count_ratio` is the one that
+    makes the consequence concrete: it is how many times too many sites you would
+    count by summing the scores, which is what breaks a Task 2 claim of the form
+    "cell line X has N modified sites". It is a weak diagnostic on its own,
+    because over- and under-prediction in different bins cancel in it.
+
+    `brier` is a proper scoring rule and moves with both calibration and
+    discrimination. Under a 4.49% positive rate its floor is dominated by the
+    easy negatives - predicting the base rate everywhere scores 0.0429 - so read
+    changes in it, not its level.
+    """
+    y_true = np.asarray(y_true)
+    y_score = np.asarray(y_score)
+    expected = float(y_score.sum())
+    actual = float(y_true.sum())
+    return {
+        "ece": expected_calibration_error(y_true, y_score),
+        "mean_predicted": float(y_score.mean()),
+        "actual_rate": float(y_true.mean()),
+        "expected_positives": expected,
+        "actual_positives": actual,
+        "count_ratio": float(expected / actual) if actual else float("nan"),
+        "brier": float(np.mean((y_score - y_true) ** 2)),
+        # What a model that learned nothing but the base rate would score on
+        # brier. Anything above this line is worse than predicting the average.
+        "brier_baseline": float(y_true.mean() * (1 - y_true.mean())),
     }
 
 

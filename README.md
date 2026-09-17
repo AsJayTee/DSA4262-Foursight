@@ -75,6 +75,28 @@ Reproduce any row:
 python scripts/train.py --config configs/quantiles.yaml
 ```
 
+**One pooled number is not enough to compare two models with.** Folds differ in
+size and positive rate, so the same model scores 0.4548 on fold 0 and 0.5081 on
+fold 1. `scripts/evaluate.py` keeps the per-fold numbers and compares two runs
+fold by fold, which is the test that can actually tell an improvement from
+noise:
+
+```bash
+python scripts/evaluate.py --config configs/quantiles.yaml --compare-features pooled_v1
+```
+
+Two things that table above does not show, and which the harness measures:
+
+- **The scores are not calibrated.** Mean predicted probability is 0.0809
+  against an actual positive rate of 0.0449 - a **1.80x overcount**. PR AUC and
+  ROC AUC are rank-based and cannot see it, but any use of a score *as a
+  probability* is wrong by that factor.
+- **Performance collapses below 20 reads per site.** Every training site has at
+  least 20 reads; SG-NEx has a median of 3. At one read the model scores 0.153,
+  which is what a motif-only classifier with no signal data at all scores
+  (0.1537). See [read depth](docs/data.md#read-depth) and
+  `scripts/evaluate.py --depth-sweep`.
+
 ---
 
 ## Training a new model
@@ -106,7 +128,8 @@ permissions and the Windows notes. **On Windows, use Git Bash, not PowerShell.**
 |---|---|
 | `make doctor` | Check this machine is set up; says what is missing |
 | `make smoke CONFIG=configs/x.yaml` | Full pipeline on 5,000 sites, ~4s, no W&B |
-| `make train CONFIG=configs/x.yaml` | Full run (~40s), logs to W&B |
+| `make train CONFIG=configs/x.yaml` | Train **and** evaluate (~100s); both go to one W&B run |
+| `make evaluate CONFIG=configs/x.yaml EVAL='--compare-features pooled_v1'` | Compare two runs, paired fold by fold |
 | `make predict INPUT=... OUTPUT=...` | Score a dataset |
 | `make test` | Run the test suite |
 | `make sample` | Rebuild `data/sample/` |
@@ -132,6 +155,7 @@ context. Reading the source yourself is always an option, never a prerequisite.
 | [docs/project-requirements.md](docs/project-requirements.md) | What the project is graded on — tasks, formats, deadlines, assessment |
 | [docs/data.md](docs/data.md) | Data dictionary and measured statistics |
 | [AGENTS.md](AGENTS.md) | Conventions your agent follows — and why |
+| [docs/decisions/](docs/decisions/) | Why the pipeline is built the way it is, one file per decision |
 | [analysis/m6anet/README.md](analysis/m6anet/README.md) | The m6Anet benchmark, and two traps waiting in it |
 
 ---
@@ -140,10 +164,14 @@ context. Reading the source yourself is always an option, never a prerequisite.
 
 ```
 src/m6a/              the package — production code
-  data.py             reading signal JSON and labels, the gene-level split
+  data.py             reading signal JSON and labels, the gene-level split,
+                      read subsampling
   features/           feature extractors (one file per idea)
   models/             models (one file per idea)
-  evaluation.py       metrics and submission validation
+  evaluation.py       metrics, stratified metrics, calibration, submission checks
+  crossval.py         the gene-grouped folds and the out-of-fold table
+  compare.py          paired comparison between two runs (needs scipy)
+  feature_cache.py    disk cache for extracted features, in .cache/features/
   registry.py         name -> implementation lookup
 scripts/              command-line entry points
 configs/              one YAML per experiment
@@ -152,6 +180,7 @@ data/sample/          the committed test dataset
 analysis/             exploratory work: SG-NEx (Task 2), m6Anet benchmark
 tests/                guardrails, including an end-to-end smoke test
 docs/                 setup, data dictionary, workflow
+  decisions/          why the shared pipeline is shaped the way it is
 ```
 
 Adding an experiment means adding one file to `features/` or `models/` plus one

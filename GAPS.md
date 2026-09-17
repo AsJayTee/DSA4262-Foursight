@@ -19,63 +19,108 @@ entries below depend on and which is easy to misread.
 
 ## Evaluation
 
-**This is the team's current priority.** The measurements below were taken on
-2026-09-15 and several of them contradict what this file previously recorded.
-Until the evaluation can distinguish a real improvement from noise and can say
-where a model fails, no modelling result here means much.
+The harness is `scripts/evaluate.py`; what it reports is described in
+[AGENTS.md section 6](AGENTS.md#6-metrics). Every number in this section can be
+regenerated, and the JSON reports behind the current ones are in
+`analysis/evaluation/reports/`. Quote numbers a command can reproduce.
 
-The pipeline records one pooled out-of-fold number per run (`metrics_oof` in
-each model's `meta.json`) and nothing else.
-
-- **Per-fold results are computed and then discarded.** `scripts/train.py`
-  computes per-fold predictions and collapses them to one pooled figure.
-  Measured per-fold PR AUC for the shipped model: 0.4548, 0.5081, 0.4685,
-  0.4704, 0.4855 (mean 0.4775, sd 0.0203).
-- **The comparison being made is unpaired where a paired one is available.**
-  This file previously claimed fold noise (sd 0.0203) swamps the pooled-vs-
-  quantile gap (0.0126) and that the two feature sets therefore cannot be
-  distinguished. That used the wrong noise estimate: both models are scored on
-  the *same* folds, so fold difficulty cancels. On the per-fold differences,
-  `quantiles_v1` beats `pooled_v1` by +0.0145, winning 5/5 folds, paired
-  t-test p = 0.0465. The difference is real and the old framing was too
-  pessimistic. Nothing in the repo currently retains the per-fold numbers
-  needed to run that test.
 - **Folds are unbalanced by positive rate**: 4.10%, 5.15%, 4.42%, 4.54%, 4.21%
   across folds 0-4, with fold sizes from 23,394 to 25,923 sites. PR AUC depends
   on the base rate, so a given model scores highest on fold 1 regardless of its
-  merit.
-- **Nothing has ever been evaluated outside the training depth range, and this
-  is the largest untested risk in the repo.** *Depth* means how many separate
-  RNA molecules gave us a measurement at one exact site — not repeated readings
-  of one molecule, but distinct copies of that RNA from the cell. If this is
-  the first time you are meeting the term, read
-  [docs/data.md](docs/data.md#read-depth) before the numbers below, because
-  almost everything in this section turns on it. Every site in the training set
-  has at least 20 reads. Scoring the shipped model on read-subsampled copies of
-  its own held-out data:
+  merit. This is measured and reported per fold now, but it is not *fixed* —
+  the split is frozen, so it cannot be. It is a reason to compare models paired
+  rather than a reason to change anything.
+- **Performance outside the training depth range is now measured, and it is
+  bad.** *Depth* means how many separate RNA molecules gave us a measurement at
+  one exact site — not repeated readings of one molecule, but distinct copies of
+  that RNA from the cell. If this is the first time you are meeting the term,
+  read [docs/data.md](docs/data.md#read-depth) before the numbers below, because
+  almost everything here turns on it. Every site in the training set has at
+  least 20 reads. The shipped model, scored on read-subsampled copies of its own
+  held-out data (`--depth-sweep`, subsample seed 4262):
 
-  | reads per site | 1 | 3 | 10 | 20 | full |
-  |---|---:|---:|---:|---:|---:|
-  | PR AUC | 0.1543 | 0.2393 | 0.3732 | 0.4248 | 0.4759 |
+  | reads per site | 1 | 3 | 5 | 10 | 20 | full |
+  |---|---:|---:|---:|---:|---:|---:|
+  | `quantiles_v1` | 0.1527 | 0.2458 | 0.2991 | 0.3716 | 0.4277 | 0.4759 |
+  | `pooled_v1` | 0.1448 | 0.2498 | 0.2996 | 0.3620 | 0.4094 | 0.4614 |
 
   A motif-only classifier (18-way one-hot, no signal at all) scores 0.1537. At
   one read the model is therefore doing nothing but reading the sequence
   pattern. SG-NEx A549 has median depth 3 and p25 depth 1 — see the Task 2
-  section.
-- **No breakdown of performance by any stratum.** Read depth ranges from 20 to
-  991 reads per site and there are 18 DRACH motifs; performance within those
-  groups is unknown, so it is not known where the model fails.
-- **The scores are not calibrated, and the size of the error is now measured.**
-  The LightGBM model sets `is_unbalance=True`. Mean predicted probability is
-  0.0809 against an actual positive rate of 0.0449 — a **1.80x overcount**
-  (9,851 expected positives vs 5,475 actual). By decile, the top bin predicts
-  0.608 and observes 0.327. ROC AUC and PR AUC are rank-based and unaffected,
-  but any use of the scores as probabilities — counting modified sites per cell
-  line in Task 2 — is currently wrong by close to a factor of two. The comment
-  in `src/m6a/models/lightgbm.py` claiming `is_unbalance` keeps the outputs
-  usable as probabilities is contradicted by this.
-- **No mechanism for comparing runs.** Comparing two experiments currently
-  means reading two terminal outputs or two W&B pages by hand.
+  section. **This is still the largest untested risk in the repo**: it is now
+  measured, but nothing has been done about it, and every Task 2 number depends
+  on it.
+- **The scores are not calibrated, and the size of the error is measured.** The
+  LightGBM model sets `is_unbalance=True`. Mean predicted probability is 0.0809
+  against an actual positive rate of 0.0449 — a **1.80x overcount** (9,851
+  expected positives vs 5,475 actual). By decile, the top bin predicts 0.608 and
+  observes 0.327. ROC AUC and PR AUC are rank-based and unaffected, but any use
+  of the scores as probabilities — counting modified sites per cell line in
+  Task 2 — is currently wrong by close to a factor of two. The comment in
+  `src/m6a/models/lightgbm.py` claiming `is_unbalance` keeps the outputs usable
+  as probabilities is contradicted by this, and is still there. Nothing has been
+  tried to fix it: no isotonic or Platt scaling, no threshold work, no
+  alternative to `is_unbalance`.
+- **The paired t-test over folds is anti-conservative, so its p-value reads
+  stronger than it is.** Each fold's model trains on the other four, so any two
+  training sets overlap heavily - measured here, 73.4% of fold 0's training rows
+  are also in fold 1's. The five differences are therefore correlated, the
+  observed scatter understates the true uncertainty, and p comes out too small
+  (Dietterich 1998; Nadeau & Bengio 2003). The test sets are fine; it is the
+  training sets that overlap. Read the win count (5/5) alongside any p-value,
+  and do not quote `p = 0.0465` unqualified. The agreed fix is recorded in
+  [docs/decisions/0006](docs/decisions/0006-strengthening-the-comparison-test.md)
+  and is **not built**.
+- **There is no error bar on the headline number itself.** 0.4759 is a point
+  estimate. Nothing says how much it depends on which 121,838 sites happened to
+  be in the dataset. The per-site scores are no longer stored
+  ([0009](docs/decisions/0009-distributions-not-per-site-scores.md)), so a
+  paired bootstrap over sites has to run in-process during the run; see
+  [0006](docs/decisions/0006-strengthening-the-comparison-test.md) #1.
+- **Comparisons between runs stop at PR AUC.** `--compare-features` pairs two
+  runs fold by fold on one metric. It cannot say *which sites* two models
+  disagree about, which is the question behind "should we ensemble these".
+- **Every model is badly miscalibrated, and the size of the error tracks the
+  rebalancing trick each one uses.** Measured with `evaluate.py --config ...`:
+
+  | model | PR AUC | predicted positives | actual | overcount |
+  |---|---:|---:|---:|---:|
+  | `baseline_logistic` (`class_weight="balanced"`) | 0.4121 | 33,374 | 5,475 | **6.10x** |
+  | `lightgbm_pooled` (`is_unbalance=True`) | 0.4634 | 15,192 | 5,475 | **2.77x** |
+  | `lightgbm_quantiles` (`is_unbalance=True`) | 0.4759 | 9,851 | 5,475 | **1.80x** |
+
+  So this is not one model's bug: every model in the repo handles the 4.49%
+  positive rate by reweighting, and every one of them therefore emits scores
+  calibrated to a rebalanced world rather than the real one. Nothing downstream
+  of a score is currently safe to read as a probability.
+- **Performance drops at the highest read depths, in every model, and nobody
+  knows why.** PR AUC by depth band rises as expected up to 84-303 reads and
+  then falls sharply in the 304+ band (6,095 sites, 263 positives):
+
+  | depth band | 20-31 | 32-46 | 47-83 | 84-303 | **304+** |
+  |---|---:|---:|---:|---:|---:|
+  | `lightgbm_quantiles` lift | 10.1x | 10.7x | 11.1x | 10.8x | **9.8x** |
+  | `lightgbm_pooled` lift | 9.8x | 10.5x | 10.6x | 10.6x | **8.9x** |
+  | `baseline_logistic` lift | 8.8x | 9.5x | 9.6x | 9.5x | **6.5x** |
+
+  Read the lift column, not PR AUC: the positive rate is near-identical across
+  bands (4.32%-4.73%), so this is not a base-rate artefact. More evidence should
+  make a site easier, not harder. The drop is consistent across three different
+  models, so it is a property of the data or the labels rather than a model
+  quirk, and it is worst for the weakest model. Untested hypotheses: 304+ sites
+  are the most highly expressed transcripts and may be a different biological
+  regime; m6ACE-Seq is an antibody method with known high background, so label
+  quality may differ there; or the summary statistics may simply saturate. Nobody
+  has looked.
+- **Only single models are evaluated.** There is no way to score an ensemble, a
+  rule combining two models, or a threshold choice.
+- **A paired comparison reports only overall PR AUC, and only for the primary
+  run.** `--compare-with` prints the comparison arm's per-fold numbers and
+  nothing else - no calibration, no strata, no stored out-of-fold table - so
+  answering "is the new model better *at low depth*" currently means running
+  both configs separately and eyeballing two tables. That is the question the
+  next round of work is about, so this is the most load-bearing thing the
+  harness cannot do.
 - **Cross-cell-line shift is smaller than this file previously assumed; depth
   shift is much larger.** Comparing the training data (Hct116) against SG-NEx
   A549 with depth held constant (both restricted to >=20 reads), the median of
@@ -84,10 +129,12 @@ each model's `meta.json`) and nothing else.
   5.26% vs 5.89%, AAACA 8.16% vs 7.74%). The dominant covariate shift between
   our training data and any Task 2 dataset is depth, not cell line. (Caveat:
   7,129 A549 sites clear depth >=20 out of 62,744 sampled from 20 windows
-  through the file, so this is directional, not a precise estimate.)
+  through the file, so this is directional, not a precise estimate. This one is
+  not part of the harness — see the Infrastructure section.)
 - **Changing the fold assignment invalidates every stored result.** The seed
-  (4262) is frozen in `AGENTS.md` for that reason. The longer results
-  accumulate, the more expensive any change to the split becomes.
+  (4262) is frozen in `AGENTS.md` for that reason. The longer results accumulate
+  in W&B, the more expensive any change to the split becomes: every `fold/*` key
+  in every historical run stops being comparable, and nothing would warn anyone.
 
 ## The training set's provenance
 
@@ -106,8 +153,11 @@ each model's `meta.json`) and nothing else.
 
 - **Two feature sets exist**, both summary statistics over reads:
   `pooled_v1` (mean/std) and `quantiles_v1` (quantiles, IQR, tail spread).
-  `quantiles_v1` is the better of the two (+0.0145 PR AUC, 5/5 folds, paired
-  p = 0.0465).
+  `quantiles_v1` is the better of the two: +0.0148 mean per-fold PR AUC, 5/5
+  folds, paired p = 0.0465, 95% CI [+0.0004, +0.0292]. (The pooled gap is
+  +0.0145; the mean of the per-fold differences is +0.0148. The paired test uses
+  the latter.) Regenerate with
+  `evaluate.py --config configs/quantiles.yaml --compare-features pooled_v1`.
 - **The depth problem is not addressable by choosing between the existing
   feature sets.** Both collapse at the same rate: retention of full-depth PR
   AUC is 0.314 (pooled) vs 0.324 (quantiles) at one read, 0.524 vs 0.503 at
@@ -131,7 +181,12 @@ each model's `meta.json`) and nothing else.
   | reads per site | 1 | 3 | 10 | full |
   |---|---:|---:|---:|---:|
   | read-level, best pooling | **0.2692** | **0.3303** | 0.3453 | 0.3666 |
-  | `quantiles_v1` | 0.1543 | 0.2393 | **0.3732** | **0.4759** |
+  | `quantiles_v1` | 0.1527 | 0.2458 | **0.3716** | **0.4759** |
+
+  (The read-level row came from `analysis/evaluation/scratch/mil_lite.py`, which
+  is not part of the harness and draws its own subsample; the `quantiles_v1` row
+  is from `--depth-sweep`. The two are close enough to compare but were not
+  drawn together, so treat the crossover point as approximate.)
 
   The two approaches cross over somewhere around depth 5-10. At one read the
   read-level model scores 0.2692 against 0.1543 — a 74% improvement in the
@@ -154,8 +209,9 @@ each model's `meta.json`) and nothing else.
   depth, where the probe above currently loses.
 - **Sequence information is barely used.** Only the central 5-mer is encoded,
   as an 18-way one-hot. The flanking bases of the 7-mer are discarded. The
-  motif contributes +0.0123 PR AUC over signal-only features (5/5 folds,
-  paired p = 0.04), and 0.1537 on its own.
+  motif contributes +0.0123 PR AUC over signal-only features (5/5 folds, paired
+  p = 0.0433), and 0.1537 on its own. Both from
+  `evaluate.py --config configs/quantiles.yaml --ablate`.
 - **No hyperparameter search has been run.** Every value in `configs/` was
   chosen by hand and none has been tuned.
 - **Class imbalance is handled only by `is_unbalance=True`.** No resampling,
@@ -193,8 +249,11 @@ limitations?" explicitly. Some of this is now measured; most is not.
 - **Per-motif base rates are now measured and vary by three orders of
   magnitude**: GGACT 22.58%, GAACT 11.25%, GGACA 8.94%, down to AAACC 0.17%,
   TAACC 0.07%, TAACA 0.02%. This is why a motif-only classifier reaches
-  0.1537. It is not known whether the model performs differently within each
-  motif group.
+  0.1537. Per-motif model performance is now measured too
+  (`evaluate.py --by motif`): PR AUC lift ranges from 2.85x on GGACT to 19.5x on
+  AGACA, and the two rarest motifs (TAACA, TAACC — 1 and 2 positives) cannot be
+  scored at all. Why lift is *lowest* on the motif with the highest base rate is
+  unexamined.
 - **Positive sites cluster in 1,507 of 3,852 genes.** The structure of that
   clustering — whether positives concentrate in particular transcript regions,
   genes, or expression levels — is unexamined. Transcript position does not
@@ -263,15 +322,30 @@ catalogued, and one blocker is much larger than expected.
 - **There is no upload path to R2.** Adding data to the bucket is manual and
   undocumented, which matters when the evaluation data is released.
 - **`setup_remote.sh` and `bootstrap.sh` have never been run against a real
-  VM.** They are written and reviewed but unproven.
+  VM.** They are written and reviewed but unproven. This is now the *only*
+  unverified link in the chain: W&B logging is confirmed working end to end from
+  a laptop (a full run with figures, tables and artifacts landed at
+  [run y2lk7ilf](https://wandb.ai/dsa4262-team/dsa4262-project/runs/y2lk7ilf)),
+  so what remains untested is specifically whether a fresh Ubuntu instance
+  reaches the same state - apt packages, the venv, `pip install -e '.[train]'`,
+  `wandb login`, and the R2 download. Nobody should discover on a paid instance
+  that `bootstrap.sh` fails at step two.
 - **`doctor` reports "R2 configured" based on the presence of keys, not their
-  validity.** Placeholder values pass the check.
-- **The measurements quoted in this file are not reproducible from this repo.**
-  The depth-subsampling, calibration, per-fold, motif-ablation and SG-NEx
-  cataloguing results were produced by throwaway scripts that no longer exist.
-  The numbers are recorded here; the means of re-deriving or challenging them
-  is not. Anyone who doubts a figure above currently has to rebuild the
-  experiment from scratch.
+  validity.** Placeholder values pass. The W&B half of this is fixed - `doctor`
+  now calls the W&B API and FAILs on a key that does not work - but nothing
+  checks that the R2 credentials can actually reach the bucket, so a broken
+  download surfaces as a traceback in `download_data.py` rather than in the
+  command whose job is to tell you what is wrong.
+- **The SG-NEx figures in the Task 2 section came from an ad-hoc S3 crawl that
+  is not in this repo.** The sample counts, the 33.4 GB total and the A549 depth
+  distribution cannot be re-derived or challenged without redoing that crawl by
+  hand. The evaluation measurements are no longer in this position - see
+  `scripts/evaluate.py` - but the SG-NEx cataloguing still is.
+- **`analysis/evaluation/scratch/` holds four rough scripts with hardcoded
+  paths**, three of which are the only source of a number quoted above (the
+  dataset profile, the read-level MIL probe, and the Hct116-vs-A549 comparison,
+  which additionally needs an input file nothing in this repo produces). See the
+  README there.
 - **No CI.** Tests run only when someone remembers to run them.
 - **The SSH access story is undecided** — whether instances come from Ronin or
   are self-funded, and how keys reach teammates.

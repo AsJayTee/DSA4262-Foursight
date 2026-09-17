@@ -25,6 +25,10 @@ handout_*.html
 models/*
 !models/final/
 !models/final/**
+# ...but never an out-of-fold score table. Nothing writes one any more
+# (docs/decisions/0009), but an old checkout can still have one sitting there,
+# and it is ~9 MB of per-site data in a public repo if it gets copied in.
+models/final/oof.csv
 
 # --- python ---
 .venv/
@@ -40,3 +44,6 @@ dist/
 # --- tooling ---
 wandb/
 .DS_Store
+
+# --- evaluation feature cache (rebuildable; see src/m6a/feature_cache.py) ---
+.cache/
