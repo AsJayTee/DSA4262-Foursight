@@ -102,7 +102,14 @@ band/{20-31,...}/pr_auc_lift
 motif/{GGACT,...}/pr_auc_lift
 ablation/{signal,motif}/pr_auc
 compare/{name}/mean_difference   compare/{name}/p_value   compare/{name}/wins
+compare/{name}/n_observations    compare/{name}/win_rate  compare/{name}/n_repeats
 ```
+
+`n_observations` was added after the fact and is not optional: `wins = 5` might
+be 5 out of 5 or 5 out of 50, and a run row that cannot say which is a row you
+cannot read. It matters most because `evaluate.py` resumes a run, so a later
+5-fold comparison overwrites an earlier `--repeats 10` one in the same row and
+nothing else would show that it had.
 
 **This is the answer to "what if I have no baseline".** You always have one:
 every run in the project, in one filterable table.

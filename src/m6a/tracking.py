@@ -204,7 +204,11 @@ def start(
             name=name,
             config=config or {},
             notes=notes,
-            tags=tags or [],
+            # Passing tags on a resume *replaces* them, which silently threw away
+            # the feature-set and model tags a training run set and left the row
+            # tagged only `eval`. Those tags are how the run table is filtered by
+            # what a run actually is, so they are unioned below instead.
+            tags=None if resume_id else (tags or []),
             job_type=job_type,
             id=resume_id,
             resume="allow" if resume_id else None,
@@ -212,6 +216,12 @@ def start(
     except Exception as exc:  # noqa: BLE001
         log(f"  W&B init failed ({type(exc).__name__}: {exc}) - continuing without it")
         return Tracker(None, log)
+
+    if resume_id and tags:
+        try:
+            run.tags = tuple(dict.fromkeys(list(run.tags) + list(tags)))
+        except Exception:  # noqa: BLE001 - never fatal, it is a label
+            pass
     return Tracker(run, log)
 
 
@@ -358,6 +368,14 @@ def flat_metrics(report: dict) -> dict[str, float]:
         flat[f"compare/{key}/mean_difference"] = float(result["mean_difference"])
         flat[f"compare/{key}/p_value"] = float(result["p_value"])
         flat[f"compare/{key}/wins"] = float(result["wins"])
+        # `wins` alone cannot be read: 5 might be 5 out of 5 or 5 out of 50, and
+        # those are very different claims. A run row has to say which, because
+        # evaluate.py resumes a run - so a later 5-fold comparison overwrites an
+        # earlier --repeats 10 one, and nothing else in the row would show it.
+        flat[f"compare/{key}/n_observations"] = float(result["n_folds"])
+        flat[f"compare/{key}/n_repeats"] = float(result.get("n_repeats", 1))
+        if result["n_folds"]:
+            flat[f"compare/{key}/win_rate"] = float(result["wins"]) / float(result["n_folds"])
         if result.get("p_value_corrected") is not None:
             flat[f"compare/{key}/p_value_corrected"] = float(result["p_value_corrected"])
 
