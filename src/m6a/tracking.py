@@ -89,6 +89,35 @@ class Tracker:
         }
         self._guard("log", lambda: self.run.log(clean))
 
+    def log_curve_series(self, series: dict[str, Any], pairs: list[tuple[str, str]]) -> None:
+        """Log curves point-by-point so W&B can overlay them across runs.
+
+        An image cannot be overlaid, filtered, or put on a shared axis - so the
+        ROC and PR curves are logged a second way, as a *step series*: one
+        `log()` per point, x and y together at the same step. A W&B line panel
+        with y = `curve/roc/tpr` and x = `curve/roc/fpr` then draws one line per
+        run, and the run selector filters them. That only works because every
+        run interpolates onto the same grid (`report.CURVE_GRID`).
+
+        `pairs` names which key is the x-axis for which y, via `define_metric`.
+        Without it the panel defaults to `_step` and every reader has to fix the
+        axis by hand. `summary="none"` keeps the last point of each curve out of
+        the run summary, where it would sit as a meaningless `fpr = 1.0`.
+        """
+        if not series:
+            return
+
+        def action():
+            for x_key, y_key in pairs:
+                self.run.define_metric(x_key, summary="none")
+                self.run.define_metric(y_key, step_metric=x_key, summary="none")
+            length = len(next(iter(series.values())))
+            for i in range(length):
+                self.run.log({key: float(values[i]) for key, values in series.items()},
+                             step=i)
+
+        self._guard("curve series", action)
+
     def log_table(self, name: str, frame: pd.DataFrame) -> None:
         """Log a DataFrame as a W&B table. The index becomes the first column."""
 
@@ -253,6 +282,173 @@ def check(timeout: float = 20.0) -> tuple[bool, str]:
         return True, f"key valid for {who}, target {entity or who}/{project}"
     except Exception as exc:  # noqa: BLE001
         return False, f"{type(exc).__name__}: {exc}"
+
+
+# --------------------------------------------------------------------------
+# identifying what a run was computed on
+# --------------------------------------------------------------------------
+
+def dataset_fingerprint(json_path, labels_path, config, limit=None) -> dict:
+    """What a run has to record so another run can refuse to pair with it.
+
+    `crossval.assert_same_folds` protects a local comparison: it refuses to pair
+    two arms that did not see the same sites in the same folds. Pulling an arm
+    out of W&B (`--compare-run`) there is nothing to check - just a vector of
+    numbers with no memory of where it came from. Compare against a run from
+    before a data refresh and you get a perfectly plausible p-value for a
+    comparison nobody made, which is the failure AGENTS.md section 3 exists to
+    prevent.
+
+    So every run records the content hash of its input, the number of sites, and
+    the split. A cross-run comparison checks all of them and refuses on any
+    mismatch rather than trusting that they line up.
+    """
+    from m6a import feature_cache
+
+    return {
+        "data_digest": feature_cache.file_digest(json_path),
+        "labels_digest": feature_cache.file_digest(labels_path),
+        # 0 rather than None for "all of it". W&B drops None from a run config,
+        # so a legitimately-unlimited run would come back indistinguishable from
+        # one that never recorded the field at all - and the check below treats
+        # those two very differently.
+        "data_limit": int(limit or 0),
+        "split_seed": config.split.seed,
+        "split_n_folds": config.split.n_folds,
+        "split_group_by": config.split.group_by,
+    }
+
+
+# Keys that must agree before two runs may be paired. `data_limit` is in the
+# list because a 5,000-site smoke run and a full run are not the same
+# experiment, however similar their key sets look.
+FINGERPRINT_KEYS = (
+    "data_digest", "labels_digest", "data_limit",
+    "split_seed", "split_n_folds", "split_group_by",
+)
+
+def resolve_run(reference: str):
+    """A W&B run from an id, an entity/project/id path, or a run name.
+
+    Names are not unique in W&B, so a name matching more than one run is an
+    error that lists the candidates rather than a silent pick of the newest.
+    Reaching for the wrong arm produces a plausible number for a comparison
+    nobody made, which is the whole class of failure this module guards.
+    """
+    import wandb
+
+    api = wandb.Api()
+    entity = os.environ.get("WANDB_ENTITY") or None
+    project = os.environ.get("WANDB_PROJECT", "dsa4262-project")
+
+    if reference.count("/") == 2:
+        return api.run(reference)
+    try:
+        return api.run(f"{entity}/{project}/{reference}")
+    except Exception:  # noqa: BLE001 - not an id; fall through and try the name
+        pass
+
+    matches = list(api.runs(f"{entity}/{project}", {"displayName": reference}))
+    if not matches:
+        raise SystemExit(
+            f"No W&B run in {entity}/{project} with id or name {reference!r}. "
+            "Pass a run id (the short code at the end of the run URL) or an "
+            "exact run name."
+        )
+    if len(matches) > 1:
+        listed = chr(10).join(
+            f"    {r.id}  {r.name}  {r.created_at}" for r in matches[:10]
+        )
+        raise SystemExit(
+            f"{len(matches)} runs in {entity}/{project} are named {reference!r}. "
+            f"Pass the id instead:{chr(10)}{listed}"
+        )
+    return matches[0]
+
+
+def fetch_observations(reference: str, metric: str = "pr_auc") -> tuple[list[dict], dict]:
+    """Pull a finished run's per-(repetition, fold) metric vector out of W&B.
+
+    This is what lets a comparison happen without refitting the other arm, and
+    it is why observations are keyed on (repetition, fold) in the first place
+    (docs/decisions/0012). A run from an instance that was terminated last week
+    can still be the baseline for one running now.
+
+    Falls back to the `fold/{f}/{metric}` keys when a run carries no `rep/*`, so
+    a single-split run from before repeated CV shipped is still usable - as five
+    observations, which the corrected t-test will weigh accordingly.
+
+    Returns (observations, fingerprint). The caller checks the fingerprint before
+    pairing; `require_same_dataset` is what does that.
+    """
+    run = resolve_run(reference)
+    summary = {k: v for k, v in run.summary.items() if not k.startswith("_")}
+
+    observations: list[dict] = []
+    for key, value in summary.items():
+        parts = key.split("/")
+        if len(parts) == 5 and parts[0] == "rep" and parts[2] == "fold" and parts[4] == metric:
+            observations.append(
+                {"repetition": int(parts[1]), "fold": int(parts[3]), metric: float(value)}
+            )
+    if not observations:
+        for key, value in summary.items():
+            parts = key.split("/")
+            if len(parts) == 3 and parts[0] == "fold" and parts[2] == metric:
+                observations.append(
+                    {"repetition": 0, "fold": int(parts[1]), metric: float(value)}
+                )
+    if not observations:
+        raise SystemExit(
+            f"W&B run {run.id} ({run.name}) has no per-fold {metric} values, so "
+            "there is nothing to pair against. It was probably logged before the "
+            "evaluation harness existed - re-run it with scripts/train.py."
+        )
+
+    config = dict(run.config)
+    fingerprint = {key: config.get(key) for key in FINGERPRINT_KEYS}
+    fingerprint.update(
+        run_id=run.id,
+        run_name=run.name,
+        url=run.url,
+        pooled=summary.get(f"oof/{metric}"),
+        n_sites=summary.get("oof/n"),
+    )
+    return sorted(observations, key=lambda o: (o["repetition"], o["fold"])), fingerprint
+
+
+def require_same_dataset(local: dict, remote: dict, name: str) -> None:
+    """Refuse to pair two runs that were not computed on the same thing.
+
+    The cross-machine counterpart of `crossval.assert_same_folds`. A mismatch is
+    not a warning: two runs over different data, or different splits, produce two
+    plausible numbers whose difference means nothing, and nothing downstream
+    would ever notice.
+    """
+    missing = [key for key in FINGERPRINT_KEYS if remote.get(key) is None]
+    if missing:
+        raise SystemExit(
+            f"W&B run {remote['run_id']} ({name}) does not record "
+            f"{', '.join(missing)}, so there is no way to check it saw the same "
+            "data as this run. Runs logged before the fingerprint shipped cannot "
+            "be compared across machines - re-run it, or compare locally with "
+            "--compare-with, which refits and checks the folds directly."
+        )
+    differences = [
+        f"    {key}: this run {local[key]!r}, {name} {remote[key]!r}"
+        for key in FINGERPRINT_KEYS
+        if local.get(key) != remote.get(key)
+    ]
+    if differences:
+        raise SystemExit(
+            f"This run and {name} were not computed on the same data or split, so "
+            "a paired comparison is not valid:"
+            + chr(10)
+            + chr(10).join(differences)
+            + chr(10)
+            + "Pairing them anyway would produce a plausible p-value for a "
+            "comparison nobody made. See AGENTS.md section 3."
+        )
 
 
 # --------------------------------------------------------------------------

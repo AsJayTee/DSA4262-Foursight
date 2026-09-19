@@ -14,11 +14,15 @@ dimension that matters most, and nobody finds out until they try. `standard` is
 the default and includes the sweep deliberately - optional evaluation is
 evaluation that does not happen.
 
-| profile | what it computes |
-|---|---|
-| `quick` | per fold, pooled, calibration. Iteration only; not a recorded result |
-| `standard` | + strata by depth and motif, + the depth sweep, + every figure |
-| `full` | + the signal-only and motif-only ablations |
+| profile | repetitions | what it computes |
+|---|---:|---|
+| `quick` | 1 | per fold, pooled, calibration. Iteration only; not a recorded result |
+| `standard` | 10 | + strata by depth and motif, + the depth sweep, + every figure |
+| `full` | 10 | + the signal-only and motif-only ablations |
+
+Ten repetitions of the 5-fold split is 50 observations rather than 5, and it is
+the default because a five-point run cannot be topped up after the instance is
+terminated (docs/decisions/0013).
 
 **Nothing here is the record.** The JSON under `analysis/evaluation/reports/` is
 a convenience for laptop work; W&B holds the copy that outlives the machine.
@@ -71,12 +75,23 @@ class Profile:
     depth_sweep: bool
     plots: bool
     ablations: bool
+    # How many times the whole cross-validation is repeated. Five folds is five
+    # points, which is not a distribution you can read or compare - and on an
+    # instance that gets terminated, a run with five points cannot be topped up
+    # later. Ten repetitions is where the curve flattens: the corrected variance
+    # is var(d) x (1/n + 1/(k-1)), so at k=5 the second term is 0.25 and never
+    # goes away. Going 50 -> 100 observations narrows the standard error by 1.9%
+    # for twice the compute. See docs/decisions/0013.
+    repeats: int = 1
 
 
 PROFILES: dict[str, Profile] = {
-    "quick": Profile("quick", strata=False, depth_sweep=False, plots=False, ablations=False),
-    "standard": Profile("standard", strata=True, depth_sweep=True, plots=True, ablations=False),
-    "full": Profile("full", strata=True, depth_sweep=True, plots=True, ablations=True),
+    "quick": Profile("quick", strata=False, depth_sweep=False, plots=False,
+                     ablations=False, repeats=1),
+    "standard": Profile("standard", strata=True, depth_sweep=True, plots=True,
+                        ablations=False, repeats=10),
+    "full": Profile("full", strata=True, depth_sweep=True, plots=True,
+                    ablations=True, repeats=10),
 }
 
 
@@ -250,14 +265,29 @@ def repeated(report: Report, result, name: str = "") -> None:
         # second one under a different key: they answer the same question, and
         # two figures called "PR AUC across folds" in one run is how someone
         # quotes the five-point version of a fifty-point result.
+        caption = ("Each point is one fold of one repetition. Repetition 0 is the\n"
+                   "canonical seed-4262 split; the rest are additive evidence.")
         report.figure(
             "fig/pr_auc_distribution",
             figures.metric_distribution(
                 {name or "this run": result.vector("pr_auc").tolist()},
                 title=f"PR AUC across {result.n_repeats} repetitions "
                       f"x {summary['n_folds']} folds",
-                caption="Each point is one fold of one repetition. Repetition 0 is the\n"
-                        "canonical seed-4262 split; the rest are additive evidence.",
+                caption=caption,
+            ),
+        )
+        # Free, since the vector is already there. Read the PR one first: at a
+        # 4.49% positive rate ROC AUC flatters everything, and its distribution
+        # comes out narrow for the same reason - which is worth seeing beside
+        # the PR spread rather than being told about.
+        report.figure(
+            "fig/roc_auc_distribution",
+            figures.metric_distribution(
+                {name or "this run": result.vector("roc_auc").tolist()},
+                metric="ROC AUC",
+                title=f"ROC AUC across {result.n_repeats} repetitions "
+                      f"x {summary['n_folds']} folds",
+                caption=caption,
             ),
         )
 
@@ -328,13 +358,71 @@ def calibration(report: Report, oof: pd.DataFrame) -> None:
         report.figure("fig/reliability", figures.reliability(table, summary))
 
 
+# Curves are interpolated onto this many points on a fixed 0..1 grid before they
+# are logged. Two reasons, and the second is the one that matters:
+#
+#   1. A raw curve over 121,838 sites has up to that many thresholds. 201 points
+#      is visually indistinguishable at any zoom and ~600x smaller.
+#   2. **Every run gets the same x values.** A W&B line panel can only overlay
+#      two runs' curves if they share an axis, and raw curves never do - each
+#      model produces its own thresholds. The shared grid is what makes the
+#      overlay exact, and what would let two curves be differenced later.
+CURVE_POINTS = 201
+CURVE_GRID = np.linspace(0.0, 1.0, CURVE_POINTS)
+
+
+def curve_series(y_true: np.ndarray, y_score: np.ndarray) -> dict[str, np.ndarray]:
+    """ROC and PR curves resampled onto the shared grid, ready to log as series.
+
+    Returned as {x_key: xs, y_key: ys} pairs. `np.interp` needs its x ascending,
+    which `roc_curve` gives and `precision_recall_curve` does not - it returns
+    recall descending - so the PR arm is sorted before interpolating.
+    """
+    from sklearn.metrics import precision_recall_curve, roc_curve
+
+    fpr, tpr, _ = roc_curve(y_true, y_score)
+    precision_raw, recall_raw, _ = precision_recall_curve(y_true, y_score)
+    order = np.argsort(recall_raw)
+    recall, precision = recall_raw[order], precision_raw[order]
+
+    return {
+        "curve/roc/fpr": CURVE_GRID,
+        "curve/roc/tpr": np.interp(CURVE_GRID, fpr, tpr),
+        "curve/pr/recall": CURVE_GRID,
+        "curve/pr/precision": np.interp(CURVE_GRID, recall, precision),
+    }
+
+
 def curves(report: Report, arms: dict[str, tuple[np.ndarray, np.ndarray]]) -> None:
-    """ROC and precision-recall over the pooled out-of-fold scores."""
-    if not report.profile.plots or not arms:
+    """ROC and precision-recall over the pooled out-of-fold scores.
+
+    Logged twice over, deliberately, because the two forms do different jobs:
+
+    - as **series** on a shared grid, which W&B can overlay across runs and
+      filter with the run selector. This is the cross-run comparison tool.
+    - as **images**, which carry the random-classifier line at the base rate and
+      the caption explaining it. This is what goes in the report.
+
+    Only the primary arm's curves become series. A run owns one set of
+    `curve/*` keys; a comparison arm's curve belongs to that arm's own run,
+    where W&B will happily draw it on the same panel.
+    """
+    if not arms:
+        return
+
+    name, (y_true, y_score) = next(iter(arms.items()))
+    report.data["curves"] = {
+        "points": CURVE_POINTS,
+        "arm": name,
+        "series": {key: values.tolist() for key, values in
+                   curve_series(y_true, y_score).items()},
+    }
+
+    if not report.profile.plots:
         return
     from m6a import figures
 
-    base_rate = float(np.asarray(next(iter(arms.values()))[0]).mean())
+    base_rate = float(np.asarray(y_true).mean())
     report.figure("fig/pr_curve", figures.pr_curve(arms, base_rate))
     report.figure("fig/roc_curve", figures.roc_curve(arms))
 
@@ -718,6 +806,16 @@ def publish(report: Report, tracker, report_path: Path | None = None, name: str 
     if not tracker.enabled:
         tracking.close_figures(report.figures)
         return
+
+    # Curves first. They occupy steps 0..200, and logging them afterwards would
+    # put the scalars at step 0 with the curve drawn over the top of them.
+    curves_block = report.data.get("curves")
+    if curves_block:
+        tracker.log_curve_series(
+            {key: np.asarray(values) for key, values in curves_block["series"].items()},
+            pairs=[("curve/roc/fpr", "curve/roc/tpr"),
+                   ("curve/pr/recall", "curve/pr/precision")],
+        )
 
     flat = tracking.flat_metrics(report.data)
     tracker.log(flat)

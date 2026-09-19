@@ -111,6 +111,17 @@ def parse_args() -> argparse.Namespace:
              "two configs differ in, so read the difference with that in mind.",
     )
     compare.add_argument(
+        "--compare-run",
+        metavar="RUN",
+        help="Paired comparison against a finished W&B run, by id or name, "
+             "WITHOUT refitting it. Pulls its per-(repetition, fold) metric "
+             "vector straight out of W&B, so the other arm can be a run from an "
+             "instance that no longer exists. Refuses unless both runs record "
+             "the same dataset fingerprint and split. Gets the corrected paired "
+             "test; cannot get the bootstrap, which needs per-site scores that "
+             "are deliberately not stored.",
+    )
+    compare.add_argument(
         "--ablate",
         action="store_true",
         help="Also score signal-only and motif-only column subsets, paired "
@@ -152,9 +163,10 @@ def parse_args() -> argparse.Namespace:
     repeat.add_argument(
         "--repeats",
         type=int,
-        default=1,
-        help="Cross-validate this many times over independently seeded splits "
-             "(default 1). Repetition 0 is always the canonical seed-4262 "
+        default=None,
+        help="Cross-validate this many times over independently seeded splits. "
+             "Defaults to whatever the profile says: 10 for standard and full, "
+             "1 for quick. Repetition 0 is always the canonical seed-4262 "
              "split, so nothing already recorded moves. 10 turns 5 paired "
              "observations into 50, which is what makes a comparison between "
              "two close models mean anything. Costs one set of fits per "
@@ -208,12 +220,12 @@ def parse_args() -> argparse.Namespace:
             "  --config configs/quantiles.yaml                (runs the folds)\n"
             "  --model models/final --json ... --labels ...   (scores a dataset)"
         )
-    for flag in ("compare_features", "compare_with", "ablate"):
+    for flag in ("compare_features", "compare_with", "compare_run", "ablate"):
         if getattr(args, flag) and not args.config:
             ap.error(f"--{flag.replace('_', '-')} needs --config.")
     if args.features and not args.config:
         ap.error("--features overrides the feature set named in --config, so it needs one.")
-    if args.repeats < 1:
+    if args.repeats is not None and args.repeats < 1:
         ap.error("--repeats must be at least 1.")
     if args.bootstrap < 0:
         ap.error("--bootstrap must be 0 (off) or a positive number of resamples.")
@@ -223,7 +235,7 @@ def parse_args() -> argparse.Namespace:
             "interval - the 2.5th percentile would rest on a handful of draws. "
             "Use at least 200, and 2000 for anything quoted."
         )
-    if args.repeats > 1 and not args.config:
+    if args.repeats is not None and args.repeats > 1 and not args.config:
         ap.error(
             "--repeats needs --config: repeated cross-validation refits the "
             "folds, which scoring a saved model cannot do."
@@ -483,12 +495,17 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
 
     sweep = args.depth_sweep or report.profile.depth_sweep
     ablate = args.ablate or report.profile.ablations
+    repeats = args.repeats if args.repeats is not None else report.profile.repeats
     depths = parse_depths(args.depths) if sweep else [None]
     if None not in depths:
         depths.append(None)  # the full-depth models are what the sweep scores with
 
     report.log(f"[{config.name}] features={features} model={config.model}")
-    report.log(f"  profile {report.profile.name}")
+    report.log(
+        f"  profile {report.profile.name}"
+        + (f", {repeats} repetitions x {config.split.n_folds} folds "
+           f"= {repeats * config.split.n_folds} observations" if repeats > 1 else "")
+    )
     if args.features:
         report.log(
             f"  feature set overridden: {config.features} -> {features}. Everything "
@@ -528,7 +545,7 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
     report.heading("Fitting folds")
     repeated = crossval.repeated_cross_validate(
         dataset, model_class, config.model_params,
-        n_repeats=args.repeats, seed=config.split.seed,
+        n_repeats=repeats, seed=config.split.seed,
         n_folds=config.split.n_folds, group_by=config.split.group_by,
         label=config.name, log=report.log,
     )
@@ -537,7 +554,7 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
     result = repeated.canonical
 
     reporting.per_fold(report, result.oof, name=features)
-    if args.repeats > 1:
+    if repeats > 1:
         reporting.repeated(report, repeated, name=features)
     if report.profile.strata:
         reporting.strata(report, result.oof, args.by.split(","), args.min_positive)
@@ -605,7 +622,7 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
         report.heading(f"Fitting folds: {args.compare_features}")
         baseline = crossval.repeated_cross_validate(
             other_sets[None], model_class, config.model_params,
-            n_repeats=args.repeats, seed=config.split.seed,
+            n_repeats=repeats, seed=config.split.seed,
             n_folds=config.split.n_folds, group_by=config.split.group_by,
             label=args.compare_features, log=report.log,
         )
@@ -630,6 +647,42 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
                  "subsample_seed": args.subsample_seed}
                 if sweep else None
             ),
+        )
+
+    if args.compare_run:
+        from m6a.compare import paired_comparison
+
+        report.heading(f"Paired against W&B run: {args.compare_run}")
+        observations, fingerprint = tracking.fetch_observations(args.compare_run)
+        tracking.require_same_dataset(
+            tracking.dataset_fingerprint(json_path, labels_path, config, limit),
+            fingerprint,
+            args.compare_run,
+        )
+        report.log(
+            f"  {fingerprint['run_name']} ({fingerprint['run_id']}): "
+            f"{len(observations)} observations, pooled PR AUC "
+            f"{fingerprint['pooled']:.4f}"
+        )
+        report.log(f"  {fingerprint['url']}")
+        report.log(
+            "  Nothing was refitted - this arm's numbers came out of W&B. That\n"
+            "  buys the corrected paired test and costs the bootstrap on the\n"
+            "  difference, which needs both arms' per-site scores at once."
+        )
+        report.data["compare_run"] = {
+            "reference": args.compare_run,
+            "n_observations": len(observations),
+            **{k: v for k, v in fingerprint.items() if k != "url"},
+        }
+        reporting.comparison(
+            report,
+            paired_comparison(
+                observations, repeated.observations,
+                fingerprint["run_name"], features, n_folds=config.split.n_folds,
+            ),
+            f"Paired: {features} vs {fingerprint['run_name']} (pulled from W&B)",
+            "run",
         )
 
     if args.bootstrap and not (args.compare_features or args.compare_with):
@@ -659,7 +712,7 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
         baseline = crossval.repeated_cross_validate(
             other_sets[None], registry.get("models", other_config.model),
             other_config.model_params,
-            n_repeats=args.repeats, seed=config.split.seed,
+            n_repeats=repeats, seed=config.split.seed,
             n_folds=config.split.n_folds, group_by=config.split.group_by,
             label=other_config.name, log=report.log,
         )
@@ -697,6 +750,7 @@ def main() -> int:
 
     report = reporting.new(args.profile, subsample_seed=args.subsample_seed)
 
+    fingerprint: dict = {}
     if args.model:
         stem = Path(args.model).name
         run_name = stem
@@ -706,12 +760,25 @@ def main() -> int:
         if args.features:
             stem = f"{stem}__{args.features}"
         run_name = stem
+        # Recorded on the run so a later --compare-run can check this one rather
+        # than trust it. Hashing the input costs about a second and is memoised.
+        json_path, labels_path = resolve_inputs(args)
+        fingerprint = tracking.dataset_fingerprint(
+            json_path, labels_path, config,
+            SMOKE_SITES if args.smoke else args.limit,
+        )
 
     tracker = tracking.start(
         run_name,
         enabled=not (args.no_wandb or args.smoke),
         config={"profile": args.profile, "subsample_seed": args.subsample_seed,
-                "repeats": args.repeats, "bootstrap": args.bootstrap},
+                # The resolved value, not args.repeats, which is None whenever
+                # the profile's default is being used - and a run config that
+                # says "repeats: null" tells a reader nothing.
+                "repeats": (args.repeats if args.repeats is not None
+                            else reporting.profile(args.profile).repeats),
+                "bootstrap": args.bootstrap,
+                **fingerprint},
         tags=[tracking.EVAL_TAG],
         job_type="evaluate",
         resume_id=find_training_run(run_name),

@@ -67,6 +67,14 @@ def parse_args() -> argparse.Namespace:
              "full = + ablations.",
     )
     ap.add_argument(
+        "--repeats",
+        type=int,
+        default=None,
+        help="Cross-validate this many times over independently seeded splits. "
+             "Defaults to the profile: 10 for standard and full, 1 for quick. "
+             "Repetition 0 is always the canonical seed-4262 split.",
+    )
+    ap.add_argument(
         "--quick",
         action="store_true",
         help="Shorthand for --profile quick: skip the depth sweep and the "
@@ -116,8 +124,13 @@ def main() -> int:
     limit = SMOKE_SITES if args.smoke else None
 
     report = reporting.new(args.profile, subsample_seed=args.subsample_seed)
+    repeats = args.repeats if args.repeats is not None else report.profile.repeats
     print(f"[{config.name}] features={config.features} model={config.model}")
-    print(f"  profile {args.profile}")
+    print(
+        f"  profile {args.profile}"
+        + (f", {repeats} repetitions x {config.split.n_folds} folds "
+           f"= {repeats * config.split.n_folds} observations" if repeats > 1 else "")
+    )
     if args.smoke:
         print(f"  SMOKE: first {SMOKE_SITES:,} sites only, no W&B")
 
@@ -128,7 +141,10 @@ def main() -> int:
         config.name,
         enabled=not (args.smoke or args.no_wandb),
         config={**config.as_dict(), "profile": args.profile,
-                "subsample_seed": args.subsample_seed},
+                "subsample_seed": args.subsample_seed, "repeats": repeats,
+                # So another run, on another machine, can refuse to pair with
+                # this one rather than trust it. See docs/decisions/0014.
+                **tracking.dataset_fingerprint(json_path, labels_path, config, limit)},
         notes=config.notes,
         tags=[config.features, config.model],
         job_type="train",
@@ -168,9 +184,15 @@ def main() -> int:
     # Per-fold metrics are kept rather than collapsed - one pooled figure cannot
     # tell a real improvement from fold noise, and the folds differ enough to
     # matter (positive rates here run from 4.10% to 5.15%).
-    result = crossval.cross_validate(
-        dataset, model_class, config.model_params, label=config.name
+    repeated = crossval.repeated_cross_validate(
+        dataset, model_class, config.model_params,
+        n_repeats=repeats, seed=config.split.seed,
+        n_folds=config.split.n_folds, group_by=config.split.group_by,
+        label=config.name,
     )
+    # Repetition 0 is the canonical seed-4262 split, so the shipped model's
+    # headline metrics are exactly what a single-split run would have reported.
+    result = repeated.canonical
     scores = result.pooled
 
     report.data["source"] = {
@@ -186,6 +208,8 @@ def main() -> int:
         "limit": limit,
     }
     reporting.per_fold(report, result.oof, name=config.name)
+    if repeats > 1:
+        reporting.repeated(report, repeated, name=config.name)
     if report.profile.strata:
         reporting.strata(report, result.oof, ["depth", "motif"], min_positive=10)
     reporting.calibration(report, result.oof)
