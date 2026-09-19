@@ -205,19 +205,25 @@ scatter estimate and is the more trustworthy signal when there are only five
 observations; the corrected p-value is what stops five correlated numbers
 reading as five experiments.
 
-**When two distributions are too close to call, get more of them:**
+**Every run is already a distribution.** `standard` and `full` run the whole
+cross-validation **ten times** over independently seeded splits, so any run
+reports 50 observations rather than 5 without anyone remembering to ask:
 
 ```bash
 python scripts/evaluate.py --config configs/your_experiment.yaml \
-       --compare-features quantiles_v1 --repeats 10
+       --compare-features quantiles_v1
 ```
 
-Ten repetitions of the 5-fold split is 50 paired observations instead of 5.
 Repetition 0 is always the canonical seed-4262 split, so nothing already
 recorded moves — see
-[docs/decisions/0012](docs/decisions/0012-repeated-cv-is-one-run-keyed-by-rep-and-fold.md).
-It costs ten times the model fits and no extra feature extraction: ~25 minutes
-on the full set against 100 seconds.
+[0012](docs/decisions/0012-repeated-cv-is-one-run-keyed-by-rep-and-fold.md) and
+[0013](docs/decisions/0013-every-run-is-a-distribution.md). It costs ten times
+the model fits and no extra feature extraction. Use `--quick` while iterating;
+`--repeats N` overrides either way.
+
+A five-point run cannot be topped up after the instance is terminated, and it is
+not comparable with a fifty-point one — which is why this is a default and not a
+flag.
 
 This is not a formality. The `quantiles_v1` vs `pooled_v1` comparison is
 **unresolvable** on five folds (corrected p = 0.1305) and comfortably resolved
@@ -254,6 +260,10 @@ ask whether the run is:
 - **against a specific baseline** → add
   `python scripts/evaluate.py --config <cfg> --compare-features <name>` (or
   `--compare-with <other.yaml>`).
+- **against a run from an instance that is gone** → `--compare-run <run-id>`.
+  Pulls that run's metric vector out of W&B and pairs against it with **no
+  refit**. Refuses unless both runs record the same dataset fingerprint and
+  split ([0015](docs/decisions/0015-comparing-against-a-run-that-no-longer-exists.md)).
 
 Never hand over `--quick` for a run whose number will be quoted. It skips the
 depth sweep, and a run without depth numbers cannot be compared against one that
