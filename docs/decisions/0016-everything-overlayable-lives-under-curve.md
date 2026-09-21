@@ -53,17 +53,35 @@ walks the longest and emits only the keys that have a value at each step. W&B
 tolerates a missing key at a step; it does not tolerate steps going backwards,
 which is what logging each series over its own range would do.
 
-### 3. Transform in the panel, not in the data
+### 3. Transform in the panel where you can, and log a companion where you cannot
 
-W&B has a log-scale toggle per axis. A transformed *metric* cannot be untransformed,
-makes the key mean something different from the day it changed, and orphans every
-run before it — the schema hazard [0007](0007-evaluating-without-a-baseline.md)
-section 4 exists to prevent.
+A transformed *metric* cannot be untransformed, makes the key mean something
+different from the day it changed, and orphans every run before it — the schema
+hazard [0007](0007-evaluating-without-a-baseline.md) section 4 exists to prevent.
+So the default is: log the raw quantity, let the axis do the work.
 
-So: log the raw quantity, let the axis do the work. The one exception is
-`calib/calibrated = 1 - ece`, added because a scatter panel cannot transform an
-axis at all and the headline scatter wants both dimensions pointing the same way.
-It is derived, `ece` remains the number to quote, and both are logged.
+**Correction (2026-09-21): W&B cannot always do the work.** This section
+originally asserted "W&B has a log-scale toggle per axis". That is false for
+**line panels**, which expose only range min/max — checked against W&B's own
+line-plot reference after a teammate went looking for the control and could not
+find it. Only the scatter panel can transform an axis.
+
+So a *companion* key is logged wherever the panel cannot transform. The rule is
+that the raw key stays, stays the default, and remains the number to quote:
+
+| companion | raw it accompanies | why the panel cannot do it |
+|---|---|---|
+| `calib/calibrated` = 1 - ece | `calib/ece` | a scatter axis cannot transform |
+| `curve/band/log10_reads` | `curve/band/reads` | a line panel has no log scale |
+| `curve/depth/log10_reads` | `curve/depth/reads` | same |
+
+The band case is not cosmetic. On a linear 20..991 axis the first three bands
+share **6% of the width**, so half the measurements are unreadable slivers.
+Point the panel's x at the `log10_` key; switch back to the raw one to read real
+read counts.
+
+A companion is not a licence to transform freely. It is allowed only when the
+panel demonstrably cannot, and it never replaces the raw key.
 
 ### 4. The depth sweep stops at 25
 
@@ -98,7 +116,8 @@ nonsense, and the sweep and band panels cannot be read against each other.
 
 **Log `logit(pr_auc)` so good models spread out.** The transform-in-the-data
 trap — see section 3. Not needed either: PR AUC here is ~0.4–0.5, nowhere near a
-ceiling.
+ceiling, and the scatter panel *can* transform its axes, so the companion
+exception does not apply.
 
 **Extend the sweep to 50 or 84 for a fuller picture.** See the table above. It
 would add points that are mostly not measuring what they claim to.

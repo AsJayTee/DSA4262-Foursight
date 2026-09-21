@@ -364,7 +364,17 @@ def strata(report: Report, oof: pd.DataFrame, which: list[str], min_positive: in
                 pr_auc += [row["pr_auc"]] * 2
             report.series(
                 "curve/band/reads", reads,
-                {"curve/band/pr_auc_lift": lift, "curve/band/pr_auc": pr_auc},
+                {
+                    "curve/band/pr_auc_lift": lift,
+                    "curve/band/pr_auc": pr_auc,
+                    # A companion x, logged because a W&B *line* panel has no
+                    # log-scale control - only the scatter does. On a linear
+                    # 20..991 axis the first three bands share 6% of the width,
+                    # so half the measurements are unreadable slivers. Point the
+                    # panel's x at this instead. The raw `reads` key stays, and
+                    # stays the default. See docs/decisions/0016.
+                    "curve/band/log10_reads": np.log10(reads).tolist(),
+                },
             )
 
         if report.profile.plots:
@@ -545,6 +555,11 @@ def depth_sweep(
                 "curve/depth/pr_auc": [row["pr_auc"] for row in numeric],
                 "curve/depth/roc_auc": [row["roc_auc"] for row in numeric],
                 "curve/depth/retained": [row["retained"] for row in numeric],
+                # Same reason as the bands: 1,2,3,4,5 share a sixth of a linear
+                # 1..25 axis, and that is the range SG-NEx actually occupies.
+                "curve/depth/log10_reads": np.log10(
+                    [int(row["depth"]) for row in numeric]
+                ).tolist(),
             },
         )
 
