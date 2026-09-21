@@ -424,6 +424,55 @@ def fetch_observations(reference: str, metric: str = "pr_auc") -> tuple[list[dic
     return sorted(observations, key=lambda o: (o["repetition"], o["fold"])), fingerprint
 
 
+# Must match m6a.report.STRATA_TABLE. Not imported from there because report.py
+# imports pandas and the whole evaluation stack, and this module is deliberately
+# importable on a machine with neither.
+STRATA_TABLE = "strata_observations"
+
+
+def fetch_strata(reference: str, metric: str = "pr_auc") -> dict[str, dict[str, list[dict]]]:
+    """Pull a finished run's per-stratum metric vectors out of W&B.
+
+    Returns {kind: {stratum: [observation, ...]}} shaped exactly like
+    `m6a.report.stratified_observations` produces locally, so a pulled arm and a
+    refitted one go through the same comparison code.
+
+    Returns an empty dict when the run has no such table - a run from before
+    docs/decisions/0018, or one evaluated at `--profile quick`. The caller says
+    so and falls back to the overall comparison rather than failing: an overall
+    test is still worth having.
+    """
+    run = resolve_run(reference)
+    table = None
+    for name in (f"{run.entity}/{run.project}/run-{run.id}-{STRATA_TABLE}:latest",):
+        try:
+            import wandb
+
+            table = wandb.Api().artifact(name, type="run_table").get(STRATA_TABLE)
+            break
+        except Exception:  # noqa: BLE001 - absent is a normal answer here
+            continue
+    if table is None:
+        return {}
+
+    columns = list(table.columns)
+    out: dict[str, dict[str, list[dict]]] = {}
+    for row in table.data:
+        record = dict(zip(columns, row))
+        if metric not in record:
+            continue
+        out.setdefault(str(record["kind"]), {}).setdefault(str(record["stratum"]), []).append(
+            {
+                "repetition": int(record["repetition"]),
+                "fold": int(record["fold"]),
+                "n": int(record.get("n", 0)),
+                "n_positive": int(record.get("n_positive", 0)),
+                metric: float(record[metric]),
+            }
+        )
+    return out
+
+
 def require_same_dataset(local: dict, remote: dict, name: str) -> None:
     """Refuse to pair two runs that were not computed on the same thing.
 

@@ -216,6 +216,8 @@ def main() -> int:
     if repeats > 1:
         reporting.repeated(report, repeated, name=config.name)
     if report.profile.strata:
+        reporting.strata_observations(report, repeated, y, dataset.sites)
+    if report.profile.strata:
         reporting.strata(report, result.oof, ["depth", "motif"], min_positive=10)
     reporting.calibration(report, result.oof)
     reporting.curves(

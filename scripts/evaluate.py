@@ -558,6 +558,10 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
     if repeats > 1:
         reporting.repeated(report, repeated, name=features)
     if report.profile.strata:
+        reporting.strata_observations(
+            report, repeated, dataset.y, dataset.sites, args.min_positive
+        )
+    if report.profile.strata:
         reporting.strata(report, result.oof, args.by.split(","), args.min_positive)
     reporting.calibration(report, result.oof)
     reporting.curves(
@@ -685,6 +689,39 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
             f"Paired: {features} vs {fingerprint['run_name']} (pulled from W&B)",
             "run",
         )
+
+        # ...and inside each stratum, if the pulled run logged the vectors.
+        # A run that did not still gets the overall test above, which is worth
+        # having on its own - so this degrades rather than fails.
+        if report.profile.strata:
+            remote_strata = tracking.fetch_strata(args.compare_run)
+            if not remote_strata:
+                report.log(
+                    "\n  No per-stratum vectors on that run, so the comparison stops "
+                    "at the\n  overall number. Runs evaluated at --profile quick, or "
+                    "before\n  docs/decisions/0018, do not carry them."
+                )
+            else:
+                local_strata = {
+                    "depth": depth_bands(dataset.sites["n_reads"].to_numpy()),
+                    "motif": dataset.sites["motif"].to_numpy(),
+                }
+                for kind, groups in local_strata.items():
+                    if kind not in args.by.split(",") or kind not in remote_strata:
+                        continue
+                    reporting.stratified_comparison(
+                        report,
+                        remote_strata[kind],
+                        reporting.stratified_observations(
+                            repeated, dataset.y, groups, min_positive=args.min_positive
+                        ),
+                        fingerprint["run_name"], features,
+                        "read depth" if kind == "depth" else "DRACH motif",
+                        f"run_{kind}",
+                        n_folds=config.split.n_folds,
+                        order=(list(evaluation.DEPTH_BAND_LABELS)
+                               if kind == "depth" else None),
+                    )
 
     if args.bootstrap and not (args.compare_features or args.compare_with):
         reporting.bootstrap(

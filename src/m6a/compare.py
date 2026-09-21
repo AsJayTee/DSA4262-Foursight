@@ -477,7 +477,12 @@ def verdict(result: dict) -> str:
             f"{result['candidate']} and {result['baseline']} scored identically on "
             f"all {n} {unit} - nothing to test."
         )
-    if p < 0.05 and wins in (0, n):
+    # "Consistent" used to mean *every* observation, which was the right rule
+    # when n was always 5 and is the wrong one at 50: 48/50 is about as one-sided
+    # as evidence gets, and calling it inconsistent buries the finding. 90% keeps
+    # 5/5 consistent and 4/5 not, exactly as before.
+    consistent = n and (wins / n >= 0.9 or wins / n <= 0.1)
+    if p < 0.05 and consistent:
         return (
             f"{result['candidate']} is {mean:+.4f} {direction} {result['baseline']}, "
             f"winning {wins}/{n} {unit}, corrected p = {p:.4f}. Consistent in "

@@ -689,6 +689,82 @@ def stratified_observations(
     return out
 
 
+# The one table a future run needs in order to compare against this one inside a
+# stratum. Given a well-known name with no slash in it, because a W&B table key
+# containing "/" is sanitised into an artifact name with a random suffix, which
+# cannot be reconstructed later - and the whole point is retrieving it by name.
+STRATA_TABLE = "strata_observations"
+
+
+def strata_observations(
+    report: Report,
+    result,
+    y: np.ndarray,
+    sites: pd.DataFrame,
+    min_positive: int = 10,
+) -> None:
+    """Per-(repetition, fold) metrics inside every depth band and motif.
+
+    Computed on **every** standard run, not only on comparisons, because this is
+    what a later `--compare-run` pulls to test a difference inside a stratum
+    without refitting anything (docs/decisions/0018). A run that did not log it
+    can only ever be compared on the overall number.
+
+    Roughly 50 observations x 22 strata. That is ~1,100 rows, which is the right
+    order of magnitude to push at W&B - unlike the per-site scores, which are
+    121,838 rows and deliberately never stored
+    ([0009](../../docs/decisions/0009-distributions-not-per-site-scores.md)).
+    """
+    kinds = {
+        "depth": depth_bands(sites["n_reads"].to_numpy()),
+        "motif": sites["motif"].to_numpy(),
+    }
+    rows: list[dict] = []
+    for kind, groups in kinds.items():
+        for stratum, observations in stratified_observations(
+            result, y, groups, min_positive=min_positive
+        ).items():
+            for observation in observations:
+                rows.append({"kind": kind, "stratum": stratum, **observation})
+
+    if not rows:
+        return
+    report.data["strata_observations"] = rows
+
+    counts = {}
+    for row in rows:
+        counts[row["kind"]] = counts.get(row["kind"], 0) + 1
+    report.log(
+        f"\nstrata observations: {len(rows):,} rows "
+        + ", ".join(f"{n:,} {kind}" for kind, n in sorted(counts.items()))
+        + " - logged so a later run can pair against this one inside a stratum"
+    )
+
+    if report.profile.plots:
+        from m6a import figures
+        from m6a.evaluation import DEPTH_BAND_EDGES, DEPTH_BAND_LABELS
+
+        order = {label: edge for label, edge in zip(DEPTH_BAND_LABELS, DEPTH_BAND_EDGES)}
+        by_band: dict[str, list[float]] = {}
+        for row in rows:
+            if row["kind"] == "depth":
+                by_band.setdefault(row["stratum"], []).append(row["pr_auc"])
+        # Highest depth at the top, so the figure reads the same way down as the
+        # by-depth table does.
+        ordered = dict(sorted(by_band.items(), key=lambda kv: -order.get(kv[0], 0)))
+        if ordered:
+            report.figure(
+                "fig/band_distribution",
+                figures.metric_distribution(
+                    ordered,
+                    title="PR AUC by read-depth band, every repetition and fold",
+                    caption="Each point is one fold of one repetition, scored on the "
+                            "sites in that band\nalone. Bands hold different numbers of "
+                            "sites, so the spreads are not equally reliable.",
+                ),
+            )
+
+
 def stratified_comparison(
     report: Report,
     baseline: dict[str, list[dict]],
@@ -903,6 +979,8 @@ def publish(report: Report, tracker, report_path: Path | None = None, name: str 
         )
     for key, block in (report.data.get("stratified_comparisons") or {}).items():
         tracker.log_table(f"stratified/{key}", pd.DataFrame(block["rows"]))
+    if report.data.get("strata_observations"):
+        tracker.log_table(STRATA_TABLE, pd.DataFrame(report.data["strata_observations"]))
     # A comparison arm's per-fold vector, so the baseline can be paired against a
     # third run later without refitting it (docs/decisions/0008).
     for arm_name, arm_data in (report.data.get("arms") or {}).items():
