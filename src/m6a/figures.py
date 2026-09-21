@@ -421,47 +421,57 @@ def depth_sweep(rows: list[dict], subsample_seed: int) -> Any:
     return figure
 
 
-def depth_bands(rows: list[dict]) -> Any:
+def depth_bands(rows: list[dict], spans: dict[str, tuple[int, int]]) -> Any:
     """PR AUC lift on sites grouped by the depth they really had.
 
     The other depth question: no reads are removed here, the sites simply differ
     in how much coverage they came with. Lift rather than PR AUC because PR AUC
     is bounded below by each band's own positive rate.
+
+    **Drawn as a step, not a line.** Each band's metric is one number that holds
+    across a *range* of read counts, and the ranges are wildly uneven - 20-31 is
+    12 reads wide, 84-303 is 220. A dot per band joined by a line invites the
+    reader to see a trend between two dots with nothing measured in between, and
+    hides how much of the axis each measurement is responsible for. A segment
+    spanning the band says both things at once: constant here, and *this* wide.
+
+    The x axis is logarithmic because the bands are roughly geometric; on a
+    linear axis the first five would pile up against the origin.
     """
-    scored = [row for row in rows if row.get("pr_auc_lift") is not None]
+    scored = [row for row in rows
+              if row.get("pr_auc_lift") is not None and row["group"] in spans]
     if not scored:
         return None
+    scored.sort(key=lambda row: spans[row["group"]][0])
 
     figure, axes = _canvas(
         "Measured at true read depth",
-        "reads at the site",
+        "reads at the site (log scale; bar width is the band's range)",
         "PR AUC lift over random",
     )
-    x = list(range(len(scored)))
     lift = [float(row["pr_auc_lift"]) for row in scored]
-    # A dot-and-line rather than bars. Lift's null is 1.0x, not 0, so a bar
-    # anchored at zero would spend nine tenths of its height on the part of the
-    # scale that carries no information and flatten the differences that do -
-    # and the band-to-band drop is the whole reason this figure exists. Same
-    # visual language as the sweep figure, so the two can be read side by side;
-    # what differs between them is in the captions.
-    axes.plot(x, lift, color=BLUE, linewidth=2, zorder=3)
-    axes.scatter(x, lift, s=48, color=BLUE, zorder=4, edgecolors=SURFACE, linewidths=1.6)
-    for position, value in zip(x, lift):
+    for row, value in zip(scored, lift):
+        first, last = spans[row["group"]]
+        axes.plot([first, last], [value, value], color=BLUE, linewidth=3.5,
+                  solid_capstyle="butt", zorder=3)
         axes.annotate(
-            f"{value:.1f}x", xy=(position, value), xytext=(0, 10),
+            f"{value:.1f}x", xy=((first * last) ** 0.5, value), xytext=(0, 9),
             textcoords="offset points", color=INK_SOFT, fontsize=8, ha="center",
         )
-    axes.set_xticks(x)
-    axes.set_xticklabels([str(row["group"]) for row in scored])
+        axes.annotate(
+            str(row["group"]), xy=((first * last) ** 0.5, value), xytext=(0, -14),
+            textcoords="offset points", color=MUTED, fontsize=7.5, ha="center",
+        )
+
+    axes.set_xscale("log")
     span = max(lift) - min(lift)
-    axes.set_ylim(min(lift) - max(span, 0.5) * 0.45, max(lift) + max(span, 0.5) * 0.55)
+    axes.set_ylim(min(lift) - max(span, 0.5) * 0.55, max(lift) + max(span, 0.5) * 0.55)
     _caption(
         figure,
         "No reads were removed: these are sites that genuinely differ in coverage. Not the\n"
         "same question as the sweep, which holds the sites fixed and takes evidence away.\n"
-        "Lift, not PR AUC: PR AUC is bounded below by each band's own positive rate. "
-        "Random is 1.0x.",
+        "Each bar is one measurement covering that whole range - there is no trend to read\n"
+        "between two bars. Lift, not PR AUC, because each band has its own positive rate.",
     )
     return figure
 
@@ -482,7 +492,7 @@ def stratum_differences(rows: list[dict], stratum_label: str, title: str) -> Any
         return None
 
     figure, axes = _canvas(
-        title, f"difference in PR AUC", stratum_label,
+        title, "difference in PR AUC", stratum_label,
         figsize=(FIGSIZE[0], max(3.0, 0.44 * len(rows) + 2.3)),
     )
     axes.axvline(0, color=INK_SOFT, linewidth=1.2, zorder=2)
@@ -519,6 +529,8 @@ def stratum_differences(rows: list[dict], stratum_label: str, title: str) -> Any
         "Descriptive - where a difference concentrates - not confirmatory.",
     )
     return figure
+
+
 def feature_importance(importances: dict[str, float], top_n: int = 20) -> Any:
     """The columns the shipped model actually splits on."""
     ranked = sorted(importances.items(), key=lambda kv: -kv[1])[:top_n]

@@ -336,30 +336,44 @@ def strata(report: Report, oof: pd.DataFrame, which: list[str], min_positive: in
         report.data[key] = records(frame)
 
     if "by_depth" in report.data:
-        # Overlayable across runs. x is the band's lower edge, which is a real
-        # number of reads, so the line is readable on a log axis and two models
-        # land on the same one. A band only appears if it could be scored -
-        # bands below 20 reads are empty on this training set by construction.
-        from m6a.evaluation import DEPTH_BAND_EDGES, DEPTH_BAND_LABELS
+        # Overlayable across runs: x is a real number of reads, so the line is
+        # readable on a log axis and two models land on the same one. A band only
+        # appears if it could be scored - bands below 20 reads are empty on this
+        # training set by construction, because the course filtered it there.
+        from m6a.evaluation import band_spans
 
-        lower = dict(zip(DEPTH_BAND_LABELS, DEPTH_BAND_EDGES))
+        spans = band_spans(float(np.asarray(oof["n_reads"]).max()))
         scored = [row for row in report.data["by_depth"]
-                  if row.get("pr_auc_lift") is not None and row["group"] in lower]
-        scored.sort(key=lambda row: lower[row["group"]])
+                  if row.get("pr_auc_lift") is not None and row["group"] in spans]
+        scored.sort(key=lambda row: spans[row["group"]][0])
         if scored:
+            # Two points per band - its first and last read count - rather than
+            # one. That turns an ordinary W&B line panel into a **step chart**:
+            # flat across each band, a near-vertical connector between them.
+            #
+            # It matters because the bands are unevenly spaced. One point per
+            # band draws a long straight run from 84 to 304 that looks like a
+            # gradual decline, when nothing at all was measured in between. The
+            # value is constant across a band by construction, and a step says
+            # that; a slope invents a trend.
+            reads, lift, pr_auc = [], [], []
+            for row in scored:
+                first, last = spans[row["group"]]
+                reads += [first, last]
+                lift += [row["pr_auc_lift"]] * 2
+                pr_auc += [row["pr_auc"]] * 2
             report.series(
-                "curve/band/reads",
-                [lower[row["group"]] for row in scored],
-                {
-                    "curve/band/pr_auc_lift": [row["pr_auc_lift"] for row in scored],
-                    "curve/band/pr_auc": [row["pr_auc"] for row in scored],
-                },
+                "curve/band/reads", reads,
+                {"curve/band/pr_auc_lift": lift, "curve/band/pr_auc": pr_auc},
             )
 
-    if report.profile.plots and "by_depth" in report.data:
-        from m6a import figures
+        if report.profile.plots:
+            from m6a import figures
 
-        report.figure("fig/depth_bands", figures.depth_bands(report.data["by_depth"]))
+            report.figure(
+                "fig/depth_bands",
+                figures.depth_bands(report.data["by_depth"], spans),
+            )
 
 
 def calibration(report: Report, oof: pd.DataFrame) -> None:

@@ -88,6 +88,32 @@ def depth_bands(n_reads) -> pd.Categorical:
     return pd.Categorical(binned, categories=DEPTH_BAND_LABELS, ordered=True)
 
 
+def band_spans(max_depth: float | None = None) -> dict[str, tuple[int, int]]:
+    """The (first, last) read count each depth band actually covers.
+
+    A band is a *range*, and its metric is one number constant across that whole
+    range. Plotting it as a single point invites a reader to draw a line to the
+    next point and see a trend - but nothing was measured in between, and the
+    bands are unevenly spaced (84-303 is 220 reads wide, 20-31 is 12). Knowing
+    each band's extent is what lets a figure say "constant here, measured once".
+
+    The top band is open-ended, so its upper bound is whatever the data actually
+    reaches. Pass `max_depth` to get the honest edge; without it the last band is
+    given a nominal width so the figure still draws.
+    """
+    spans: dict[str, tuple[int, int]] = {}
+    for index, label in enumerate(DEPTH_BAND_LABELS):
+        lower = DEPTH_BAND_EDGES[index]
+        if index + 1 < len(DEPTH_BAND_EDGES):
+            upper = DEPTH_BAND_EDGES[index + 1] - 1
+        elif max_depth is not None:
+            upper = int(max_depth)
+        else:
+            upper = int(lower * 1.5)
+        spans[label] = (int(lower), max(int(upper), int(lower)))
+    return spans
+
+
 def metrics_by(
     y_true: np.ndarray,
     y_score: np.ndarray,
