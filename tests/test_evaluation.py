@@ -168,9 +168,14 @@ def test_subsampled_features_differ_from_full_depth_ones(fake):
 # --------------------------------------------------------------------------
 
 def test_depth_bands_are_ordered_and_cover_the_sgnex_range():
-    bands = depth_bands([1, 2, 3, 4, 5, 19, 20, 46, 500])
-    assert list(bands) == ["1", "2", "3-4", "3-4", "5-9", "10-19", "20-31", "32-46", "304+"]
+    bands = depth_bands([1, 2, 3, 4, 5, 19, 20, 46, 500, 700])
+    assert list(bands) == [
+        "1", "2", "3-4", "3-4", "5-9", "10-19", "20-31", "32-46", "304-599", "600+",
+    ]
     assert bands.ordered
+    # The top band was split at 600 (docs/decisions/0017) because every model
+    # drops sharply above 304 and one open-ended bucket could not say whether
+    # that is a cliff or a slide. True depth tops out at 991 on this data.
 
 
 def test_thin_strata_get_a_reason_instead_of_a_number():

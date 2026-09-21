@@ -70,7 +70,8 @@ from m6a import evaluation
 from m6a.evaluation import depth_bands, metrics
 
 SMOKE_SITES = 5000
-DEFAULT_DEPTHS = "1,3,5,10,20,full"
+# See scripts/train.py for why this stops at 25.
+DEFAULT_DEPTHS = "1,2,3,4,5,7,10,15,20,25,full"
 # Mirrors m6a.compare.BOOTSTRAP_SEED rather than importing it: m6a.compare
 # pulls in scipy, and this script should not do that just to print a default.
 BOOTSTRAP_SEED = 4262

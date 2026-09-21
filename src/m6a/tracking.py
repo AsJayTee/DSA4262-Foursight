@@ -111,10 +111,17 @@ class Tracker:
             for x_key, y_key in pairs:
                 self.run.define_metric(x_key, summary="none")
                 self.run.define_metric(y_key, step_metric=x_key, summary="none")
-            length = len(next(iter(series.values())))
-            for i in range(length):
-                self.run.log({key: float(values[i]) for key, values in series.items()},
-                             step=i)
+            # Series have different lengths - 201 points for a ROC curve, 10 for
+            # a depth sweep. Log by step across the longest, emitting only the
+            # keys that have a value there. W&B tolerates a missing key at a
+            # step; it does not tolerate steps going backwards, which is what
+            # logging each series over its own range would do.
+            longest = max(len(values) for values in series.values())
+            for i in range(longest):
+                row = {key: float(values[i]) for key, values in series.items()
+                       if i < len(values)}
+                if row:
+                    self.run.log(row, step=i)
 
         self._guard("curve series", action)
 
@@ -534,7 +541,8 @@ def flat_metrics(report: dict) -> dict[str, float]:
 
     calibration = report.get("calibration")
     if calibration:
-        for key in ("ece", "brier", "count_ratio", "mean_predicted", "actual_rate"):
+        for key in ("ece", "calibrated", "brier", "count_ratio",
+                    "mean_predicted", "actual_rate"):
             value = calibration["summary"].get(key)
             if value is not None:
                 flat[f"calib/{key}"] = float(value)

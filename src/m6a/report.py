@@ -131,6 +131,21 @@ class Report:
         if figure is not None:
             self.figures[name] = figure
 
+    def series(self, x_key: str, xs, ys: dict[str, Any]) -> None:
+        """Register an overlayable curve: one x key, one or more y keys against it.
+
+        Everything registered here is logged point-by-point so W&B can draw one
+        line per run on a single panel. An image cannot do that, which is the
+        whole reason this exists alongside the figures - see
+        docs/decisions/0014 and 0016.
+        """
+        block = self.data.setdefault("curves", {"series": {}, "pairs": []})
+        block["series"][x_key] = [float(v) for v in xs]
+        for y_key, values in ys.items():
+            block["series"][y_key] = [float(v) for v in values]
+            if [x_key, y_key] not in block["pairs"]:
+                block["pairs"].append([x_key, y_key])
+
 
 def new(profile_name: str = DEFAULT_PROFILE, *, subsample_seed: int, log=print) -> Report:
     report = Report(profile=profile(profile_name), log=log)
@@ -320,6 +335,27 @@ def strata(report: Report, oof: pd.DataFrame, which: list[str], min_positive: in
         )
         report.data[key] = records(frame)
 
+    if "by_depth" in report.data:
+        # Overlayable across runs. x is the band's lower edge, which is a real
+        # number of reads, so the line is readable on a log axis and two models
+        # land on the same one. A band only appears if it could be scored -
+        # bands below 20 reads are empty on this training set by construction.
+        from m6a.evaluation import DEPTH_BAND_EDGES, DEPTH_BAND_LABELS
+
+        lower = dict(zip(DEPTH_BAND_LABELS, DEPTH_BAND_EDGES))
+        scored = [row for row in report.data["by_depth"]
+                  if row.get("pr_auc_lift") is not None and row["group"] in lower]
+        scored.sort(key=lambda row: lower[row["group"]])
+        if scored:
+            report.series(
+                "curve/band/reads",
+                [lower[row["group"]] for row in scored],
+                {
+                    "curve/band/pr_auc_lift": [row["pr_auc_lift"] for row in scored],
+                    "curve/band/pr_auc": [row["pr_auc"] for row in scored],
+                },
+            )
+
     if report.profile.plots and "by_depth" in report.data:
         from m6a import figures
 
@@ -351,6 +387,17 @@ def calibration(report: Report, oof: pd.DataFrame) -> None:
         "cell line in Task 2 does exactly that."
     )
     report.data["calibration"] = {"summary": summary, "deciles": records(table)}
+
+    # The reliability diagram as a series, so every model's miscalibration lands
+    # on one panel against the diagonal. `calib/ece` compresses this to a single
+    # number, which says a model is badly calibrated but not *how* - whether it
+    # overcounts everywhere or only in the top decile. These are ours: 0.608
+    # predicted against 0.327 observed in the top bin.
+    report.series(
+        "curve/reliability/predicted",
+        table["mean_predicted"].to_numpy(),
+        {"curve/reliability/observed": table["observed_rate"].to_numpy()},
+    )
 
     if report.profile.plots:
         from m6a import figures
@@ -411,12 +458,13 @@ def curves(report: Report, arms: dict[str, tuple[np.ndarray, np.ndarray]]) -> No
         return
 
     name, (y_true, y_score) = next(iter(arms.items()))
-    report.data["curves"] = {
-        "points": CURVE_POINTS,
-        "arm": name,
-        "series": {key: values.tolist() for key, values in
-                   curve_series(y_true, y_score).items()},
-    }
+    computed = curve_series(y_true, y_score)
+    report.series("curve/roc/fpr", computed["curve/roc/fpr"],
+                  {"curve/roc/tpr": computed["curve/roc/tpr"]})
+    report.series("curve/pr/recall", computed["curve/pr/recall"],
+                  {"curve/pr/precision": computed["curve/pr/precision"]})
+    report.data["curves"]["points"] = CURVE_POINTS
+    report.data["curves"]["arm"] = name
 
     if not report.profile.plots:
         return
@@ -468,6 +516,23 @@ def depth_sweep(
         "note": "trained at full depth, scored at the stated depth",
         "rows": records(frame),
     }
+
+    # Overlayable across runs: one line per model on one panel. `full` is left
+    # out because it has no number on a reads axis - it is already `oof/pr_auc`,
+    # so nothing is lost, and inventing an x for "all of them" would need
+    # explaining on a figure meant to be read at a glance.
+    numeric = [row for row in report.data["depth_sweep"]["rows"] if row["depth"] != "full"]
+    numeric.sort(key=lambda row: int(row["depth"]))
+    if numeric:
+        report.series(
+            "curve/depth/reads",
+            [int(row["depth"]) for row in numeric],
+            {
+                "curve/depth/pr_auc": [row["pr_auc"] for row in numeric],
+                "curve/depth/roc_auc": [row["roc_auc"] for row in numeric],
+                "curve/depth/retained": [row["retained"] for row in numeric],
+            },
+        )
 
     if report.profile.plots:
         from m6a import figures
@@ -810,11 +875,10 @@ def publish(report: Report, tracker, report_path: Path | None = None, name: str 
     # Curves first. They occupy steps 0..200, and logging them afterwards would
     # put the scalars at step 0 with the curve drawn over the top of them.
     curves_block = report.data.get("curves")
-    if curves_block:
+    if curves_block and curves_block.get("series"):
         tracker.log_curve_series(
             {key: np.asarray(values) for key, values in curves_block["series"].items()},
-            pairs=[("curve/roc/fpr", "curve/roc/tpr"),
-                   ("curve/pr/recall", "curve/pr/precision")],
+            pairs=[tuple(pair) for pair in curves_block["pairs"]],
         )
 
     flat = tracking.flat_metrics(report.data)

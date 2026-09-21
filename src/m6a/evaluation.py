@@ -51,17 +51,27 @@ def metrics(y_true: np.ndarray, y_score: np.ndarray) -> dict[str, float]:
 # stratified metrics
 # --------------------------------------------------------------------------
 
-# Read-depth bands. The upper five boundaries are this training set's own depth
+# Read-depth bands. The upper boundaries are this training set's own depth
 # quartiles and p95 (32 / 47 / 84 / 304, see docs/data.md); the lower five cover
 # the regime SG-NEx actually lives in (median depth 3) and the depths the sweep
 # scores at. Fixed rather than computed per dataset, so a band means the same
 # thing in two reports and the numbers can be read side by side.
 #
+# 600 splits what used to be a single open-ended 304+ band. Every model drops
+# sharply in that band and nobody knows why (GAPS.md), so the question "is it a
+# cliff or a slide" was unanswerable while it was one bucket. The split gives
+# 3,258 sites / 134 positives below 600 and 2,837 / 129 above - both clear
+# `min_positive`, though PR AUC on ~130 positives is noisy and should be read as
+# such. True depth here tops out at 991, so there is nothing above 600+ to add.
+# Changing these edges changes what every `band/*` key means: see
+# docs/decisions/0017.
+#
 # Depth is the number of distinct RNA molecules measured at one site, not
 # repeated readings of one molecule: docs/data.md#read-depth.
-DEPTH_BAND_EDGES = [1, 2, 3, 5, 10, 20, 32, 47, 84, 304]
+DEPTH_BAND_EDGES = [1, 2, 3, 5, 10, 20, 32, 47, 84, 304, 600]
 DEPTH_BAND_LABELS = [
-    "1", "2", "3-4", "5-9", "10-19", "20-31", "32-46", "47-83", "84-303", "304+",
+    "1", "2", "3-4", "5-9", "10-19", "20-31", "32-46", "47-83", "84-303",
+    "304-599", "600+",
 ]
 
 
@@ -217,6 +227,11 @@ def calibration_summary(y_true: np.ndarray, y_score: np.ndarray) -> dict[str, fl
         # What a model that learned nothing but the base rate would score on
         # brier. Anything above this line is worse than predicting the average.
         "brier_baseline": float(y_true.mean() * (1 - y_true.mean())),
+        # ECE flipped so that higher is better, for a scatter axis where "up and
+        # to the right" means "better" on both dimensions. Derived, not new
+        # information - `ece` stays the number to quote. Logged rather than
+        # computed in the panel because a W&B axis cannot transform a metric.
+        "calibrated": 1.0 - expected_calibration_error(y_true, y_score),
     }
 
 

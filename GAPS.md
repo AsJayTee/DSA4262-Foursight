@@ -140,25 +140,33 @@ regenerated, and the JSON reports behind the current ones are in
   positive rate by reweighting, and every one of them therefore emits scores
   calibrated to a rebalanced world rather than the real one. Nothing downstream
   of a score is currently safe to read as a probability.
-- **Performance drops at the highest read depths, in every model, and nobody
-  knows why.** PR AUC by depth band rises as expected up to 84-303 reads and
-  then falls sharply in the 304+ band (6,095 sites, 263 positives):
+- **Performance collapses above 600 reads per site, and it is a cliff rather
+  than a slide.** This entry used to say the drop began at 304. Splitting the
+  top band at 600 ([0017](docs/decisions/0017-split-the-top-depth-band.md))
+  shows that is wrong:
 
-  | depth band | 20-31 | 32-46 | 47-83 | 84-303 | **304+** |
-  |---|---:|---:|---:|---:|---:|
-  | `lightgbm_quantiles` lift | 10.1x | 10.7x | 11.1x | 10.8x | **9.8x** |
-  | `lightgbm_pooled` lift | 9.8x | 10.5x | 10.6x | 10.6x | **8.9x** |
-  | `baseline_logistic` lift | 8.8x | 9.5x | 9.6x | 9.5x | **6.5x** |
+  | depth band | 20-31 | 32-46 | 47-83 | 84-303 | 304-599 | **600+** |
+  |---|---:|---:|---:|---:|---:|---:|
+  | `lightgbm_quantiles` lift | 10.1x | 10.7x | 11.1x | 10.8x | **11.07x** | **8.84x** |
+
+  304-599 is the **best** band in the table. Everything above 600 falls off a
+  cliff: 2,837 sites, 129 positives, 8.84x against a neighbour at 11.07x.
 
   Read the lift column, not PR AUC: the positive rate is near-identical across
   bands (4.32%-4.73%), so this is not a base-rate artefact. More evidence should
-  make a site easier, not harder. The drop is consistent across three different
-  models, so it is a property of the data or the labels rather than a model
-  quirk, and it is worst for the weakest model. Untested hypotheses: 304+ sites
-  are the most highly expressed transcripts and may be a different biological
-  regime; m6ACE-Seq is an antibody method with known high background, so label
-  quality may differ there; or the summary statistics may simply saturate. Nobody
-  has looked.
+  make a site easier, not harder. The old 304+ number was recorded for all three
+  models and the drop was present in each, so this is a property of the data or
+  the labels rather than a model quirk - the split has only been re-measured on
+  `lightgbm_quantiles` so far, and confirming it on the other two is one command.
+
+  A threshold effect at 600 fits a **distinct population** better than it fits
+  gradual saturation of the summary statistics, which would predict a decline
+  starting well before 600. Untested hypotheses now narrowed to 2,837 sites:
+  they are the most highly expressed transcripts and may be a different
+  biological regime; or m6ACE-Seq's antibody background differs there. Nobody
+  has looked at what those sites *are* - which transcripts, which genes, whether
+  they are ribosomal or mitochondrial. That is now a tractable question rather
+  than a vague one.
 - **Only single models are evaluated.** There is no way to score an ensemble, a
   rule combining two models, or a threshold choice.
 - **Cross-cell-line shift is smaller than this file previously assumed; depth
@@ -171,6 +179,15 @@ regenerated, and the JSON reports behind the current ones are in
   7,129 A549 sites clear depth >=20 out of 62,744 sampled from 20 windows
   through the file, so this is directional, not a precise estimate. This one is
   not part of the harness — see the Infrastructure section.)
+- **Paralogous genes could leak across the split, and nobody has checked.**
+  The split groups on `gene_id`, which stops transcripts of the *same* gene
+  straddling a fold. It does nothing about two *different* genes that share
+  near-identical sequence - paralogs, gene families, recent duplications. A
+  paralog pair split across folds is a genuine leak: the model sees one copy in
+  training and is scored on the other. Nobody has measured sequence similarity
+  across fold boundaries, so the size of this is unknown. It is the only
+  unguarded leakage vector identified so far, and it is the first thing to rule
+  out whenever a number looks too good - see the m6Anet entry under Modelling.
 - **Changing the fold assignment invalidates every stored result.** The seed
   (4262) is frozen in `AGENTS.md` for that reason. The longer results accumulate
   in W&B, the more expensive any change to the split becomes: every `fold/*` key
@@ -266,12 +283,37 @@ regenerated, and the JSON reports behind the current ones are in
 - **No external training data has been sought**, although the handout
   explicitly permits searching for additional labels or training sets.
 - The current best out-of-fold PR AUC is **0.4759** (quantile features,
-  LightGBM). Two reference points now exist for reading that number: a
-  motif-only classifier scores **0.1537** (3.42x random) with no signal data at
-  all, and m6Anet's published site-level performance is **ROC AUC 0.83, PR AUC
-  0.35** on HEK293T. The latter is a different cell line with different labels
-  and is not a like-for-like comparison, but it does indicate 0.4759 is in a
-  plausible range rather than suspiciously high.
+  LightGBM). One reference point is solid: a motif-only classifier scores
+  **0.1537** (3.42x random) with no signal data at all.
+
+  **The m6Anet comparison is not a second reference point, and this file used to
+  claim it was.** m6Anet's published site-level performance is ROC AUC 0.83 /
+  PR AUC 0.35 on HEK293T. This entry previously said that "indicates 0.4759 is
+  in a plausible range rather than suspiciously high." That reasoning is
+  backwards. Our **logistic regression baseline** scores 0.4122 - a linear model
+  on 38 summary statistics, beating a published multiple-instance-learning
+  network from Nature Methods. The correct response to that is suspicion, not
+  reassurance.
+
+  What would explain it, in order of likelihood:
+
+  1. **PR AUC is not comparable across datasets at all.** It is bounded below by
+     the positive rate. Ours is 4.49%, so 0.4759 is a **10.59x lift**. If
+     m6Anet's evaluation had a 2% positive rate, their 0.35 is a 17.5x lift -
+     better than ours while looking worse. **Nobody has read their base rate out
+     of the paper.** Until someone does, the comparison means nothing. This is
+     the cheapest thing on this list and it is still not done.
+  2. **Different cell line, labels and site universe.** Theirs is HEK293T; ours
+     is Hct116 with m6ACE-Seq labels and a site set the course pre-selected.
+  3. **Possibly easier data.** Our own depth sweep says we score 0.2458 at depth
+     3 and 0.1527 at depth 1 - both *below* 0.35. If their evaluation had
+     realistic coverage the ordering flips entirely. **But** m6Anet samples 20
+     reads per site, which is the likely reason the course filtered at >= 20 in
+     the first place, so their evaluation may be depth-filtered too. Check
+     before relying on this.
+  4. **Leakage in our pipeline.** Least likely - the split is gene-grouped and
+     features are computed per site from that site's own reads - but not ruled
+     out; see the paralog entry below.
 - **`LightGBMModel.fit` fails on a DataFrame with non-string column names.** It
   passes `list(X.columns)` straight to `feature_name`, and LightGBM raises
   `AttributeError: 'int' object has no attribute 'encode'` from inside its own
@@ -358,6 +400,11 @@ catalogued, and one blocker is much larger than expected.
 - m6Anet's **published** figures are ROC AUC 0.83 / PR AUC 0.35 on HEK293T
   (Hendra et al. 2022). If m6Anet cannot be installed, that is the fallback
   comparison — on different data, which has to be stated plainly.
+- **Nobody has read m6Anet's evaluation base rate out of the paper.** Without
+  it, comparing our PR AUC to their 0.35 is meaningless, because PR AUC is
+  bounded below by the positive rate. One number from one table would let us
+  compare lift instead. This is the single cheapest open item in this file and
+  it gates any claim the report makes about beating m6Anet.
 
 ## Infrastructure
 

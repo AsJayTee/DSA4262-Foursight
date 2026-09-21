@@ -46,7 +46,12 @@ from m6a.data import SUBSAMPLE_SEED, resolve_data_dir
 from m6a.env import load_env
 
 SMOKE_SITES = 5000
-DEFAULT_DEPTHS = [1, 3, 5, 10, 20, None]
+# Dense where SG-NEx lives (median 3, p25 1) and stopping at 25 on purpose:
+# `subsample_reads` returns a site unchanged once it already has fewer reads
+# than asked for, and on this training set 22.7% of sites are untouched at
+# depth 30 and 53.6% at depth 50. Past ~25 the row is mostly "full depth"
+# wearing a label. See docs/decisions/0016.
+DEFAULT_DEPTHS = [1, 2, 3, 4, 5, 7, 10, 15, 20, 25, None]
 
 
 def parse_args() -> argparse.Namespace:

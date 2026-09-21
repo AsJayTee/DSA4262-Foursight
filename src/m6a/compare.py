@@ -290,7 +290,7 @@ def stratified_paired_comparison(
     """
     present = set(baseline) | set(candidate)
     # `order` fixes the reading order (depth bands are ordinal, and alphabetical
-    # would put "304+" between "3-4" and "32-46"). It is filtered to strata that
+    # would put "600+" between "5-9" and "84-303"). It is filtered to strata that
     # actually occurred, so bands that are empty by construction - everything
     # below 20 reads, on this training set - are not reported as "not tested".
     # "Not tested" should mean "we could not test it", not "it does not exist".
