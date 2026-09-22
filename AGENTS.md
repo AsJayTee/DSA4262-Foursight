@@ -245,6 +245,13 @@ conclusion in this repo at least once:
 - **A depth sweep** (`--depth-sweep`) — every training site has ≥ 20 reads and
   SG-NEx has a median of 3. At one read this model scores what a motif-only
   classifier scores. Read [what depth means](docs/data.md#read-depth) first.
+- **A threshold sweep** — PR AUC and ROC AUC integrate over every threshold,
+  which is what makes them right for comparing models and useless for using
+  one. **If a result is a count of anything, quote the count swing**: on the
+  current model a site count moves 2.1× between threshold 0.3 and 0.7, both
+  defensible. A count without it reports an arbitrary cut as a measurement.
+  0.5 is not a neutral default here — it calls 7,250 sites where 5,475 are
+  real. See [0019](docs/decisions/0019-a-threshold-sweep-because-a-ranking-cannot-count.md).
 
 Every run writes a JSON report to `analysis/evaluation/reports/` **and** uploads
 it to W&B. If you quote a number in `GAPS.md` or the report, quote one that a
@@ -296,7 +303,8 @@ has them — which is the failure the profiles exist to prevent.
 | You are doing | It goes in |
 |---|---|
 | A new feature set or model | `src/m6a/features/`, `src/m6a/models/` |
-| Evaluating or comparing runs | `scripts/evaluate.py` — don't write your own |
+| Evaluating or comparing two runs | `scripts/evaluate.py` — don't write your own |
+| One figure across N finished runs | `scripts/compare_runs.py` (reads W&B, fits nothing) |
 | A report section, or a profile | `src/m6a/report.py` (shared — write a record) |
 | A plot | `src/m6a/figures.py` (additive; matplotlib imported inside the function) |
 | Anything that talks to W&B | `src/m6a/tracking.py` — the flat metric keys are a schema |

@@ -28,11 +28,23 @@ from typing import Any, Sequence
 import numpy as np
 import pandas as pd
 
-# A validated categorical palette: adjacent pairs stay distinguishable under
-# colour-vision deficiency, and the first three slots hold up when every pair is
-# on screen at once. Fixed order, never cycled - slot 1 is always the subject of
-# the plot and slot 2 always the thing it is being compared against, so two
-# figures side by side mean the same thing.
+# A validated categorical palette. Fixed order, never cycled - slot 1 is always
+# the subject of the plot and slot 2 always the thing it is being compared
+# against, so two figures side by side mean the same thing.
+#
+# **BLUE and ORANGE are the only two that may share a figure as categories.**
+# Measured, not assumed: BLUE/ORANGE separate by dE 24.7 under protanopia and
+# 33.6 at normal vision, comfortably clear. BLUE/ORANGE/**RED** together does
+# not pass - RED against ORANGE is dE 10.8 at *normal* vision, below the 15
+# floor, so full-colour readers cannot reliably tell them apart either. An
+# earlier version of this comment claimed the first three slots held up when
+# every pair was on screen; that claim was wrong and no figure here relies on
+# it. RED is a diverging pole against BLUE and never a third category.
+#
+# A third series in one figure goes to MUTED as context, the way depth_sweep
+# draws ROC AUC and threshold_sweep draws F1. A figure that genuinely needs more
+# than two categories needs a wider validated ramp first - see
+# docs/decisions/0020 and `scripts/compare_runs.py`.
 BLUE = "#2a78d6"     # slot 1: the run this report is about
 ORANGE = "#eb6834"   # slot 2: the run it is compared against
 RED = "#d03b3b"      # the losing side of a difference; diverging pole against BLUE
@@ -98,6 +110,7 @@ def metric_distribution(
     metric: str = "PR AUC",
     title: str | None = None,
     caption: str = "",
+    colours: Sequence[str] | None = None,
 ) -> Any:
     """One row per arm, every fold (and repetition) drawn as its own point.
 
@@ -111,7 +124,14 @@ def metric_distribution(
     worse object than the five numbers.
     """
     names = list(vectors)
-    colours = [BLUE, ORANGE][: len(names)] or [BLUE]
+    # `colours` lets a caller with more than two arms say which is which -
+    # scripts/compare_runs.py paints the reference run one way and every
+    # candidate the other. Left alone, the house default holds: slot 1 is the
+    # subject, slot 2 is what it is compared against.
+    if colours is not None:
+        colours = list(colours)
+    else:
+        colours = [BLUE, ORANGE][: len(names)] or [BLUE]
     while len(colours) < len(names):
         colours.append(MUTED)
 
@@ -527,6 +547,230 @@ def stratum_differences(rows: list[dict], stratum_label: str, title: str) -> Any
         "interval crosses zero. These are the weakest numbers the harness produces:\n"
         "one test per band, strongly correlated, uncorrected for multiplicity by design.\n"
         "Descriptive - where a difference concentrates - not confirmatory.",
+    )
+    return figure
+
+
+# --------------------------------------------------------------------------
+# thresholds - the half a rank metric cannot answer
+# --------------------------------------------------------------------------
+
+def threshold_sweep(table: pd.DataFrame, points: dict[str, dict]) -> Any:
+    """Precision and recall against the threshold, with F1 behind them.
+
+    Precision and recall are the two quantities in tension, so they take the two
+    categorical slots. F1 is a *summary of those two* rather than a third
+    independent series, so it recedes to the context grey - the same treatment
+    `depth_sweep` gives ROC AUC. Its peak is marked because that is the only
+    thing anyone reads off an F1 curve.
+    """
+    thresholds = table["threshold"].to_numpy(dtype=float)
+    figure, axes = _canvas(
+        "Precision, recall and F1 against the decision threshold",
+        "threshold (a site is called positive at or above this score)",
+        "",
+    )
+
+    axes.plot(thresholds, table["f1"].to_numpy(dtype=float), color=MUTED,
+              linewidth=2, zorder=3, label="F1")
+    axes.plot(thresholds, table["precision"].to_numpy(dtype=float), color=BLUE,
+              linewidth=2, zorder=4, label="precision")
+    axes.plot(thresholds, table["recall"].to_numpy(dtype=float), color=ORANGE,
+              linewidth=2, zorder=4, label="recall")
+
+    best = points.get("f1_max")
+    if best is not None:
+        at = float(best["threshold"])
+        axes.axvline(at, color=INK_SOFT, linewidth=1.1, linestyle=(0, (4, 3)), zorder=2)
+        # Annotated at the foot of the rule, not the top: the top right is the
+        # only region all three curves leave clear, and the legend needs it.
+        axes.annotate(
+            f"best F1 {float(best['f1']):.3f} at {at:.2f}",
+            xy=(at, 0.0), xytext=(5, 6), textcoords="offset points",
+            color=INK_SOFT, fontsize=8, ha="left", va="bottom",
+        )
+
+    axes.set_xlim(0, 1)
+    axes.set_ylim(0, 1.02)
+    # Upper right is the one corner no curve reaches: precision tops out below
+    # 0.8, and recall and F1 are both falling by then. Anywhere else the legend
+    # sits on top of a line.
+    axes.legend(frameon=False, fontsize=8.5, labelcolor=INK_SOFT, loc="upper right")
+    _caption(
+        figure,
+        "Every other metric in this report integrates over this axis. PR AUC and ROC AUC\n"
+        "rank sites; they never pick a threshold, and counting modified sites needs one.",
+    )
+    return figure
+
+
+def threshold_count(table: pd.DataFrame, points: dict[str, dict], n_positive: int) -> Any:
+    """How many sites get called positive, against the threshold. Log scale.
+
+    **The figure behind any Task 2 site count.** The count spans orders of
+    magnitude across thresholds a reasonable person might pick, so a claim that a
+    cell line has N modified sites is partly a claim about N and partly about a
+    choice that usually goes unrecorded. One series, so no legend - the title
+    names it.
+
+    The y axis is logarithmic because the count is: on a linear axis every
+    operating point worth choosing is flattened against zero.
+    """
+    counts = table["predicted_positives"].to_numpy(dtype=float)
+    thresholds = table["threshold"].to_numpy(dtype=float)
+    # log scale cannot draw a zero, and the count reaches zero once nothing is
+    # called. Stop the line where the calls stop rather than clipping, which
+    # would draw a floor that is not there.
+    drawn = counts > 0
+    figure, axes = _canvas(
+        "Sites called positive, against the decision threshold",
+        "threshold (a site is called positive at or above this score)",
+        "sites called positive (log scale)",
+    )
+
+    axes.plot(thresholds[drawn], counts[drawn], color=BLUE, linewidth=2, zorder=4)
+    axes.axhline(n_positive, color=MUTED, linewidth=1.2, zorder=2)
+    axes.annotate(
+        f"{n_positive:,} sites really are positive",
+        xy=(0.02, n_positive), xytext=(0, 6), textcoords="offset points",
+        color=MUTED, fontsize=8, ha="left", va="bottom",
+    )
+
+    # Alternating label heights, alternating **in threshold order** rather than
+    # in the order the operating points happen to be named. The three can land
+    # within a few hundredths of each other, and alternating by name put two
+    # neighbouring labels at the same height and printed one over the other.
+    ordered = sorted(points.items(), key=lambda kv: float(kv[1]["threshold"]))
+    for index, (name, row) in enumerate(ordered):
+        at = float(row["threshold"])
+        called = int(row["predicted_positives"])
+        if called <= 0:
+            continue
+        axes.axvline(at, color=INK_SOFT, linewidth=1.1, linestyle=(0, (4, 3)), zorder=3)
+        axes.scatter([at], [called], s=52, color=BLUE, zorder=5,
+                     edgecolors=SURFACE, linewidths=1.6)
+        axes.annotate(
+            f"{name}\n{at:.2f} -> {called:,}",
+            xy=(at, called), xytext=(6, 12 if index % 2 == 0 else -28),
+            textcoords="offset points", color=INK_SOFT, fontsize=7.8, ha="left",
+            # The neighbouring rule often passes behind these two lines of text.
+            # A surface-coloured pad knocks it out, the same idea as the surface
+            # ring the scatter marks carry - but it only works above the rules,
+            # and the next point's axvline is drawn after this annotation.
+            bbox=dict(facecolor=SURFACE, edgecolor="none", pad=1.4),
+            zorder=6,
+        )
+
+    axes.set_yscale("log")
+    axes.set_xlim(0, 1)
+    _caption(
+        figure,
+        "The sensitivity analysis any site count needs. Two defensible thresholds give\n"
+        "counts an order of magnitude apart, and the scores are miscalibrated on top of\n"
+        "that - so a count quoted without a threshold is an arbitrary cut reported as a\n"
+        "measurement.",
+    )
+    return figure
+
+
+# --------------------------------------------------------------------------
+# many runs at once - the report's answer to the live W&B panels
+# --------------------------------------------------------------------------
+
+def run_scatter(
+    points: list[dict],
+    x_label: str,
+    y_label: str,
+    title: str,
+    diagonal: bool = True,
+    reference: str | None = None,
+) -> Any:
+    """One point per run, labelled, with the y = x diagonal drawn in.
+
+    The two things a W&B scatter panel cannot do are draw a reference line and
+    put a name next to a dot, and both are the whole point when the question is
+    "how far does each of our models fall short of *this* line".
+
+    The diagonal is only drawn when the two axes are the same quantity - full
+    depth against depth 3, say, where the distance below the line is the
+    collapse. Against two different quantities it would be a line with no
+    meaning, so the caller passes `diagonal=False` and the caption says why.
+
+    Identity is carried by the label beside each point, never by colour alone:
+    beyond two categories this palette has no validated hues to give
+    (docs/decisions/0020).
+    """
+    if not points:
+        return None
+
+    xs = np.array([float(p["x"]) for p in points])
+    ys = np.array([float(p["y"]) for p in points])
+    figure, axes = _canvas(title, x_label, y_label, figsize=(FIGSIZE[0], 5.0))
+
+    if diagonal:
+        low = float(min(xs.min(), ys.min()))
+        high = float(max(xs.max(), ys.max()))
+        pad = max((high - low) * 0.25, 0.02)
+        line = [low - pad, high + pad]
+        axes.plot(line, line, color=MUTED, linewidth=1.2, zorder=2)
+        # Annotated at the *lower* end. The upper end is where the label column
+        # below puts its first entry, and the two printed over each other.
+        axes.annotate(
+            "y = x", xy=(line[0], line[0]), xytext=(4, -3), textcoords="offset points",
+            color=MUTED, fontsize=8, ha="left", va="top",
+        )
+
+    for point in points:
+        is_reference = reference is not None and point["name"] == reference
+        axes.scatter(
+            [point["x"]], [point["y"]], s=74,
+            color=ORANGE if is_reference else BLUE, zorder=4,
+            edgecolors=SURFACE, linewidths=1.8,
+        )
+
+    # Labels run to the right of their point, so the right margin has to hold the
+    # longest one or it is clipped at the figure edge.
+    axes.margins(x=0.30, y=0.18)
+
+    # **Labels are stacked in a column, not hung off each dot.** Two models that
+    # score similarly are two dots a few pixels apart, and a label beside each
+    # one then prints over its neighbour - which happened to every pair tried
+    # here, and alternating the labels above and below only moved which pair
+    # collided. A column spaced evenly down the axis cannot collide by
+    # construction, whatever the points do, and a leader line keeps each label
+    # attached to its dot.
+    ordered = sorted(points, key=lambda p: float(p["y"]))
+    x_low, x_high = axes.get_xlim()
+    y_low, y_high = axes.get_ylim()
+    label_x = max(float(p["x"]) for p in points) + (x_high - x_low) * 0.05
+    if len(ordered) == 1:
+        heights = [float(ordered[0]["y"])]
+    else:
+        first, last = y_low + (y_high - y_low) * 0.12, y_low + (y_high - y_low) * 0.88
+        heights = [
+            first + (last - first) * i / (len(ordered) - 1)
+            for i in range(len(ordered))
+        ]
+
+    for point, height in zip(ordered, heights):
+        is_reference = reference is not None and point["name"] == reference
+        axes.plot(
+            [float(point["x"]), label_x], [float(point["y"]), height],
+            color=GRID, linewidth=1.0, zorder=3, solid_capstyle="round",
+        )
+        axes.annotate(
+            point["name"] + ("  (reference)" if is_reference else ""),
+            xy=(label_x, height), xytext=(4, 0), textcoords="offset points",
+            color=INK_SOFT, fontsize=8, ha="left", va="center", zorder=5,
+            bbox=dict(facecolor=SURFACE, edgecolor="none", pad=1.4),
+        )
+    _caption(
+        figure,
+        "One point per W&B run, labelled - which is what a W&B scatter panel cannot do,\n"
+        "along with the reference line. Each point is a whole run, so nothing here is a\n"
+        "significance test; pair the runs for that."
+        + ("\nDistance below the diagonal is the drop between the two axes."
+           if diagonal else ""),
     )
     return figure
 

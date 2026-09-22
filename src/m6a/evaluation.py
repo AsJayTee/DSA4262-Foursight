@@ -261,6 +261,144 @@ def calibration_summary(y_true: np.ndarray, y_score: np.ndarray) -> dict[str, fl
     }
 
 
+# --------------------------------------------------------------------------
+# thresholds: turning a ranking into a decision
+# --------------------------------------------------------------------------
+
+# The same 201-point grid the ROC and PR curves are interpolated onto, and for
+# the same reason: every run has to share an x axis or two runs' curves cannot
+# be overlaid (docs/decisions/0014). Scores are probabilities, so the grid is
+# the unit interval and a threshold means the same thing in every run.
+THRESHOLD_POINTS = 201
+THRESHOLD_GRID = np.linspace(0.0, 1.0, THRESHOLD_POINTS)
+
+
+def threshold_table(
+    y_true: np.ndarray, y_score: np.ndarray, thresholds: np.ndarray | None = None
+) -> pd.DataFrame:
+    """Precision, recall, F1 and the number of sites called positive, per threshold.
+
+    Every other metric in this repo integrates over all thresholds - PR AUC and
+    ROC AUC are rank statistics, which is right for *comparing* models and
+    useless for *using* one. Counting modified sites in a cell line needs an
+    operating point, and this is the table that picks it.
+
+    **Read `predicted_positives` first.** It is how many sites a threshold calls
+    modified, and it moves by an order of magnitude across the range - so any
+    Task 2 claim of the form "cell line X has N modified sites" is a claim about
+    a threshold as much as about the cell line. Reporting the count without the
+    sensitivity is reporting an arbitrary choice as a measurement.
+
+    A site is called positive when `score >= threshold`. Where nothing is called,
+    precision and F1 are undefined and left as NaN rather than filled with 1.0:
+    a model that predicts nothing has no precision, and saying so is not the same
+    as saying it is perfect.
+
+    Pure numpy on a sorted copy of the scores, so the whole grid costs one sort
+    regardless of how many thresholds are asked for.
+    """
+    y_true = np.asarray(y_true)
+    y_score = np.asarray(y_score)
+    grid = THRESHOLD_GRID if thresholds is None else np.asarray(thresholds, dtype=float)
+
+    order = np.argsort(y_score, kind="stable")
+    sorted_scores = y_score[order]
+    # cumulative[i] is how many positives sit below index i, so the count at or
+    # above any cut is one subtraction rather than a pass over the array.
+    cumulative = np.concatenate([[0], np.cumsum(y_true[order])])
+    n = y_true.size
+    n_positive = int(y_true.sum())
+
+    below = np.searchsorted(sorted_scores, grid, side="left")
+    predicted = n - below
+    true_positive = n_positive - cumulative[below]
+    false_positive = predicted - true_positive
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        precision = np.where(predicted > 0, true_positive / predicted, np.nan)
+        recall = (
+            true_positive / n_positive if n_positive else np.full(grid.shape, np.nan)
+        )
+        denominator = precision + recall
+        f1 = np.where(denominator > 0, 2 * precision * recall / denominator, np.nan)
+
+    return pd.DataFrame(
+        {
+            "threshold": grid,
+            "predicted_positives": predicted.astype(int),
+            "predicted_rate": predicted / n if n else np.full(grid.shape, np.nan),
+            "true_positives": true_positive.astype(int),
+            "false_positives": false_positive.astype(int),
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+        }
+    )
+
+
+# The operating points every run reports. `half` is in the list because 0.5 is
+# what anyone reaches for without thinking, and on a model that overcounts
+# positives by 1.80x it is not a neutral choice - having it in the table next to
+# the alternatives is what makes that visible rather than assumed.
+OPERATING_POINTS = ("f1_max", "count_matched", "half")
+
+
+def operating_points(table: pd.DataFrame, n_positive: int) -> dict[str, dict]:
+    """Three named thresholds out of the sweep, each with what it would cost.
+
+    - **`f1_max`** balances precision against recall. The usual default when
+      nothing else is known about how the two errors trade off, and nothing here
+      says they trade off equally - it is a starting point, not a recommendation.
+    - **`count_matched`** is the threshold at which the number of sites called
+      positive equals the number that really are. It is the operating point a
+      *count* wants, and it is the one to quote beside a Task 2 site count.
+      It says nothing about whether the right sites were picked - a model can
+      match the count perfectly and still be wrong about every site.
+    - **`half`** is 0.5, the unexamined default, reported so the cost of using it
+      is on the page.
+
+    Returns {name: row}, where a row is the table's columns plus the threshold.
+    """
+    usable = table.dropna(subset=["f1"])
+    chosen: dict[str, dict] = {}
+
+    if not usable.empty:
+        chosen["f1_max"] = usable.loc[usable["f1"].idxmax()].to_dict()
+    if n_positive:
+        gap = (table["predicted_positives"] - n_positive).abs()
+        chosen["count_matched"] = table.loc[gap.idxmin()].to_dict()
+    nearest_half = (table["threshold"] - 0.5).abs().idxmin()
+    chosen["half"] = table.loc[nearest_half].to_dict()
+
+    return {name: chosen[name] for name in OPERATING_POINTS if name in chosen}
+
+
+def count_swing(table: pd.DataFrame, low: float = 0.3, high: float = 0.7) -> dict:
+    """How much a site count moves between two defensible thresholds.
+
+    One number for "how arbitrary is this count". Both 0.3 and 0.7 are choices
+    someone could make with a straight face, so the ratio between the counts they
+    produce is the error bar that a single reported count hides. It is not a
+    statistical interval - it is the span of an unforced choice.
+    """
+    rows = {}
+    for name, value in (("low", low), ("high", high)):
+        rows[name] = table.loc[(table["threshold"] - value).abs().idxmin()]
+    low_count = int(rows["low"]["predicted_positives"])
+    high_count = int(rows["high"]["predicted_positives"])
+    return {
+        # Rounded because the grid comes from `linspace`, which lands on
+        # 0.7000000000000001 rather than 0.7. The curve series keeps the raw
+        # grid values - every run shares those exactly, and that is what makes
+        # two runs' curves overlay (docs/decisions/0014).
+        "low_threshold": round(float(rows["low"]["threshold"]), 6),
+        "high_threshold": round(float(rows["high"]["threshold"]), 6),
+        "low_count": low_count,
+        "high_count": high_count,
+        "ratio": float(low_count / high_count) if high_count else float("nan"),
+    }
+
+
 def write_submission(scores: pd.DataFrame, path: str | Path) -> Path:
     """Write the required CSV: transcript_id,transcript_position,score."""
     path = Path(path)

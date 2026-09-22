@@ -220,6 +220,7 @@ def main() -> int:
     if report.profile.strata:
         reporting.strata(report, result.oof, ["depth", "motif"], min_positive=10)
     reporting.calibration(report, result.oof)
+    reporting.thresholds(report, result.oof)
     reporting.curves(
         report,
         {config.name: (result.oof["label"].to_numpy(), result.oof["score"].to_numpy())},

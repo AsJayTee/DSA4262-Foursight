@@ -20,6 +20,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,10 +35,13 @@ from m6a.data import Site, iter_sites, subsample_reads  # noqa: E402
 from m6a.evaluation import (  # noqa: E402
     calibration_summary,
     calibration_table,
+    count_swing,
     depth_bands,
     expected_calibration_error,
     metrics,
     metrics_by,
+    operating_points,
+    threshold_table,
 )
 
 
@@ -472,3 +476,156 @@ def test_training_evaluates_inline_and_leaves_no_per_site_table(tmp_path):
     # standard is the default profile, so a depth sweep happens without asking.
     assert report["profile"] == "standard"
     assert report["depth_sweep"]["rows"]
+
+
+# --------------------------------------------------------------------------
+# thresholds (docs/decisions/0019)
+# --------------------------------------------------------------------------
+
+def test_the_threshold_table_agrees_with_counting_by_hand():
+    """Every row must match a direct `score >= t` count over the raw arrays.
+
+    The implementation is vectorised - one sort, then a searchsorted per
+    threshold - because `evaluation.py` may not import sklearn's curve helpers
+    (AGENTS.md section 4). That is exactly the kind of code that is subtly wrong
+    at the boundaries: an off-by-one in the cumulative sum, or `side="right"`
+    instead of `"left"`, produces a table that looks entirely plausible and is
+    shifted by one site.
+
+    Ties are included on purpose. Real scores tie constantly - a gradient-boosted
+    tree puts thousands of sites on identical leaf values - and a site exactly on
+    the threshold is the case the two sides of `>=` disagree about.
+    """
+    rng = np.random.default_rng(4262)
+    y = (rng.random(3000) < 0.045).astype(int)
+    score = np.round(rng.beta(2, 20, 3000) + 0.3 * y, 2)  # rounded: many ties
+
+    table = threshold_table(y, score)
+    for row in table.itertuples():
+        called = score >= row.threshold
+        assert int(called.sum()) == row.predicted_positives
+        assert int((called & (y == 1)).sum()) == row.true_positives
+        if row.predicted_positives:
+            assert row.precision == pytest.approx(y[called].mean())
+        else:
+            # Not 1.0. A model that calls nothing has no precision, and
+            # sklearn's convention would put a perfect score in the run table.
+            assert np.isnan(row.precision)
+        assert row.recall == pytest.approx(int((called & (y == 1)).sum()) / y.sum())
+
+
+def test_count_matched_picks_the_threshold_that_counts_right():
+    """The operating point a Task 2 site count needs, and the swing around it."""
+    rng = np.random.default_rng(7)
+    y = (rng.random(5000) < 0.05).astype(int)
+    score = np.clip(rng.beta(2, 12, 5000) + 0.35 * y, 0, 1)
+
+    table = threshold_table(y, score)
+    points = operating_points(table, int(y.sum()))
+
+    assert set(points) == {"f1_max", "count_matched", "half"}
+    assert points["half"]["threshold"] == pytest.approx(0.5)
+
+    # No other threshold on the grid may call a count closer to the truth.
+    gap = abs(points["count_matched"]["predicted_positives"] - y.sum())
+    assert gap <= (table["predicted_positives"] - y.sum()).abs().min()
+    # f1_max is the best F1 on the grid, by construction.
+    assert points["f1_max"]["f1"] == pytest.approx(table["f1"].max())
+
+    swing = count_swing(table)
+    assert swing["low_count"] >= swing["high_count"]  # count falls as the cut rises
+    assert swing["ratio"] >= 1.0
+
+
+def test_thresholds_never_log_a_non_finite_point():
+    """Nothing registered as a series may be NaN or infinite.
+
+    `Tracker.log` drops non-finite scalars, but `log_curve_series` calls
+    `run.log` directly for every point of a curve and does not - so a NaN here
+    reaches W&B and draws as a real measurement at zero. Precision, F1 and
+    log10(count) all go undefined at the top of the range once nothing is being
+    called, so the series are truncated there rather than padded
+    (docs/decisions/0019 section 4).
+    """
+    from m6a import report as reporting
+
+    rng = np.random.default_rng(11)
+    n = 2000
+    y = (rng.random(n) < 0.05).astype(int)
+    oof = pd.DataFrame({
+        "label": y,
+        # Deliberately capped below 1.0, so the top of the grid calls nothing.
+        "score": np.clip(rng.beta(2, 12, n) + 0.3 * y, 0, 0.9),
+    })
+
+    report = reporting.new("quick", subsample_seed=4262, log=lambda *_: None)
+    reporting.thresholds(report, oof)
+
+    series = report.data["curves"]["series"]
+    assert "curve/threshold/threshold" in series
+    for key, values in series.items():
+        if not key.startswith("curve/threshold/"):
+            continue
+        assert values, f"{key} is empty"
+        assert all(np.isfinite(v) for v in values), f"{key} logs a non-finite point"
+
+    # The truncated ones stop short of the full grid; the count itself does not.
+    grid = len(series["curve/threshold/threshold"])
+    assert len(series["curve/threshold/predicted_positives"]) == grid
+    assert len(series["curve/threshold/precision"]) < grid
+
+
+# --------------------------------------------------------------------------
+# comparing many runs at once (docs/decisions/0020)
+# --------------------------------------------------------------------------
+
+def _compare_runs_module():
+    """Load scripts/compare_runs.py by path - `scripts/` is not a package."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "compare_runs", ROOT / "scripts" / "compare_runs.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_two_runs_sharing_a_name_do_not_collapse_into_one():
+    """W&B run names are not unique, and the figure keys its rows by name.
+
+    Re-running a config gives a second run with the same display name - the
+    normal case, not an edge one. Without disambiguation the two land on the
+    same dict key and one vanishes from the figure with nothing said, which is
+    the silent kind of wrong this harness exists to avoid.
+    """
+    module = _compare_runs_module()
+    runs = [
+        {"name": "lightgbm_quantiles", "id": "aaa111"},
+        {"name": "lightgbm_quantiles", "id": "bbb222"},
+        {"name": "baseline_logistic", "id": "ccc333"},
+    ]
+    module.label_runs(runs)
+
+    assert len({run["name"] for run in runs}) == 3, "names must be unique after labelling"
+    # The shared name gets its id; the unique one is left alone.
+    assert runs[0]["name"] == "lightgbm_quantiles (aaa111)"
+    assert runs[1]["name"] == "lightgbm_quantiles (bbb222)"
+    assert runs[2]["name"] == "baseline_logistic"
+    assert [run["wandb_name"] for run in runs] == [
+        "lightgbm_quantiles", "lightgbm_quantiles", "baseline_logistic",
+    ]
+
+
+def test_the_diagonal_is_only_drawn_between_comparable_axes():
+    """y = x means something only when both axes are the same quantity.
+
+    `oof/pr_auc` against `depth/3/pr_auc` is the depth collapse and the diagonal
+    is the claim. Against `calib/calibrated` it would be a line a reader could
+    only misread, so it is not drawn.
+    """
+    module = _compare_runs_module()
+    assert module.same_quantity("oof/pr_auc", "depth/3/pr_auc")
+    assert module.same_quantity("fold/0/pr_auc", "rep/pr_auc_mean") is False
+    assert not module.same_quantity("oof/pr_auc", "calib/calibrated")
+    assert not module.same_quantity("oof/pr_auc", "calib/ece")

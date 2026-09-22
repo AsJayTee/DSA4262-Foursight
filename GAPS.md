@@ -58,9 +58,42 @@ regenerated, and the JSON reports behind the current ones are in
   of the scores as probabilities — counting modified sites per cell line in
   Task 2 — is currently wrong by close to a factor of two. The comment in
   `src/m6a/models/lightgbm.py` claiming `is_unbalance` keeps the outputs usable
-  as probabilities is contradicted by this, and is still there. Nothing has been
-  tried to fix it: no isotonic or Platt scaling, no threshold work, no
-  alternative to `is_unbalance`.
+  as probabilities is contradicted by this, and is still there. **Nothing has
+  been tried to fix it**: no isotonic or Platt scaling, no alternative to
+  `is_unbalance`. (Threshold work now exists — see the next entry — but that
+  measures the consequence rather than fixing the cause.)
+- **A threshold sweep exists now, and 0.5 is not a neutral choice.** Every other
+  metric here integrates over all thresholds, which is right for comparing
+  models and useless for using one — and Task 2 has to *count* modified sites,
+  which needs an operating point. Measured
+  (`evaluate.py --config configs/quantiles.yaml`, full training set):
+
+  | operating point | threshold | precision | recall | F1 | sites called |
+  |---|---:|---:|---:|---:|---:|
+  | best F1 | 0.58 | 0.4849 | 0.5571 | 0.5185 | 6,290 |
+  | count-matched | 0.65 | 0.5133 | 0.5149 | 0.5141 | 5,492 |
+  | 0.5, the default | 0.50 | 0.4513 | 0.5976 | 0.5143 | 7,250 |
+
+  5,475 sites really are positive, so **0.5 overcounts by 1.32x** — a different
+  number from the 1.80x above, because that one comes from *summing* the scores
+  and this one from *thresholding* them. Both are the same miscalibration and
+  they are not interchangeable; quoting either as "the" overcount is wrong.
+
+  **The number to carry into Task 2 is the swing: a site count moves 2.1x
+  between threshold 0.3 (10,610 sites) and 0.7 (4,943).** Both are choices
+  someone could make with a straight face, so any claim of the form "cell line X
+  has N modified sites" is partly a claim about a threshold nobody wrote down.
+  That is not a statistical interval and no confidence interval would show it.
+
+  What this does **not** do (**LOW PRIORITY** - deliberately parked
+  2026-09-22; the project optimises PR AUC and no Task 2 count is being quoted
+  yet, so this is not on the critical path): the operating points are fitted out
+  of fold on depth >= 20 data. A threshold is an absolute cut on a score distribution, and
+  depth is known to shift that distribution, so the threshold that counts
+  correctly here is not necessarily the one that counts correctly on SG-NEx at
+  median depth 3. Nobody has measured that, and it is a worse problem for a
+  threshold than for a rank metric.
+  See [0019](docs/decisions/0019-a-threshold-sweep-because-a-ranking-cannot-count.md).
 - **The repo's headline comparison does not survive a correct significance
   test, and the claim needs restating wherever it appears.** The paired t-test
   over five folds is anti-conservative: each fold's model trains on the other
@@ -167,8 +200,13 @@ regenerated, and the JSON reports behind the current ones are in
   has looked at what those sites *are* - which transcripts, which genes, whether
   they are ribosomal or mitochondrial. That is now a tractable question rather
   than a vague one.
-- **Only single models are evaluated.** There is no way to score an ensemble, a
-  rule combining two models, or a threshold choice.
+- **Only single models are evaluated** - and this needs **no harness change**.
+  A rule combining two models ("model A above depth 10, model B below it", the
+  obvious thing to try given the depth-sweep crossover under Modelling) is an
+  *experiment*: a new model class in `src/m6a/models/` plus a config, evaluated
+  by the existing pipeline exactly like any other arm. Recorded here so nobody
+  rebuilds the comparison machinery to support it. **LOW PRIORITY** until
+  somebody actually wants to run it.
 - **Cross-cell-line shift is smaller than this file previously assumed; depth
   shift is much larger.** Comparing the training data (Hct116) against SG-NEx
   A549 with depth held constant (both restricted to >=20 reads), the median of
@@ -276,12 +314,64 @@ regenerated, and the JSON reports behind the current ones are in
   `evaluate.py --config configs/quantiles.yaml --ablate`.
 - **No hyperparameter search has been run.** Every value in `configs/` was
   chosen by hand and none has been tuned.
-- **Class imbalance is handled only by `is_unbalance=True`.** No resampling,
-  alternative objective, or threshold work has been tried. See the calibration
-  entry under Evaluation for what this currently costs.
+
+  A nested-CV + Optuna protocol was designed and costed on 2026-09-22, then
+  **dropped**, and the costing is worth keeping so it is not re-derived: a
+  properly nested search (outer 5-fold gene-grouped, inner 3-fold, 40 TPE
+  trials) is ~6,050 model fits per architecture at 10 repetitions, roughly
+  **10 hours per architecture** on this data - about 30 for three. Cutting the
+  outer loop to 3 repetitions brings it to ~1.7 hours each while widening the
+  corrected standard error by only 8%, because the Nadeau & Bengio variance
+  factor `1/n + 1/(k-1)` is dominated by the 0.25 floor at k=5 folds.
+
+  Even at that price it was judged the wrong thing to spend an instance on
+  versus read-level/MIL architectures, which the depth probe suggests are worth
+  far more. **The trap to remember if anyone revives this:** tuning flat (on the
+  same folds you report) does *not* wash out in a paired comparison, because the
+  selection bias scales with search-space size - a 6-parameter GBT gains more
+  from it than a 2-parameter logistic regression, so flat tuning hands one
+  architecture an advantage and calls it a win.
+- **Class imbalance is handled only by `is_unbalance=True`.** No resampling and
+  no alternative objective has been tried. Threshold work now exists
+  ([0019](docs/decisions/0019-a-threshold-sweep-because-a-ranking-cannot-count.md)),
+  which measures what the rebalancing costs at the point of use without
+  addressing the cause. See the calibration entry under Evaluation.
 - **No ensembling.**
-- **No external training data has been sought**, although the handout
-  explicitly permits searching for additional labels or training sets.
+- **External labelled data: three routes, none of them started.** The handout
+  explicitly permits additional labels or training sets, and the reason to want
+  them is specific rather than general — every site we have is at depth >= 20,
+  so nothing in this repo can measure performance at a realistic depth on
+  *genuinely* low-depth sites rather than artificially thinned ones. The
+  read-subsampling sweep cannot close that gap by construction
+  ([0003](docs/decisions/0003-read-subsampling-in-data.md)), and neither can
+  another run of our own cell line (see the dead idea under Task 2).
+
+  In order of feasibility:
+
+  **(a) GLORI labels + SG-NEx A549/K562 nanopore.** The only route where the
+  nanopore side is already in our input format *and* at a realistic depth
+  (median 2-3). Needs the GLORI site lists — GEO **GSE210563** — and conversion
+  from genomic to transcript coordinates, which is the fiddly part and the most
+  likely place to introduce a silent off-by-one. GLORI is
+  chemical (glyoxal-and-nitrite) rather than antibody-based, so it is not
+  subject to the m6ACE-Seq background problem recorded under "Understanding the
+  data" — and that cuts both ways, because **cross-method label disagreement is
+  then the main risk**: a site GLORI calls positive and m6ACE-Seq does not is
+  not obviously either method's error. METTL3-knockout samples give
+  high-confidence negatives, which is the strongest thing about this route.
+
+  **(b) HEK293T + GLORI.** The best-characterised pairing and what the
+  benchmarking papers use, so it is the route that would make our m6Anet
+  comparison mean something. Blocked twice over: SG-NEx's HEK293T is fastq/fast5
+  only, so it needs nanopolish eventalign and m6Anet dataprep first, and m6Anet
+  is not installed (see Benchmarking).
+
+  **(c) Aggregators — RMBase, m6A-Atlas, REPIC.** Easiest to obtain and the
+  weakest labels: they pool sites called by different methods at different
+  thresholds, so a positive means "somebody's assay called this once". Good for
+  sanity-checking our own label set, risky to train on.
+
+  Nobody has started any of them, and (a) is the one to start with.
 - The current best out-of-fold PR AUC is **0.4759** (quantile features,
   LightGBM). One reference point is solid: a motif-only classifier scores
   **0.1537** (3.42x random) with no signal data at all.
@@ -371,16 +461,74 @@ catalogued, and one blocker is much larger than expected.
   `scripts/predict.py` runs on it unmodified — no nanopolish and no m6Anet
   install is needed for Task 2. Total volume is 33.4 GB uncompressed
   (mean 1.45 GB per sample, max 2.70 GB).
-- **Read depth in SG-NEx is far below anything the model has seen.** For
-  A549 `replicate6_run1`: 1,500,579 candidate sites, 20.2M reads, median depth
-  **3**, p25 depth **1**. Only 12.5% of sites have the >= 20 reads that every
-  training site has; 69.4% have >= 2 and 39.3% have >= 5. Read against the
-  depth table under Evaluation, this means the majority of any naive Task 2
-  prediction run would be at or near the motif-only floor. Cross-cell-line
-  differences computed from those scores would track sequencing depth rather
-  than biology.
+- **"SG-NEx has 7 cell lines" is wrong: it has 14, and 7 is the subset somebody
+  else has already processed.** The raw direct RNA-Seq data under
+  `data/sequencing_data_ont/fastq/` (and the matching `fast5/`) is **56 samples
+  across 14 cell lines** — the 7 above plus **Hek293T (5 replicates)**,
+  MCF7-EV (2), and IM95, Myeloma-N082, Myeloma-N104, Myeloma-N122 and NCC24
+  with 1 each. Note the bucket spells it `Hek293T`, not `HEK293T`.
+
+  The distinction is the whole story and it is easy to miss, because both halves
+  are in the same bucket: the 7 are ready to predict on today, and the other 7
+  are fastq/fast5 only. Using one of them means running nanopolish eventalign
+  and m6Anet dataprep first, and m6Anet has never been installed here (see
+  Benchmarking). **HEK293T is the painful one** — it is the best-characterised
+  cell line for m6A, the one the benchmarking papers use, and it is on the wrong
+  side of that line.
+
+  Regenerate with `python analysis/sgnex/survey.py catalogue`.
+- **Read depth in SG-NEx is far below anything the model has seen, and this is
+  now reproducible rather than asserted.** Measured from each sample's
+  `data.readcount` — one line per site, ~34 MB against the 2 GB `data.json`
+  beside it, so a depth distribution costs well under a minute and no download
+  (`python analysis/sgnex/survey.py depth <sample>`):
+
+  | sample | sites | p25 | median | >= 2 | >= 5 | **< 20 reads** |
+  |---|---:|---:|---:|---:|---:|---:|
+  | A549 `replicate6_run1` | 1,500,579 | 1 | 3 | 69.4% | 39.3% | **87.5%** |
+  | K562 `replicate4_run1` | 1,104,444 | 1 | 2 | 62.5% | 30.5% | **92.2%** |
+  | Hct116 `replicate3_run1` | 1,391,230 | 1 | 3 | 67.2% | 36.8% | 88.8% |
+
+  Every training site has >= 20 reads, so that last column is the fraction of
+  each sample the model has never seen anything like. Read against the depth
+  table under Evaluation, **the majority of any naive Task 2 prediction run
+  would be at or near the motif-only floor**, and cross-cell-line differences
+  computed from those scores would track sequencing depth rather than biology.
+
+  The Hct116 row is a check on the method rather than a new fact: restricted to
+  our 121,838 labelled sites it gives median 47 and p25 32, exactly the
+  distribution recorded under "The training set's provenance" from the original
+  ad-hoc crawl.
 - **Hct116 is not an independent cell line for us.** See "The training set's
   provenance".
+- **DEAD IDEA, recorded so nobody spends a day re-deriving it: the other two
+  Hct116 samples cannot give us low-depth copies of our labelled sites.** The
+  reasoning was good. Our depth sweep drops reads at random, which simulates
+  *covariate* shift and structurally cannot see label shift
+  ([0003](docs/decisions/0003-read-subsampling-in-data.md)); SG-NEx holds two
+  more m6Anet-processed runs of our own cell line (`replicate3_run4`,
+  `replicate4_run3`); if the same labelled sites were shallow in those, we would
+  have real low-depth measurements of sites whose labels we already trust, and
+  could check the sweep against them.
+
+  They are not shallow. Measured on both:
+
+  | sample | our sites found | min | p25 | median | below 20 reads |
+  |---|---:|---:|---:|---:|---:|
+  | Hct116 `replicate3_run4` | 121,838 (100%) | 20 | 28 | 42 | **0** |
+  | Hct116 `replicate4_run3` | 121,838 (100%) | 20 | 51 | 76 | **0** |
+
+  A 100% overlap and not one site below 20 reads in either. The reason is
+  structural, which is why no other sample will fix it: **our sites have >= 20
+  reads because their transcripts are abundant, and abundance is a property of
+  the cell line, not of the sequencing run.** An abundant transcript is deep in
+  every run of that cell line. The depth floor is not a filter that a different
+  run happens to pass — it selects a population that stays deep.
+
+  So real low-depth labelled data has to come from somewhere with *different*
+  labels, not a different run of ours. See the external-data routes under
+  Modelling. Regenerate with
+  `python analysis/sgnex/survey.py depth SGNex_Hct116_directRNA_replicate3_run4 --labels data0/data.info.labelled`.
 - **Note H9 is not a cancer cell line** (it is an embryonic stem cell line),
   while the briefing scopes the task to 5 cancer cell lines. Which of the 7
   available lines to report on is undecided.
@@ -428,11 +576,13 @@ catalogued, and one blocker is much larger than expected.
   checks that the R2 credentials can actually reach the bucket, so a broken
   download surfaces as a traceback in `download_data.py` rather than in the
   command whose job is to tell you what is wrong.
-- **The SG-NEx figures in the Task 2 section came from an ad-hoc S3 crawl that
-  is not in this repo.** The sample counts, the 33.4 GB total and the A549 depth
-  distribution cannot be re-derived or challenged without redoing that crawl by
-  hand. The evaluation measurements are no longer in this position - see
-  `scripts/evaluate.py` - but the SG-NEx cataloguing still is.
+- **The sample counts and depth distributions in the Task 2 section are
+  reproducible now** — `analysis/sgnex/survey.py` does the crawl that used to be
+  ad-hoc and untracked, and it was what found that SG-NEx has 14 cell lines
+  rather than 7. Two numbers there still are not: the **33.4 GB** total volume
+  and the per-sample sizes come from the original crawl and nothing regenerates
+  them. They are cheap to re-derive (a `list_objects_v2` over the m6Anet prefix,
+  summing `Size`) and nobody has.
 - **`analysis/evaluation/scratch/` holds four rough scripts with hardcoded
   paths**, three of which are the only source of a number quoted above (the
   dataset profile, the read-level MIL probe, and the Hct116-vs-A549 comparison,

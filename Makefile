@@ -8,8 +8,10 @@ INPUT   ?= data/sample/sample.json.gz
 OUTPUT  ?= predictions.csv
 PROFILE ?= standard
 EVAL    ?=
+RUNS    ?=
+ARGS    ?=
 
-.PHONY: help doctor smoke train evaluate predict test sample clean clean-cache
+.PHONY: help doctor smoke train evaluate compare predict test sample clean clean-cache
 
 help:
 	@echo "make doctor              - check this machine is set up correctly"
@@ -19,6 +21,9 @@ help:
 	@echo "                         - re-evaluate, or compare against a baseline"
 	@echo "                           (train already does the standard profile)"
 	@echo "                           add --repeats 10 when it is too close to call"
+	@echo "make compare RUNS='run-a run-b run-c'"
+	@echo "                         - one figure across N finished W&B runs,"
+	@echo "                           written to report/figures/"
 	@echo "make predict MODEL=... INPUT=... OUTPUT=..."
 	@echo "make test                - pytest, incl. end-to-end smoke test"
 	@echo "make sample              - regenerate data/sample/ (committed test data)"
@@ -39,6 +44,11 @@ train:
 # comparisons: EVAL='--compare-features pooled_v1' or EVAL='--ablate'.
 evaluate:
 	@$(PY) scripts/evaluate.py --config $(CONFIG) --profile $(PROFILE) $(EVAL)
+
+# Reads finished runs out of W&B and fits nothing, so it needs no instance and
+# no data - it works from a laptop after every machine involved is gone.
+compare:
+	@$(PY) scripts/compare_runs.py $(RUNS) $(ARGS)
 
 predict:
 	@$(PY) scripts/predict.py --model $(MODEL) --input $(INPUT) --output $(OUTPUT)

@@ -460,6 +460,7 @@ def run_from_model(args: argparse.Namespace, report: reporting.Report) -> None:
             report, oof, [b for b in args.by.split(",") if b != "fold"], args.min_positive
         )
     reporting.calibration(report, oof)
+    reporting.thresholds(report, oof)
     reporting.curves(report, {meta["name"]: (y, scores)})
 
     if sweep:
@@ -564,6 +565,7 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
     if report.profile.strata:
         reporting.strata(report, result.oof, args.by.split(","), args.min_positive)
     reporting.calibration(report, result.oof)
+    reporting.thresholds(report, result.oof)
     reporting.curves(
         report,
         {config.name: (result.oof["label"].to_numpy(), result.oof["score"].to_numpy())},

@@ -373,6 +373,62 @@ def resolve_run(reference: str):
     return matches[0]
 
 
+def observations_from_summary(summary: dict, metric: str = "pr_auc") -> list[dict]:
+    """The per-(repetition, fold) metric vector hiding in a run's flat summary keys.
+
+    `rep/{r}/fold/{f}/{metric}` is the full vector; `fold/{f}/{metric}` is the
+    fallback for a run logged before repeated CV shipped, read as repetition 0 -
+    which is what it is, since repetition 0 *is* the canonical split
+    (docs/decisions/0012).
+
+    Extracted so `fetch_observations` and `fetch_run` cannot drift into parsing
+    the same keys two different ways. Returns [] rather than raising; the callers
+    differ on whether an empty vector is fatal.
+    """
+    observations: list[dict] = []
+    for key, value in summary.items():
+        parts = key.split("/")
+        if len(parts) == 5 and parts[0] == "rep" and parts[2] == "fold" and parts[4] == metric:
+            observations.append(
+                {"repetition": int(parts[1]), "fold": int(parts[3]), metric: float(value)}
+            )
+    if not observations:
+        for key, value in summary.items():
+            parts = key.split("/")
+            if len(parts) == 3 and parts[0] == "fold" and parts[2] == metric:
+                observations.append(
+                    {"repetition": 0, "fold": int(parts[1]), metric: float(value)}
+                )
+    return sorted(observations, key=lambda o: (o["repetition"], o["fold"]))
+
+
+def fetch_run(reference: str, metric: str = "pr_auc") -> dict:
+    """Everything `scripts/compare_runs.py` needs about one finished run, in one call.
+
+    `fetch_observations` answers "give me the vector or fail", which is right for
+    `--compare-run`: a comparison that cannot pair is not a comparison. Drawing N
+    runs on one figure is a different job - a run with no per-fold vector can
+    still be a point on the scatter - so this returns whatever is there and lets
+    the caller decide what is missing.
+
+    One `resolve_run` per run, because each one is a network round trip.
+    """
+    run = resolve_run(reference)
+    summary = {k: v for k, v in run.summary.items() if not k.startswith("_")}
+    config = dict(run.config)
+    fingerprint = {key: config.get(key) for key in FINGERPRINT_KEYS}
+    return {
+        "reference": reference,
+        "id": run.id,
+        "name": run.name,
+        "url": run.url,
+        "summary": summary,
+        "config": config,
+        "fingerprint": fingerprint,
+        "observations": observations_from_summary(summary, metric),
+    }
+
+
 def fetch_observations(reference: str, metric: str = "pr_auc") -> tuple[list[dict], dict]:
     """Pull a finished run's per-(repetition, fold) metric vector out of W&B.
 
@@ -390,21 +446,7 @@ def fetch_observations(reference: str, metric: str = "pr_auc") -> tuple[list[dic
     """
     run = resolve_run(reference)
     summary = {k: v for k, v in run.summary.items() if not k.startswith("_")}
-
-    observations: list[dict] = []
-    for key, value in summary.items():
-        parts = key.split("/")
-        if len(parts) == 5 and parts[0] == "rep" and parts[2] == "fold" and parts[4] == metric:
-            observations.append(
-                {"repetition": int(parts[1]), "fold": int(parts[3]), metric: float(value)}
-            )
-    if not observations:
-        for key, value in summary.items():
-            parts = key.split("/")
-            if len(parts) == 3 and parts[0] == "fold" and parts[2] == metric:
-                observations.append(
-                    {"repetition": 0, "fold": int(parts[1]), metric: float(value)}
-                )
+    observations = observations_from_summary(summary, metric)
     if not observations:
         raise SystemExit(
             f"W&B run {run.id} ({run.name}) has no per-fold {metric} values, so "
@@ -421,7 +463,7 @@ def fetch_observations(reference: str, metric: str = "pr_auc") -> tuple[list[dic
         pooled=summary.get(f"oof/{metric}"),
         n_sites=summary.get("oof/n"),
     )
-    return sorted(observations, key=lambda o: (o["repetition"], o["fold"])), fingerprint
+    return observations, fingerprint  # already sorted by the helper above
 
 
 # Must match m6a.report.STRATA_TABLE. Not imported from there because report.py
@@ -522,6 +564,7 @@ def require_same_dataset(local: dict, remote: dict, name: str) -> None:
 #   band/*       true depth: how the model does on sites that really are shallow
 #   motif/*      per-DRACH-motif lift
 #   calib/*      whether a score may be read as a probability
+#   threshold/*  the operating points, and how far a site count swings between them
 #   ablation/*   the signal-only and motif-only floors
 #   compare/*    a paired difference against another run
 
@@ -595,6 +638,22 @@ def flat_metrics(report: dict) -> dict[str, float]:
             value = calibration["summary"].get(key)
             if value is not None:
                 flat[f"calib/{key}"] = float(value)
+
+    # The operating points, and how far a site count moves between two of them.
+    # `threshold/count_swing` is the one to sort on: it is how arbitrary a Task 2
+    # site count is for this model, in one number.
+    thresholds = report.get("thresholds")
+    if thresholds:
+        for name, row in thresholds["operating_points"].items():
+            for key in ("threshold", "precision", "recall", "f1",
+                        "predicted_positives", "predicted_rate"):
+                value = row.get(key)
+                if value is not None:
+                    flat[f"threshold/{name}/{key}"] = float(value)
+        swing = thresholds["count_swing"]
+        flat["threshold/count_swing"] = float(swing["ratio"])
+        flat["threshold/count_low"] = float(swing["low_count"])
+        flat["threshold/count_high"] = float(swing["high_count"])
 
     for which, ablation in (report.get("ablations") or {}).items():
         flat[f"ablation/{which}/pr_auc"] = float(ablation["pooled"]["pr_auc"])

@@ -174,6 +174,33 @@ python scripts/evaluate.py --config configs/your_experiment.yaml --by depth,moti
 python scripts/evaluate.py --config configs/your_experiment.yaml --depth-sweep
 ```
 
+**If your result is going to be a count of anything, read the Thresholds
+section of the output.** PR AUC and ROC AUC rank sites; they never pick a
+cut-off, and counting modified sites needs one. Every run now reports three
+operating points and — the number that matters — how far the count swings
+between them. On the current model a site count moves **2.1x** between
+threshold 0.3 and 0.7, both of which are defensible choices. Quote the swing
+beside any count, or you are reporting an arbitrary cut as a measurement.
+See [docs/decisions/0019](decisions/0019-a-threshold-sweep-because-a-ranking-cannot-count.md).
+
+### Several runs at once
+
+Once a few experiments are in W&B, the question stops being "is A better than
+B" and becomes "where does everything sit". W&B's own panels are awkward for
+that — its distribution panels are one image per run, and its scatter cannot
+draw a reference line or label a point:
+
+```bash
+python scripts/compare_runs.py lightgbm_quantiles lightgbm_pooled baseline_logistic --pair
+```
+
+That writes two figures to `report/figures/`: every run's metric distribution on
+one axis, and one labelled point per run with the y = x diagonal — by default
+full-depth PR AUC against PR AUC at depth 3, where the distance below the line
+is the collapse. `--pair` adds the corrected paired test of each run against the
+first one named. It fits nothing and needs no instance, so it works from a
+laptop long after the machines are gone.
+
 Every run writes a JSON report to `analysis/evaluation/reports/` **and** uploads
 it to W&B, so a number you quote can be traced back to the run that produced it
 from either place. Treat the local copy as a convenience: on a Ronin instance it

@@ -429,6 +429,133 @@ def calibration(report: Report, oof: pd.DataFrame) -> None:
         report.figure("fig/reliability", figures.reliability(table, summary))
 
 
+def thresholds(report: Report, oof: pd.DataFrame) -> None:
+    """Where to cut the scores, and what it costs - the half a ranking cannot say.
+
+    PR AUC and ROC AUC integrate over every threshold. That is the right thing
+    for deciding which model is better and the wrong thing for using one: to
+    count modified sites in a cell line you have to call each site, and calling
+    a site needs a number to compare its score against.
+
+    The output to read is the **count swing**. A site count moves by a large
+    factor across thresholds a reasonable person might pick, so a Task 2 figure
+    of "N modified sites in cell line X" is partly a statement about N and partly
+    a statement about a choice nobody wrote down. Quoting the swing beside the
+    count is the sensitivity analysis that makes the claim honest.
+    """
+    from m6a.evaluation import count_swing, operating_points, threshold_table
+
+    y = oof["label"].to_numpy()
+    scores = oof["score"].to_numpy()
+    table = threshold_table(y, scores)
+    n_positive = int(y.sum())
+    points = operating_points(table, n_positive)
+    swing = count_swing(table)
+
+    report.heading("Thresholds")
+    report.log(
+        "PR AUC and ROC AUC integrate over every threshold, which is what makes\n"
+        "them right for comparing two models and useless for using one. Counting\n"
+        "modified sites needs an operating point; these are three, and none of\n"
+        "them is a recommendation."
+    )
+    rows = []
+    for name, row in points.items():
+        rows.append(
+            {
+                "operating point": name,
+                "threshold": round(float(row["threshold"]), 4),
+                "precision": float(row["precision"]),
+                "recall": float(row["recall"]),
+                "f1": float(row["f1"]),
+                "predicted": int(row["predicted_positives"]),
+            }
+        )
+    frame = pd.DataFrame(rows).set_index("operating point")
+    report.show(frame)
+    report.log(f"\n{n_positive:,} sites really are positive, out of {len(y):,}.")
+    report.log(
+        "  f1_max         balances the two errors, which is a default, not a finding\n"
+        "  count_matched  calls as many sites as are really positive - the point a\n"
+        "                 *count* wants, and it says nothing about picking the\n"
+        "                 right ones\n"
+        "  half           0.5, the threshold everyone reaches for without looking"
+    )
+    report.log(
+        f"\nA site count swings {swing['ratio']:.1f}x between threshold "
+        f"{swing['low_threshold']:.1f} ({swing['low_count']:,} sites) and "
+        f"{swing['high_threshold']:.1f} ({swing['high_count']:,} sites)."
+    )
+    report.log(
+        "Both are thresholds someone could choose with a straight face, so that\n"
+        "ratio is the span of an unforced choice rather than a statistical\n"
+        "interval. Any Task 2 claim of the form 'cell line X has N modified sites'\n"
+        "has to carry it, or it is reporting an arbitrary cut as a measurement.\n"
+        "Note also that the scores are not calibrated (see above), so the gap\n"
+        "between count_matched and half is partly the miscalibration showing up as\n"
+        "a threshold - fixing the calibration would move these points."
+    )
+
+    report.data["thresholds"] = {
+        "n_positive": n_positive,
+        "n": int(y.size),
+        # Built column by column rather than by a generic comprehension over the
+        # row: `.loc[i]` on a frame of mixed dtypes returns a float Series, so a
+        # count would otherwise land in the JSON as 6290.0.
+        "operating_points": {
+            name: {
+                "threshold": round(float(row["threshold"]), 6),
+                "precision": float(row["precision"]),
+                "recall": float(row["recall"]),
+                "f1": float(row["f1"]),
+                "predicted_positives": int(row["predicted_positives"]),
+                "predicted_rate": float(row["predicted_rate"]),
+                "true_positives": int(row["true_positives"]),
+                "false_positives": int(row["false_positives"]),
+            }
+            for name, row in points.items()
+        },
+        "count_swing": swing,
+    }
+
+    # Overlayable across runs, which is the point: two models' count curves on one
+    # panel show whether a threshold means the same thing to both of them. It does
+    # not - a model that overcounts by 1.80x and one that overcounts by 6.10x call
+    # wildly different numbers of sites at 0.5.
+    #
+    # `predicted_positives` falls to zero at the top of the range, where precision
+    # and F1 are undefined and log10 of the count is -inf. Those three series are
+    # truncated to the region where something is still being called rather than
+    # padded: a ragged series is exactly what `log_curve_series` handles, and a
+    # NaN sent to W&B would render as a real point at zero.
+    called = table["predicted_positives"].to_numpy() > 0
+    last = int(called.sum())
+    series = {
+        "curve/threshold/recall": table["recall"].to_numpy(),
+        "curve/threshold/predicted_positives": table["predicted_positives"].to_numpy(),
+        "curve/threshold/predicted_rate": table["predicted_rate"].to_numpy(),
+        "curve/threshold/precision": table["precision"].to_numpy()[:last],
+        "curve/threshold/f1": table["f1"].to_numpy()[:last],
+        # A companion x, for the same reason as curve/band and curve/depth: a W&B
+        # line panel has no log-scale control. The count spans four orders of
+        # magnitude, so on a linear axis every operating point worth choosing is
+        # squashed against zero. The raw key stays and stays the one to quote.
+        # See docs/decisions/0016 section 3.
+        "curve/threshold/log10_predicted_positives": np.log10(
+            table["predicted_positives"].to_numpy()[:last]
+        ),
+    }
+    report.series("curve/threshold/threshold", table["threshold"].to_numpy(), series)
+
+    if report.profile.plots:
+        from m6a import figures
+
+        report.figure("fig/threshold_sweep", figures.threshold_sweep(table, points))
+        report.figure(
+            "fig/threshold_count", figures.threshold_count(table, points, n_positive)
+        )
+
+
 # Curves are interpolated onto this many points on a fixed 0..1 grid before they
 # are logged. Two reasons, and the second is the one that matters:
 #
@@ -664,6 +791,7 @@ def arm(
     if report.profile.strata:
         strata(sub, oof, by, min_positive)
     calibration(sub, oof)
+    thresholds(sub, oof)
     curves(sub, {name: (oof["label"].to_numpy(), oof["score"].to_numpy())})
     if sweep is not None:
         depth_sweep(sub, sweep["datasets"], sweep["models"], sweep["columns"],
