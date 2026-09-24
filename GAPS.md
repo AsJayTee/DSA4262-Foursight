@@ -748,10 +748,97 @@ regenerated, and the JSON reports behind the current ones are in
   reading** - the span is bounded by the first and last *candidate*, not by the
   true transcript ends. Consistent with, not evidence for.
 
-  **Until the robust variants have run, no cross-site model should be put in
-  `models/final/`.** The cross-validated gains are honest about this dataset and
-  say nothing about a file built differently.
+  **WHAT THE DRIFT ACTUALLY COSTS, in PR AUC rather than in sd.** Bias in
+  standard deviations says the features *move*; it does not say what that is
+  worth. Simulated directly - fold models fitted on full-density features
+  exactly as every recorded run fits them, then the held-out fold scored twice,
+  once with the features it was trained to expect and once with the features it
+  would receive if the evaluation file were thinner:
 
+  | candidate sites kept | trained-on features | thinned features | cost |
+  |---:|---:|---:|---:|
+  | 100% | 0.5360 | 0.5360 | 0.0000 |
+  | 75% | 0.5378 | 0.5275 | **-0.0103** |
+  | 50% | 0.5316 | 0.5143 | **-0.0174** |
+  | 25% | 0.5272 | 0.4858 | **-0.0414** |
+
+  Set that against the +0.0534 the full stack buys over `quantiles_v1`. **Even
+  at a quarter of our candidate density the cross-site model is still ahead of
+  the baseline**, by about +0.012; at half density it keeps roughly two thirds
+  of its advantage. So the risk is real, material, and **not** disqualifying.
+
+  Three caveats that travel with that table. It thins **randomly**, and a real
+  evaluation file would more likely be thinned *structurally* - whole
+  transcripts missing, or a different depth filter - which is not the same
+  perturbation and could be worse. The absolute numbers come from the feature
+  set without depth augmentation, so they sit above
+  `configs/final_candidate.yaml`'s 0.5293; only the **cost** column is the
+  measurement. And nothing here tells us what the evaluation file will look
+  like.
+
+  **The obvious fix has not been tried and is nearly free.** This repo already
+  solves the identical problem one level down: `train_depths`
+  ([0022](docs/decisions/0022-training-rows-may-come-from-several-depths.md))
+  trains on rows drawn at several *read* depths so the model is not surprised by
+  a shallow one. The same trick applies to candidate density - fit on features
+  computed at several thinning levels, and the model stops depending on ours.
+  It would need a config key like `train_densities` and a change to
+  `crossval`, so it needs a decision record, and it is the single highest-value
+  unbuilt thing in this file.
+
+  **Until then, a cross-site model may go in `models/final/` only with the table
+  above quoted beside it.** The cross-validated gains are honest about this
+  dataset; the table is what they are worth on a different one.
+
+- **THE STACK, and it does stack.** Everything independently established,
+  combined, each `--compare-with configs/quantiles_flank_depth_augmented.yaml`
+  at 50 observations:
+
+  | config | contents | `oof/pr_auc` | vs flank+depth-aug | wins | corrected p |
+  |---|---|---:|---:|---:|---:|
+  | `crosssite_robust` | quantiles + robust cross-site + depth | 0.5232 | +0.0271 | 50/50 | 0.0000 |
+  | **`final_candidate`** | **+ the 7-mer flanks** | **0.5293** | **+0.0332** | **50/50** | 0.0000 |
+
+  0.5293 against a 0.4759 starting point is **+0.0534 in total**, and at one
+  read 0.3096 against 0.1527 - **doubled**. The flanks are still worth ~+0.006
+  on top of robust cross-site (0.5293 vs 0.5232), less than the +0.0109 they buy
+  alone, so there is some overlap between sequence context and what a
+  transcript-level aggregate already captures.
+
+  **It is the worst-calibrated model in the project except the logistic
+  baseline** - count ratio 3.27, ECE 0.1020 - because it carries depth
+  augmentation. See the calibration entry: that is now fixed rather than merely
+  measured.
+- **CALIBRATION IS SOLVED, and the textbook explanation is not why.** Both
+  methods run on `quantiles_flank_depth_augmented`:
+
+  | | `oof/pr_auc` | count ratio | ECE |
+  |---|---:|---:|---:|
+  | uncalibrated | 0.4933 | 3.827 | 0.1270 |
+  | `prior_shift` (derived, `logit - log w`) | 0.4926 | 0.691 | 0.0139 |
+  | **`platt`** (fitted, `a*logit + b`) | 0.4927 | **1.021** | **0.0036** |
+
+  **Platt lands the count ratio at 1.021 and cuts ECE by 35x.** That is the
+  difference between a Task 2 site count being wrong by nearly four-fold and
+  being right.
+
+  `prior_shift` is the falsifiable form of the class-weight story - subtract
+  `log(21.25) = 3.06` from the logit - and it **undershoots to 0.691**, having
+  overshot to 0.356 on the non-augmented model. The derived constant is the
+  wrong size in both directions, so the class weight is not the main cause; the
+  fitted slope of ~0.69 says most of the error is over-confidence. Anywhere the
+  repo or the literature review says the overcount is explained by
+  `logit(p_w) = logit(p) + log(w)`, it is explaining less than it claims.
+
+  The 0.0006 drop in `oof/pr_auc` is the per-fold rescaling effect, not a loss of
+  accuracy: per-fold PR AUC is bit-identical and the pooled vector reorders
+  across fold boundaries because each fold fits its own intercept.
+- **THE `n_estimators` SUSPICION DOES NOT TRANSFER.** GAPS recorded that a
+  training curve put `configs/quantiles.yaml` past its held-out peak at 600
+  rounds. Tested on the current best feature set, `best_shorter` (450 rounds)
+  against 600: **-0.0017, 10/50 wins, corrected p = 0.1236**. Not established as
+  worse, but the direction is clear and 600 is not costing anything measurable
+  here. One config, one comparison, no search - the flat-tuning trap avoided.
 - **THE CURRENT BEST MODEL: `quantiles_flank_v1` trained at five depths.** The
   two things that have worked are orthogonal and they stack - on the depth
   sweep, which is not where the headline test looks.
@@ -821,11 +908,26 @@ regenerated, and the JSON reports behind the current ones are in
   python scripts/evaluate.py --config configs/quantiles_flank_depth_augmented.yaml \
          --compare-features quantiles_v1
   ```
-- **UNTESTED BUT THE STRONGEST LEAD MEASURED SO FAR: the within-site correlation
-  between pore positions.** `configs/coupling.yaml` /
-  `src/m6a/features/coupling.py`, built 2026-09-24, **not yet run** - so nothing
-  here is a model result, and `grid` is the standing reminder that a strong
-  screen can still produce nothing.
+- **CONFIRMED: the within-site correlation between pore positions is real,
+  +0.0104.** `configs/coupling.yaml` / `src/m6a/features/coupling.py`. Paired
+  against `quantiles_v1` over 50 observations: **+0.0104, 47/50 wins, corrected
+  p = 0.0100**, `oof/pr_auc` 0.4851.
+
+  Comparable to the flank columns (+0.0109) and, unlike `grid` and `joint`,
+  it clears the bar. So the joint-within-read hypothesis **is** right and the
+  two earlier nulls were both testing it wrongly - `joint` whitened the
+  correlation away, `grid` summarised it into quantities the marginals already
+  determined. Three attempts, and only the one that computed `E[XY]` directly
+  found anything.
+
+  **It behaves exactly as predicted at low depth, including the part that is a
+  cost.** A correlation needs several reads, so the columns are zero below five
+  and noisy at twenty; `depth/1/pr_auc` is 0.1485 against the 0.1527 baseline -
+  slightly *worse*. The gain is a full-depth gain, which is the regime the
+  graded evaluation is in and not the regime Task 2 is in.
+
+  Not yet combined with anything. Whether it stacks on `final_candidate` is
+  untested.
 
   The quantity is `r` between mean current at positions -1, 0 and +1, computed
   *across the reads at a site*. It is the one second moment the marginals cannot

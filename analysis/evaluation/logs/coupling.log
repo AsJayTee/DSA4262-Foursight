@@ -1,0 +1,542 @@
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
+wandb: Currently logged in as: jinthau-siah (dsa4262-team) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run x8yd2kx7
+wandb: Tracking run with wandb version 0.30.0
+wandb: Run data is saved locally in C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\wandb\run-20260924_235031-x8yd2kx7
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run lightgbm_coupling
+wandb:  View project at https://wandb.ai/dsa4262-team/dsa4262-project
+wandb:  View run at https://wandb.ai/dsa4262-team/dsa4262-project/runs/x8yd2kx7
+[lightgbm_coupling] features=quantiles_coupling_v1 model=lightgbm
+  profile standard, 10 repetitions x 5 folds = 50 observations
+  extracting quantiles_coupling_v1 at depth [1, 2, 3, 4, 5, 7, 10, 15, 20, 25, full] from dataset0.json.gz ...
+  121,838 sites, 5,475 positive (4.49%), 5 folds grouped by gene_id (seed 4262)
+
+Fitting folds
+-------------
+  repetition 0 of 10 (split seed 4262)
+    PR AUC mean 0.4871  range [0.4595, 0.5146]
+  repetition 1 of 10 (split seed 3903649664)
+    PR AUC mean 0.4913  range [0.4539, 0.5116]
+  repetition 2 of 10 (split seed 1249557661)
+    PR AUC mean 0.4913  range [0.4792, 0.5048]
+  repetition 3 of 10 (split seed 3187691742)
+    PR AUC mean 0.4933  range [0.4696, 0.5079]
+  repetition 4 of 10 (split seed 2871020302)
+    PR AUC mean 0.4850  range [0.4351, 0.5161]
+  repetition 5 of 10 (split seed 2019218930)
+    PR AUC mean 0.4889  range [0.4618, 0.5192]
+  repetition 6 of 10 (split seed 3107030937)
+    PR AUC mean 0.4873  range [0.4389, 0.5353]
+  repetition 7 of 10 (split seed 1141095731)
+    PR AUC mean 0.4883  range [0.4678, 0.5087]
+  repetition 8 of 10 (split seed 4272215296)
+    PR AUC mean 0.4874  range [0.4293, 0.5116]
+  repetition 9 of 10 (split seed 1350079209)
+    PR AUC mean 0.4895  range [0.4758, 0.5092]
+
+Per fold
+--------
+          n  n_positive  positive_rate  roc_auc  pr_auc  pr_auc_lift
+fold                                                                
+0     24314         997         0.0410   0.9323  0.4595      11.2068
+1     25923        1336         0.0515   0.9203  0.5146       9.9853
+2     23394        1033         0.0442   0.9213  0.4748      10.7532
+3     24119        1095         0.0454   0.9130  0.4899      10.7898
+4     24088        1014         0.0421   0.9334  0.4965      11.7934
+
+per-fold PR AUC: mean 0.4871  sd 0.0210  range [0.4595, 0.5146]
+That sd is fold-to-fold variation, not the uncertainty on a comparison.
+Folds differ in size and positive rate, and PR AUC depends on the base
+rate, so a model scores highest on the richest fold whatever its merit.
+To compare two models, pair them fold by fold: --compare-features.
+pooled OOF: ROC AUC 0.9231   PR AUC 0.4851   (10.80x random)   n=121,838  positives=5,475 (4.49%)
+
+Repeated cross-validation: 10 x 5 folds
+---------------------------------------
+Repetition 0 is the canonical split (seed 4262); the rest are spawned
+children of it. Every other number in this report comes from repetition
+0, so running more of them changes none of them.
+                     n  n_positive  roc_auc  pr_auc
+repetition fold                                    
+0          0     24314         997   0.9323  0.4595
+           1     25923        1336   0.9203  0.5146
+           2     23394        1033   0.9213  0.4748
+           3     24119        1095   0.9130  0.4899
+           4     24088        1014   0.9334  0.4965
+1          0     23399        1051   0.9326  0.4812
+           1     25481        1216   0.9261  0.5116
+           2     23773        1130   0.9233  0.5088
+           3     25004        1037   0.9335  0.5010
+           4     24181        1041   0.9126  0.4539
+2          0     23530        1084   0.9267  0.5048
+           1     24521        1069   0.9326  0.5017
+           2     24029        1191   0.9115  0.4792
+           3     25559        1139   0.9231  0.4884
+           4     24199         992   0.9314  0.4826
+3          0     24052        1018   0.9282  0.4696
+           1     25284        1160   0.9247  0.5007
+           2     25095        1072   0.9284  0.5079
+           3     24749        1155   0.9232  0.5059
+           4     22658        1070   0.9164  0.4822
+4          0     24428        1140   0.9239  0.4934
+           1     24318        1123   0.9225  0.5006
+           2     25789        1225   0.9351  0.5161
+           3     23716         951   0.9237  0.4351
+           4     23587        1036   0.9187  0.4798
+5          0     24503        1116   0.9248  0.4653
+           1     23983        1047   0.9337  0.5069
+           2     24442        1069   0.9308  0.4910
+           3     24011        1044   0.9120  0.4618
+           4     24899        1199   0.9183  0.5192
+6          0     23668         978   0.9254  0.4762
+           1     24673        1004   0.9294  0.4760
+           2     25155        1122   0.9313  0.5098
+           3     23927        1134   0.9048  0.4389
+           4     24415        1237   0.9264  0.5353
+7          0     23935        1135   0.9273  0.4955
+           1     24817        1181   0.9156  0.5008
+           2     24510        1138   0.9277  0.5087
+           3     23807        1036   0.9294  0.4678
+           4     24769         985   0.9236  0.4686
+8          0     24165        1044   0.9223  0.4293
+           1     23500         977   0.9317  0.5116
+           2     24464        1070   0.9170  0.4862
+           3     24706        1219   0.9245  0.5105
+           4     25003        1165   0.9272  0.4992
+9          0     25275        1179   0.9290  0.4758
+           1     23528        1068   0.9209  0.4886
+           2     24221        1113   0.9229  0.4823
+           3     24980        1085   0.9270  0.4915
+           4     23834        1030   0.9328  0.5092
+
+50 observations: PR AUC mean 0.4889  sd 0.0223  range [0.4293, 0.5353]
+That sd is wider than a single split's, and it should be: more splits
+sample more of the split-to-split variation rather than averaging it
+away. It is still one dataset sliced many ways, not many datasets -
+which is what the corrected t-test exists to keep honest.
+
+strata observations: 978 rows 296 depth, 682 motif - logged so a later run can pair against this one inside a stratum
+
+By read depth
+-------------
+             n  n_positive  positive_rate  roc_auc  pr_auc  pr_auc_lift note
+group                                                                       
+20-31    30138        1352         0.0449   0.9169  0.4428       9.8698     
+32-46    29713        1286         0.0433   0.9344  0.4550      10.5119     
+47-83    31276        1409         0.0451   0.9292  0.5077      11.2698     
+84-303   24616        1165         0.0473   0.9240  0.5421      11.4548     
+304-599   3258         134         0.0411   0.8690  0.4585      11.1467     
+600+      2837         129         0.0455   0.8413  0.4660      10.2474     
+Depth is the number of distinct RNA molecules measured at the site,
+not repeated readings of one molecule - docs/data.md#read-depth.
+Bands below 20 reads are empty on this training set by construction.
+
+Read pr_auc_lift across rows, not pr_auc: PR AUC is bounded below by
+each stratum's own positive rate, and those differ by a lot here.
+
+By DRACH motif
+--------------
+           n  n_positive  positive_rate  roc_auc  pr_auc  pr_auc_lift                note
+group                                                                                    
+AAACA  10152          38         0.0037   0.6664  0.0098       2.6051                    
+AAACC   6502          11         0.0017   0.6852  0.0033       1.9453                    
+AAACT   8627         255         0.0296   0.9065  0.2904       9.8240                    
+AGACA   7396         147         0.0199   0.9537  0.4302      21.6427                    
+AGACC   6785          60         0.0088   0.7797  0.1374      15.5410                    
+AGACT   6405         525         0.0820   0.9089  0.4671       5.6988                    
+GAACA   7934         187         0.0236   0.7795  0.1231       5.2209                    
+GAACC   5719         124         0.0217   0.7827  0.1040       4.7981                    
+GAACT   6957         783         0.1125   0.8300  0.4033       3.5834                    
+GGACA   7727         691         0.0894   0.9379  0.5901       6.5986                    
+GGACC   7353         552         0.0751   0.9027  0.5367       7.1497                    
+GGACT   6376        1440         0.2258   0.8773  0.6343       2.8084                    
+TAACA   4695           1         0.0002        -       -            -  only 1 positive(s)
+TAACC   2966           2         0.0007        -       -            -  only 2 positive(s)
+TAACT   4433          71         0.0160   0.7553  0.0784       4.8944                    
+TGACA   7718          68         0.0088   0.7999  0.1119      12.6983                    
+TGACC   7304          90         0.0123   0.6577  0.0593       4.8164                    
+TGACT   6789         430         0.0633   0.8806  0.4104       6.4799                    
+
+Read pr_auc_lift across rows, not pr_auc: PR AUC is bounded below by
+each stratum's own positive rate, and those differ by a lot here.
+
+Calibration
+-----------
+            n  n_positive  mean_predicted  observed_rate     gap
+decile                                                          
+1       12184          20          0.0002         0.0016 -0.0014
+2       12184          32          0.0006         0.0026 -0.0020
+3       12184          32          0.0012         0.0026 -0.0014
+4       12183          49          0.0022         0.0040 -0.0018
+5       12184          67          0.0039         0.0055 -0.0016
+6       12184          93          0.0069         0.0076 -0.0008
+7       12183         129          0.0132         0.0106  0.0026
+8       12184         264          0.0301         0.0217  0.0084
+9       12184         687          0.1023         0.0564  0.0459
+10      12184        4102          0.5896         0.3367  0.2529
+
+mean predicted 0.0750 vs actual positive rate 0.0449
+expected positives 9,141 vs actual 5,475  ->  1.67x overcount
+ROC AUC and PR AUC cannot see this: both are rank-based, so the ordering
+can be good while the magnitude is wrong by this factor. It matters the
+moment a score is read as a probability - counting modified sites per
+cell line in Task 2 does exactly that.
+
+Thresholds
+----------
+PR AUC and ROC AUC integrate over every threshold, which is what makes
+them right for comparing two models and useless for using one. Counting
+modified sites needs an operating point; these are three, and none of
+them is a recommendation.
+                 threshold  precision  recall     f1  predicted
+operating point                                                
+f1_max              0.4900     0.4644  0.6055 0.5256       7139
+count_matched       0.6350     0.5210  0.5207 0.5209       5472
+half                0.5000     0.4677  0.5993 0.5254       7015
+
+5,475 sites really are positive, out of 121,838.
+  f1_max         balances the two errors, which is a default, not a finding
+  count_matched  calls as many sites as are really positive - the point a
+                 *count* wants, and it says nothing about picking the
+                 right ones
+  half           0.5, the threshold everyone reaches for without looking
+
+A site count swings 2.1x between threshold 0.3 (9,922 sites) and 0.7 (4,738 sites).
+Both are thresholds someone could choose with a straight face, so that
+ratio is the span of an unforced choice rather than a statistical
+interval. Any Task 2 claim of the form 'cell line X has N modified sites'
+has to carry it, or it is reporting an arbitrary cut as a measurement.
+Note also that the scores are not calibrated (see above), so the gap
+between count_matched and half is partly the miscalibration showing up as
+a threshold - fixing the calibration would move these points.
+
+Depth sweep
+-----------
+Models are fitted on FULL-depth training folds and scored on read-
+subsampled copies of their own held-out fold. That is the Task 2
+situation: we train on depth >= 20 data and predict on SG-NEx, whose
+median depth is 3. Labels come from m6ACE-Seq rather than from the
+nanopore reads, so they stay valid when reads are dropped.
+Subsample seed 4262 (not the split seed; safe to vary).
+       roc_auc  pr_auc  pr_auc_lift  retained
+depth                                        
+1       0.6707  0.1485       3.3052    0.3062
+2       0.7453  0.1934       4.3041    0.3987
+3       0.7845  0.2350       5.2290    0.4844
+4       0.8024  0.2577       5.7346    0.5312
+5       0.8228  0.2901       6.4568    0.5981
+7       0.8530  0.3367       7.4925    0.6940
+10      0.8695  0.3682       8.1939    0.7590
+15      0.8904  0.4020       8.9459    0.8286
+20      0.8986  0.4309       9.5881    0.8881
+25      0.9060  0.4422       9.8397    0.9114
+full    0.9231  0.4851      10.7960    1.0000
+
+Fitting folds: quantiles_v1
+---------------------------
+  repetition 0 of 10 (split seed 4262)
+    PR AUC mean 0.4775  range [0.4548, 0.5081]
+  repetition 1 of 10 (split seed 3903649664)
+    PR AUC mean 0.4794  range [0.4271, 0.5070]
+  repetition 2 of 10 (split seed 1249557661)
+    PR AUC mean 0.4813  range [0.4610, 0.5023]
+  repetition 3 of 10 (split seed 3187691742)
+    PR AUC mean 0.4772  range [0.4665, 0.4898]
+  repetition 4 of 10 (split seed 2871020302)
+    PR AUC mean 0.4761  range [0.4283, 0.5023]
+  repetition 5 of 10 (split seed 2019218930)
+    PR AUC mean 0.4789  range [0.4471, 0.5117]
+  repetition 6 of 10 (split seed 3107030937)
+    PR AUC mean 0.4770  range [0.4305, 0.5264]
+  repetition 7 of 10 (split seed 1141095731)
+    PR AUC mean 0.4764  range [0.4508, 0.4968]
+  repetition 8 of 10 (split seed 4272215296)
+    PR AUC mean 0.4786  range [0.4263, 0.5042]
+  repetition 9 of 10 (split seed 1350079209)
+    PR AUC mean 0.4827  range [0.4564, 0.5031]
+quantiles_v1 OOF: ROC AUC 0.9169   PR AUC 0.4759   (10.59x random)   n=121,838  positives=5,475 (4.49%)
+
+Comparison arm in full: quantiles_v1
+------------------------------------
+
+Per fold
+--------
+          n  n_positive  positive_rate  roc_auc  pr_auc  pr_auc_lift
+fold                                                                
+0     24314         997         0.0410   0.9272  0.4548      11.0910
+1     25923        1336         0.0515   0.9136  0.5081       9.8591
+2     23394        1033         0.0442   0.9174  0.4685      10.6108
+3     24119        1095         0.0454   0.9041  0.4704      10.3614
+4     24088        1014         0.0421   0.9277  0.4855      11.5341
+
+per-fold PR AUC: mean 0.4775  sd 0.0203  range [0.4548, 0.5081]
+That sd is fold-to-fold variation, not the uncertainty on a comparison.
+Folds differ in size and positive rate, and PR AUC depends on the base
+rate, so a model scores highest on the richest fold whatever its merit.
+To compare two models, pair them fold by fold: --compare-features.
+pooled OOF: ROC AUC 0.9169   PR AUC 0.4759   (10.59x random)   n=121,838  positives=5,475 (4.49%)
+
+By read depth
+-------------
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\src\m6a\figures.py:75: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`). Consider using `matplotlib.pyplot.close()`.
+  figure, axes = plt.subplots(figsize=figsize, dpi=DPI)
+wandb: uploading artifact run-x8yd2kx7-stratifiedfeatures_depth-ibmYOA; uploading artifact run-x8yd2kx7-strata_observations; uploading artifact run-x8yd2kx7-armquantiles_v1per_fold-2szPlg; uploading artifact lightgbm_coupling-report; updating run metadata
+wandb: uploading artifact run-x8yd2kx7-strata_observations; uploading artifact lightgbm_coupling-report
+wandb: uploading artifact lightgbm_coupling-report
+wandb: uploading config.yaml; uploading media\images\fig\pr_auc_distribution_210_a0525ba8a01471c9ab2b.png; uploading media\images\fig\threshold_sweep_210_57f4dda2e06dfa9ef7fa.png; uploading media\images\fig\arm\quantiles_v1\threshold_sweep_210_8c1d04a6ad2902971e9d.png; uploading media\images\fig\arm\quantiles_v1\threshold_count_210_99cf55c448f1a476d0db.png (+ 20 more)
+wandb: uploading media\images\fig\pr_auc_distribution_210_a0525ba8a01471c9ab2b.png; uploading media\images\fig\threshold_sweep_210_57f4dda2e06dfa9ef7fa.png; uploading media\images\fig\arm\quantiles_v1\threshold_sweep_210_8c1d04a6ad2902971e9d.png; uploading media\images\fig\arm\quantiles_v1\threshold_count_210_99cf55c448f1a476d0db.png; uploading media\images\fig\arm\quantiles_v1\pr_curve_210_b852f57ad0a58d678488.png (+ 19 more)
+wandb: uploading media\images\fig\compare\features\difference_210_ad98870b86685eb120f9.png; uploading media\images\fig\threshold_count_210_68288021631a8f932d0e.png; uploading media\images\fig\compare\features_motif\by_stratum_210_90a99b339aed776bd66a.png; uploading media\images\fig\band_distribution_210_39afac60845c02b04dd1.png; uploading media\images\fig\depth_bands_210_a0a6842a451d18ba63c4.png (+ 1 more)
+wandb: 
+wandb: Run summary:
+wandb:        arm/quantiles_v1/band/20-31/pr_auc 0.44293
+wandb:   arm/quantiles_v1/band/20-31/pr_auc_lift 9.87349
+wandb:      arm/quantiles_v1/band/304-599/pr_auc 0.45539
+wandb: arm/quantiles_v1/band/304-599/pr_auc_lift 11.07206
+wandb:        arm/quantiles_v1/band/32-46/pr_auc 0.4625
+wandb:   arm/quantiles_v1/band/32-46/pr_auc_lift 10.68595
+wandb:        arm/quantiles_v1/band/47-83/pr_auc 0.50133
+wandb:   arm/quantiles_v1/band/47-83/pr_auc_lift 11.12819
+wandb:         arm/quantiles_v1/band/600+/pr_auc 0.40174
+wandb:    arm/quantiles_v1/band/600+/pr_auc_lift 8.8352
+wandb:                                      +382 ...
+wandb: 
+wandb:  View run lightgbm_coupling at: https://wandb.ai/dsa4262-team/dsa4262-project/runs/x8yd2kx7
+wandb:  View project at: https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: Synced 5 W&B file(s), 31 media file(s), 20 artifact file(s) and 0 other file(s)
+wandb: Find logs at: .\wandb\run-20260924_235031-x8yd2kx7\logs
+             n  n_positive  positive_rate  roc_auc  pr_auc  pr_auc_lift note
+group                                                                       
+20-31    30138        1352         0.0449   0.9132  0.4429       9.8735     
+32-46    29713        1286         0.0433   0.9299  0.4625      10.6860     
+47-83    31276        1409         0.0451   0.9248  0.5013      11.1282     
+84-303   24616        1165         0.0473   0.9109  0.5122      10.8232     
+304-599   3258         134         0.0411   0.8693  0.4554      11.0721     
+600+      2837         129         0.0455   0.8206  0.4017       8.8352     
+Depth is the number of distinct RNA molecules measured at the site,
+not repeated readings of one molecule - docs/data.md#read-depth.
+Bands below 20 reads are empty on this training set by construction.
+
+Read pr_auc_lift across rows, not pr_auc: PR AUC is bounded below by
+each stratum's own positive rate, and those differ by a lot here.
+
+By DRACH motif
+--------------
+           n  n_positive  positive_rate  roc_auc  pr_auc  pr_auc_lift                note
+group                                                                                    
+AAACA  10152          38         0.0037   0.6104  0.0104       2.7808                    
+AAACC   6502          11         0.0017   0.6344  0.0069       4.1016                    
+AAACT   8627         255         0.0296   0.9014  0.2610       8.8289                    
+AGACA   7396         147         0.0199   0.9333  0.3868      19.4607                    
+AGACC   6785          60         0.0088   0.7583  0.1157      13.0785                    
+AGACT   6405         525         0.0820   0.9070  0.4612       5.6269                    
+GAACA   7934         187         0.0236   0.7734  0.0857       3.6369                    
+GAACC   5719         124         0.0217   0.7597  0.0795       3.6650                    
+GAACT   6957         783         0.1125   0.8294  0.4029       3.5794                    
+GGACA   7727         691         0.0894   0.9233  0.5792       6.4773                    
+GGACC   7353         552         0.0751   0.8870  0.4808       6.4048                    
+GGACT   6376        1440         0.2258   0.8802  0.6431       2.8475                    
+TAACA   4695           1         0.0002        -       -            -  only 1 positive(s)
+TAACC   2966           2         0.0007        -       -            -  only 2 positive(s)
+TAACT   4433          71         0.0160   0.7741  0.0573       3.5753                    
+TGACA   7718          68         0.0088   0.7635  0.1000      11.3535                    
+TGACC   7304          90         0.0123   0.6012  0.0460       3.7326                    
+TGACT   6789         430         0.0633   0.8627  0.4230       6.6792                    
+
+Read pr_auc_lift across rows, not pr_auc: PR AUC is bounded below by
+each stratum's own positive rate, and those differ by a lot here.
+
+Calibration
+-----------
+            n  n_positive  mean_predicted  observed_rate     gap
+decile                                                          
+1       12184          26          0.0002         0.0021 -0.0019
+2       12184          26          0.0007         0.0021 -0.0014
+3       12184          37          0.0015         0.0030 -0.0015
+4       12183          68          0.0028         0.0056 -0.0027
+5       12184          64          0.0050         0.0053 -0.0002
+6       12184         105          0.0091         0.0086  0.0005
+7       12183         143          0.0177         0.0117  0.0060
+8       12184         291          0.0399         0.0239  0.0160
+9       12184         733          0.1233         0.0602  0.0632
+10      12184        3982          0.6082         0.3268  0.2814
+
+mean predicted 0.0809 vs actual positive rate 0.0449
+expected positives 9,851 vs actual 5,475  ->  1.80x overcount
+ROC AUC and PR AUC cannot see this: both are rank-based, so the ordering
+can be good while the magnitude is wrong by this factor. It matters the
+moment a score is read as a probability - counting modified sites per
+cell line in Task 2 does exactly that.
+
+Thresholds
+----------
+PR AUC and ROC AUC integrate over every threshold, which is what makes
+them right for comparing two models and useless for using one. Counting
+modified sites needs an operating point; these are three, and none of
+them is a recommendation.
+                 threshold  precision  recall     f1  predicted
+operating point                                                
+f1_max              0.5800     0.4849  0.5571 0.5185       6290
+count_matched       0.6500     0.5133  0.5149 0.5141       5492
+half                0.5000     0.4513  0.5976 0.5143       7250
+
+5,475 sites really are positive, out of 121,838.
+  f1_max         balances the two errors, which is a default, not a finding
+  count_matched  calls as many sites as are really positive - the point a
+                 *count* wants, and it says nothing about picking the
+                 right ones
+  half           0.5, the threshold everyone reaches for without looking
+
+A site count swings 2.1x between threshold 0.3 (10,610 sites) and 0.7 (4,943 sites).
+Both are thresholds someone could choose with a straight face, so that
+ratio is the span of an unforced choice rather than a statistical
+interval. Any Task 2 claim of the form 'cell line X has N modified sites'
+has to carry it, or it is reporting an arbitrary cut as a measurement.
+Note also that the scores are not calibrated (see above), so the gap
+between count_matched and half is partly the miscalibration showing up as
+a threshold - fixing the calibration would move these points.
+
+Depth sweep
+-----------
+Models are fitted on FULL-depth training folds and scored on read-
+subsampled copies of their own held-out fold. That is the Task 2
+situation: we train on depth >= 20 data and predict on SG-NEx, whose
+median depth is 3. Labels come from m6ACE-Seq rather than from the
+nanopore reads, so they stay valid when reads are dropped.
+Subsample seed 4262 (not the split seed; safe to vary).
+       roc_auc  pr_auc  pr_auc_lift  retained
+depth                                        
+1       0.6831  0.1527       3.3976    0.3208
+2       0.7503  0.2001       4.4534    0.4205
+3       0.7872  0.2458       5.4709    0.5165
+4       0.8067  0.2723       6.0588    0.5720
+5       0.8213  0.2991       6.6563    0.6285
+7       0.8486  0.3314       7.3752    0.6963
+10      0.8669  0.3716       8.2689    0.7807
+15      0.8864  0.3998       8.8968    0.8400
+20      0.8957  0.4277       9.5177    0.8986
+25      0.8996  0.4389       9.7660    0.9221
+full    0.9169  0.4759      10.5914    1.0000
+
+Paired: quantiles_coupling_v1 vs quantiles_v1 (same model, same parameters, same folds)
+---------------------------------------------------------------------------------------
+                 quantiles_v1  quantiles_coupling_v1  difference
+repetition fold                                                 
+0          0           0.4548                 0.4595      0.0048
+           1           0.5081                 0.5146      0.0065
+           2           0.4685                 0.4748      0.0063
+           3           0.4704                 0.4899      0.0194
+           4           0.4855                 0.4965      0.0109
+1          0           0.4863                 0.4812     -0.0050
+           1           0.5070                 0.5116      0.0046
+           2           0.5010                 0.5088      0.0078
+           3           0.4757                 0.5010      0.0253
+           4           0.4271                 0.4539      0.0268
+2          0           0.5023                 0.5048      0.0026
+           1           0.4974                 0.5017      0.0043
+           2           0.4610                 0.4792      0.0182
+           3           0.4846                 0.4884      0.0038
+           4           0.4614                 0.4826      0.0212
+3          0           0.4676                 0.4696      0.0020
+           1           0.4841                 0.5007      0.0166
+           2           0.4781                 0.5079      0.0298
+           3           0.4898                 0.5059      0.0162
+           4           0.4665                 0.4822      0.0157
+4          0           0.4883                 0.4934      0.0052
+           1           0.4910                 0.5006      0.0096
+           2           0.5023                 0.5161      0.0138
+           3           0.4283                 0.4351      0.0068
+           4           0.4707                 0.4798      0.0091
+5          0           0.4671                 0.4653     -0.0017
+           1           0.4927                 0.5069      0.0142
+           2           0.4757                 0.4910      0.0153
+           3           0.4471                 0.4618      0.0146
+           4           0.5117                 0.5192      0.0075
+6          0           0.4689                 0.4762      0.0073
+           1           0.4615                 0.4760      0.0146
+           2           0.4976                 0.5098      0.0122
+           3           0.4305                 0.4389      0.0083
+           4           0.5264                 0.5353      0.0089
+7          0           0.4777                 0.4955      0.0177
+           1           0.4968                 0.5008      0.0040
+           2           0.4965                 0.5087      0.0122
+           3           0.4601                 0.4678      0.0077
+           4           0.4508                 0.4686      0.0179
+8          0           0.4263                 0.4293      0.0030
+           1           0.5042                 0.5116      0.0074
+           2           0.4740                 0.4862      0.0122
+           3           0.4932                 0.5105      0.0173
+           4           0.4954                 0.4992      0.0038
+9          0           0.4564                 0.4758      0.0195
+           1           0.4860                 0.4886      0.0026
+           2           0.4848                 0.4823     -0.0025
+           3           0.4832                 0.4915      0.0083
+           4           0.5031                 0.5092      0.0061
+
+quantiles_v1           mean 0.4785  sd 0.0229
+quantiles_coupling_v1  mean 0.4889  sd 0.0223
+
+unpaired  (wrong)     gap +0.0104 against a fold sd of ~0.0229, Welch p = 0.0235
+paired    (optimistic) mean difference +0.0104  sd 0.0075  95% CI [+0.0083, +0.0125]  t = 9.85  p = 0.0000  wins 47/50
+corrected (quote this) 95% CI [+0.0026, +0.0182]  t = 2.68  p = 0.0100
+
+The corrected row is Nadeau & Bengio: it inflates the variance to admit
+that each fold's model trains on the other 4, so the observations are not
+independent. Its p-value is always the larger of the two, and it is the one to
+quote - a difference that only clears 0.05 uncorrected has not cleared it.
+
+quantiles_coupling_v1 is +0.0104 better than quantiles_v1, winning 47/50 paired observations, corrected p = 0.0100. Consistent in direction and significant even after correcting for the overlap between training sets.
+
+Paired within read depth: quantiles_coupling_v1 vs quantiles_v1
+---------------------------------------------------------------
+         baseline_mean  candidate_mean  mean_difference win_ratio  p_value_corrected
+stratum                                                                             
+20-31           0.4431          0.4474           0.0043     30/50             0.6310
+32-46           0.4682          0.4659          -0.0023     20/50             0.7933
+47-83           0.5017          0.5142           0.0126     37/50             0.1491
+84-303          0.5235          0.5426           0.0191     45/50             0.0166
+304-599         0.4535          0.4717           0.0181     32/47             0.4223
+600+            0.4294          0.4776           0.0482     39/49             0.1261
+
+6 strata means 6 p-values, and at least one will
+look significant by chance. They are NOT corrected for that here,
+deliberately: these tests are strongly correlated - the same models, the
+same folds, overlapping evidence - so a Bonferroni factor calibrated for
+independent tests would be wrong in the other direction. Treat a
+per-stratum p-value as descriptive, pointing at where a difference
+concentrates, and the overall paired test as the confirmatory one. Do not
+quote a band p-value as a headline; picking the band after seeing the
+result is how a significant finding gets manufactured.
+
+Paired within DRACH motif: quantiles_coupling_v1 vs quantiles_v1
+----------------------------------------------------------------
+         baseline_mean  candidate_mean  mean_difference win_ratio  p_value_corrected
+stratum                                                                             
+AAACA           0.0220          0.0190          -0.0029     10/14             0.7517
+AAACT           0.2828          0.3136           0.0308     42/50             0.0662
+AGACA           0.4051          0.4371           0.0320     35/50             0.2056
+AGACC           0.1880          0.2104           0.0224     24/35             0.3503
+AGACT           0.4796          0.4742          -0.0054     21/50             0.7408
+GAACA           0.1097          0.1227           0.0130     33/50             0.4275
+GAACC           0.1226          0.1228           0.0002     26/50             0.9920
+GAACT           0.4047          0.4123           0.0076     32/50             0.4740
+GGACA           0.5824          0.5946           0.0122     35/50             0.2474
+GGACC           0.5012          0.5364           0.0352     46/50             0.0066
+GGACT           0.6423          0.6447           0.0023     26/50             0.8136
+TAACT           0.0853          0.1018           0.0164     30/45             0.3725
+TGACA           0.1636          0.2023           0.0388     29/40             0.2863
+TGACC           0.0661          0.0782           0.0121     28/48             0.5881
+TGACT           0.4405          0.4310          -0.0096     22/50             0.6085
+
+15 strata means 15 p-values, and at least one will
+look significant by chance. They are NOT corrected for that here,
+deliberately: these tests are strongly correlated - the same models, the
+same folds, overlapping evidence - so a Bonferroni factor calibrated for
+independent tests would be wrong in the other direction. Treat a
+per-stratum p-value as descriptive, pointing at where a difference
+concentrates, and the overall paired test as the confirmatory one. Do not
+quote a band p-value as a headline; picking the band after seeing the
+result is how a significant finding gets manufactured.
+
+report -> analysis\evaluation\reports\lightgbm_coupling.json   (1715.6s)
+  logged to W&B: https://wandb.ai/dsa4262-team/dsa4262-project/runs/x8yd2kx7
