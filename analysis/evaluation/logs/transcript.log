@@ -1,56 +1,56 @@
 wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
 wandb: Currently logged in as: jinthau-siah (dsa4262-team) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
-wandb: setting up run d403bn74
+wandb: setting up run e71f14jf
 wandb: Tracking run with wandb version 0.30.0
-wandb: Run data is saved locally in C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\wandb\run-20260924_202230-d403bn74
+wandb: Run data is saved locally in C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\wandb\run-20260924_210643-e71f14jf
 wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run lightgbm_nbr_struct
+wandb: Syncing run lightgbm_transcript
 wandb:  View project at https://wandb.ai/dsa4262-team/dsa4262-project
-wandb:  View run at https://wandb.ai/dsa4262-team/dsa4262-project/runs/d403bn74
-[lightgbm_nbr_struct] features=quantiles_nbr_struct_v1 model=lightgbm
+wandb:  View run at https://wandb.ai/dsa4262-team/dsa4262-project/runs/e71f14jf
+[lightgbm_transcript] features=quantiles_transcript_v1 model=lightgbm
   profile standard, 10 repetitions x 5 folds = 50 observations
-  extracting quantiles_nbr_struct_v1 at depth [1, 2, 3, 4, 5, 7, 10, 15, 20, 25, full] from dataset0.json.gz ...
+  extracting quantiles_transcript_v1 at depth [1, 2, 3, 4, 5, 7, 10, 15, 20, 25, full] from dataset0.json.gz ...
   121,838 sites, 5,475 positive (4.49%), 5 folds grouped by gene_id (seed 4262)
 
 Fitting folds
 -------------
   repetition 0 of 10 (split seed 4262)
-    PR AUC mean 0.5051  range [0.4871, 0.5226]
+    PR AUC mean 0.5091  range [0.4908, 0.5285]
   repetition 1 of 10 (split seed 3903649664)
-    PR AUC mean 0.5018  range [0.4536, 0.5200]
+    PR AUC mean 0.5066  range [0.4673, 0.5386]
   repetition 2 of 10 (split seed 1249557661)
-    PR AUC mean 0.5039  range [0.4747, 0.5266]
+    PR AUC mean 0.5110  range [0.4984, 0.5289]
   repetition 3 of 10 (split seed 3187691742)
-    PR AUC mean 0.5044  range [0.4886, 0.5269]
+    PR AUC mean 0.5047  range [0.4773, 0.5220]
   repetition 4 of 10 (split seed 2871020302)
-    PR AUC mean 0.5017  range [0.4533, 0.5197]
+    PR AUC mean 0.5069  range [0.4471, 0.5303]
   repetition 5 of 10 (split seed 2019218930)
-    PR AUC mean 0.5040  range [0.4654, 0.5527]
+    PR AUC mean 0.5078  range [0.4803, 0.5560]
   repetition 6 of 10 (split seed 3107030937)
-    PR AUC mean 0.4982  range [0.4548, 0.5422]
+    PR AUC mean 0.5067  range [0.4634, 0.5532]
   repetition 7 of 10 (split seed 1141095731)
-    PR AUC mean 0.4988  range [0.4725, 0.5236]
+    PR AUC mean 0.5024  range [0.4850, 0.5303]
   repetition 8 of 10 (split seed 4272215296)
-    PR AUC mean 0.4956  range [0.4505, 0.5334]
+    PR AUC mean 0.5036  range [0.4569, 0.5506]
   repetition 9 of 10 (split seed 1350079209)
-    PR AUC mean 0.5093  range [0.4940, 0.5423]
+    PR AUC mean 0.5128  range [0.4859, 0.5378]
 
 Per fold
 --------
           n  n_positive  positive_rate  roc_auc  pr_auc  pr_auc_lift
 fold                                                                
-0     24314         997         0.0410   0.9321  0.4871      11.8790
-1     25923        1336         0.0515   0.9163  0.5226      10.1402
-2     23394        1033         0.0442   0.9247  0.5026      11.3815
-3     24119        1095         0.0454   0.9106  0.5048      11.1187
-4     24088        1014         0.0421   0.9328  0.5086      12.0813
+0     24314         997         0.0410   0.9350  0.4908      11.9695
+1     25923        1336         0.0515   0.9163  0.5171      10.0343
+2     23394        1033         0.0442   0.9230  0.4975      11.2659
+3     24119        1095         0.0454   0.9129  0.5113      11.2628
+4     24088        1014         0.0421   0.9336  0.5285      12.5559
 
-per-fold PR AUC: mean 0.5051  sd 0.0127  range [0.4871, 0.5226]
+per-fold PR AUC: mean 0.5091  sd 0.0151  range [0.4908, 0.5285]
 That sd is fold-to-fold variation, not the uncertainty on a comparison.
 Folds differ in size and positive rate, and PR AUC depends on the base
 rate, so a model scores highest on the richest fold whatever its merit.
 To compare two models, pair them fold by fold: --compare-features.
-pooled OOF: ROC AUC 0.9220   PR AUC 0.5036   (11.21x random)   n=121,838  positives=5,475 (4.49%)
+pooled OOF: ROC AUC 0.9230   PR AUC 0.5070   (11.28x random)   n=121,838  positives=5,475 (4.49%)
 
 Repeated cross-validation: 10 x 5 folds
 ---------------------------------------
@@ -59,58 +59,58 @@ children of it. Every other number in this report comes from repetition
 0, so running more of them changes none of them.
                      n  n_positive  roc_auc  pr_auc
 repetition fold                                    
-0          0     24314         997   0.9321  0.4871
-           1     25923        1336   0.9163  0.5226
-           2     23394        1033   0.9247  0.5026
-           3     24119        1095   0.9106  0.5048
-           4     24088        1014   0.9328  0.5086
-1          0     23399        1051   0.9272  0.5116
-           1     25481        1216   0.9220  0.5200
-           2     23773        1130   0.9220  0.5172
-           3     25004        1037   0.9331  0.5063
-           4     24181        1041   0.9075  0.4536
-2          0     23530        1084   0.9279  0.5266
-           1     24521        1069   0.9299  0.5152
-           2     24029        1191   0.9031  0.4747
-           3     25559        1139   0.9196  0.5075
-           4     24199         992   0.9336  0.4956
-3          0     24052        1018   0.9264  0.4954
-           1     25284        1160   0.9290  0.5269
-           2     25095        1072   0.9239  0.5084
-           3     24749        1155   0.9201  0.5029
-           4     22658        1070   0.9087  0.4886
-4          0     24428        1140   0.9212  0.5020
-           1     24318        1123   0.9190  0.5187
-           2     25789        1225   0.9270  0.5150
-           3     23716         951   0.9224  0.4533
-           4     23587        1036   0.9232  0.5197
-5          0     24503        1116   0.9260  0.4943
-           1     23983        1047   0.9300  0.5249
-           2     24442        1069   0.9252  0.4828
-           3     24011        1044   0.9109  0.4654
-           4     24899        1199   0.9208  0.5527
-6          0     23668         978   0.9223  0.4997
-           1     24673        1004   0.9251  0.4733
-           2     25155        1122   0.9288  0.5210
-           3     23927        1134   0.9023  0.4548
-           4     24415        1237   0.9234  0.5422
-7          0     23935        1135   0.9253  0.5028
-           1     24817        1181   0.9155  0.5113
-           2     24510        1138   0.9284  0.5236
-           3     23807        1036   0.9267  0.4838
-           4     24769         985   0.9208  0.4725
-8          0     24165        1044   0.9215  0.4505
-           1     23500         977   0.9277  0.5334
-           2     24464        1070   0.9151  0.4913
-           3     24706        1219   0.9189  0.5064
-           4     25003        1165   0.9245  0.4962
-9          0     25275        1179   0.9252  0.4940
-           1     23528        1068   0.9190  0.5001
-           2     24221        1113   0.9193  0.5030
-           3     24980        1085   0.9231  0.5069
-           4     23834        1030   0.9306  0.5423
+0          0     24314         997   0.9350  0.4908
+           1     25923        1336   0.9163  0.5171
+           2     23394        1033   0.9230  0.4975
+           3     24119        1095   0.9129  0.5113
+           4     24088        1014   0.9336  0.5285
+1          0     23399        1051   0.9283  0.5134
+           1     25481        1216   0.9252  0.5386
+           2     23773        1130   0.9211  0.5185
+           3     25004        1037   0.9270  0.4951
+           4     24181        1041   0.9116  0.4673
+2          0     23530        1084   0.9264  0.5248
+           1     24521        1069   0.9306  0.5289
+           2     24029        1191   0.9059  0.4992
+           3     25559        1139   0.9232  0.4984
+           4     24199         992   0.9334  0.5039
+3          0     24052        1018   0.9271  0.4773
+           1     25284        1160   0.9286  0.5220
+           2     25095        1072   0.9279  0.5127
+           3     24749        1155   0.9252  0.5200
+           4     22658        1070   0.9129  0.4913
+4          0     24428        1140   0.9273  0.5122
+           1     24318        1123   0.9225  0.5303
+           2     25789        1225   0.9268  0.5191
+           3     23716         951   0.9227  0.4471
+           4     23587        1036   0.9227  0.5260
+5          0     24503        1116   0.9280  0.4964
+           1     23983        1047   0.9298  0.5255
+           2     24442        1069   0.9248  0.4803
+           3     24011        1044   0.9167  0.4807
+           4     24899        1199   0.9237  0.5560
+6          0     23668         978   0.9218  0.4882
+           1     24673        1004   0.9230  0.4791
+           2     25155        1122   0.9319  0.5532
+           3     23927        1134   0.9082  0.4634
+           4     24415        1237   0.9289  0.5495
+7          0     23935        1135   0.9222  0.4908
+           1     24817        1181   0.9194  0.5187
+           2     24510        1138   0.9303  0.5303
+           3     23807        1036   0.9265  0.4873
+           4     24769         985   0.9248  0.4850
+8          0     24165        1044   0.9235  0.4569
+           1     23500         977   0.9286  0.5506
+           2     24464        1070   0.9224  0.4935
+           3     24706        1219   0.9172  0.5101
+           4     25003        1165   0.9283  0.5066
+9          0     25275        1179   0.9271  0.4859
+           1     23528        1068   0.9227  0.5107
+           2     24221        1113   0.9189  0.5046
+           3     24980        1085   0.9261  0.5247
+           4     23834        1030   0.9332  0.5378
 
-50 observations: PR AUC mean 0.5023  sd 0.0232  range [0.4505, 0.5527]
+50 observations: PR AUC mean 0.5071  sd 0.0249  range [0.4471, 0.5560]
 That sd is wider than a single split's, and it should be: more splits
 sample more of the split-to-split variation rather than averaging it
 away. It is still one dataset sliced many ways, not many datasets -
@@ -122,12 +122,12 @@ By read depth
 -------------
              n  n_positive  positive_rate  roc_auc  pr_auc  pr_auc_lift note
 group                                                                       
-20-31    30138        1352         0.0449   0.9191  0.4687      10.4482     
-32-46    29713        1286         0.0433   0.9363  0.4886      11.2894     
-47-83    31276        1409         0.0451   0.9312  0.5269      11.6968     
-84-303   24616        1165         0.0473   0.9126  0.5463      11.5436     
-304-599   3258         134         0.0411   0.8696  0.4655      11.3178     
-600+      2837         129         0.0455   0.8145  0.4363       9.5950     
+20-31    30138        1352         0.0449   0.9188  0.4739      10.5632     
+32-46    29713        1286         0.0433   0.9346  0.5049      11.6656     
+47-83    31276        1409         0.0451   0.9309  0.5210      11.5650     
+84-303   24616        1165         0.0473   0.9176  0.5411      11.4337     
+304-599   3258         134         0.0411   0.8841  0.4963      12.0674     
+600+      2837         129         0.0455   0.8420  0.4481       9.8548     
 Depth is the number of distinct RNA molecules measured at the site,
 not repeated readings of one molecule - docs/data.md#read-depth.
 Bands below 20 reads are empty on this training set by construction.
@@ -139,24 +139,24 @@ By DRACH motif
 --------------
            n  n_positive  positive_rate  roc_auc  pr_auc  pr_auc_lift                note
 group                                                                                    
-AAACA  10152          38         0.0037   0.6709  0.0097       2.5907                    
-AAACC   6502          11         0.0017   0.7564  0.0073       4.3180                    
-AAACT   8627         255         0.0296   0.9041  0.2641       8.9332                    
-AGACA   7396         147         0.0199   0.9444  0.3957      19.9109                    
-AGACC   6785          60         0.0088   0.7886  0.1341      15.1619                    
-AGACT   6405         525         0.0820   0.9145  0.4945       6.0335                    
-GAACA   7934         187         0.0236   0.7914  0.1077       4.5685                    
-GAACC   5719         124         0.0217   0.7879  0.1027       4.7352                    
-GAACT   6957         783         0.1125   0.8327  0.4116       3.6567                    
-GGACA   7727         691         0.0894   0.9295  0.6074       6.7921                    
-GGACC   7353         552         0.0751   0.8905  0.5105       6.7996                    
-GGACT   6376        1440         0.2258   0.8867  0.6861       3.0378                    
+AAACA  10152          38         0.0037   0.6853  0.0166       4.4465                    
+AAACC   6502          11         0.0017   0.7316  0.0075       4.4129                    
+AAACT   8627         255         0.0296   0.9114  0.2931       9.9155                    
+AGACA   7396         147         0.0199   0.9437  0.4135      20.8047                    
+AGACC   6785          60         0.0088   0.7664  0.1174      13.2800                    
+AGACT   6405         525         0.0820   0.9176  0.5199       6.3426                    
+GAACA   7934         187         0.0236   0.7708  0.0946       4.0148                    
+GAACC   5719         124         0.0217   0.7922  0.0875       4.0347                    
+GAACT   6957         783         0.1125   0.8392  0.4152       3.6893                    
+GGACA   7727         691         0.0894   0.9318  0.6293       7.0373                    
+GGACC   7353         552         0.0751   0.8923  0.5055       6.7337                    
+GGACT   6376        1440         0.2258   0.8902  0.6814       3.0170                    
 TAACA   4695           1         0.0002        -       -            -  only 1 positive(s)
 TAACC   2966           2         0.0007        -       -            -  only 2 positive(s)
-TAACT   4433          71         0.0160   0.8081  0.0787       4.9161                    
-TGACA   7718          68         0.0088   0.7380  0.1022      11.6038                    
-TGACC   7304          90         0.0123   0.6579  0.0443       3.5942                    
-TGACT   6789         430         0.0633   0.8708  0.4519       7.1346                    
+TAACT   4433          71         0.0160   0.7786  0.0582       3.6358                    
+TGACA   7718          68         0.0088   0.7942  0.1105      12.5416                    
+TGACC   7304          90         0.0123   0.6591  0.0333       2.7027                    
+TGACT   6789         430         0.0633   0.8757  0.4523       7.1411                    
 
 Read pr_auc_lift across rows, not pr_auc: PR AUC is bounded below by
 each stratum's own positive rate, and those differ by a lot here.
@@ -165,19 +165,19 @@ Calibration
 -----------
             n  n_positive  mean_predicted  observed_rate     gap
 decile                                                          
-1       12184          15          0.0001         0.0012 -0.0011
-2       12184          25          0.0006         0.0021 -0.0015
-3       12184          38          0.0012         0.0031 -0.0019
-4       12183          49          0.0023         0.0040 -0.0017
-5       12184          66          0.0042         0.0054 -0.0012
-6       12184         121          0.0078         0.0099 -0.0021
-7       12183         133          0.0155         0.0109  0.0046
-8       12184         272          0.0352         0.0223  0.0128
-9       12184         718          0.1100         0.0589  0.0511
-10      12184        4038          0.5834         0.3314  0.2520
+1       12184          11          0.0001         0.0009 -0.0008
+2       12184          23          0.0004         0.0019 -0.0014
+3       12184          37          0.0010         0.0030 -0.0020
+4       12183          46          0.0019         0.0038 -0.0018
+5       12184          77          0.0037         0.0063 -0.0027
+6       12184          87          0.0069         0.0071 -0.0002
+7       12183         160          0.0140         0.0131  0.0009
+8       12184         306          0.0329         0.0251  0.0078
+9       12184         674          0.1066         0.0553  0.0513
+10      12184        4054          0.5786         0.3327  0.2459
 
-mean predicted 0.0760 vs actual positive rate 0.0449
-expected positives 9,264 vs actual 5,475  ->  1.69x overcount
+mean predicted 0.0746 vs actual positive rate 0.0449
+expected positives 9,092 vs actual 5,475  ->  1.66x overcount
 ROC AUC and PR AUC cannot see this: both are rank-based, so the ordering
 can be good while the magnitude is wrong by this factor. It matters the
 moment a score is read as a probability - counting modified sites per
@@ -191,9 +191,9 @@ modified sites needs an operating point; these are three, and none of
 them is a recommendation.
                  threshold  precision  recall     f1  predicted
 operating point                                                
-f1_max              0.5550     0.4998  0.5638 0.5299       6177
-count_matched       0.6200     0.5278  0.5286 0.5282       5483
-half                0.5000     0.4741  0.5896 0.5256       6809
+f1_max              0.5950     0.5265  0.5381 0.5322       5595
+count_matched       0.6050     0.5303  0.5311 0.5307       5484
+half                0.5000     0.4837  0.5890 0.5312       6668
 
 5,475 sites really are positive, out of 121,838.
   f1_max         balances the two errors, which is a default, not a finding
@@ -202,7 +202,7 @@ half                0.5000     0.4741  0.5896 0.5256       6809
                  right ones
   half           0.5, the threshold everyone reaches for without looking
 
-A site count swings 2.2x between threshold 0.3 (9,884 sites) and 0.7 (4,597 sites).
+A site count swings 2.2x between threshold 0.3 (9,831 sites) and 0.7 (4,542 sites).
 Both are thresholds someone could choose with a straight face, so that
 ratio is the span of an unforced choice rather than a statistical
 interval. Any Task 2 claim of the form 'cell line X has N modified sites'
@@ -221,17 +221,17 @@ nanopore reads, so they stay valid when reads are dropped.
 Subsample seed 4262 (not the split seed; safe to vary).
        roc_auc  pr_auc  pr_auc_lift  retained
 depth                                        
-1       0.6913  0.1485       3.3036    0.2948
-2       0.7601  0.2052       4.5668    0.4075
-3       0.7946  0.2574       5.7284    0.5112
-4       0.8159  0.2846       6.3338    0.5652
-5       0.8311  0.3162       7.0376    0.6280
-7       0.8559  0.3499       7.7873    0.6949
-10      0.8719  0.3914       8.7096    0.7772
-15      0.8920  0.4215       9.3791    0.8369
-20      0.8994  0.4439       9.8774    0.8814
-25      0.9064  0.4576      10.1825    0.9086
-full    0.9220  0.5036      11.2065    1.0000
+1       0.6999  0.1502       3.3428    0.2963
+2       0.7633  0.2046       4.5523    0.4034
+3       0.8022  0.2624       5.8396    0.5175
+4       0.8191  0.2878       6.4055    0.5677
+5       0.8379  0.3182       7.0812    0.6276
+7       0.8614  0.3629       8.0750    0.7156
+10      0.8775  0.4003       8.9077    0.7894
+15      0.8960  0.4285       9.5346    0.8450
+20      0.9028  0.4571      10.1713    0.9014
+25      0.9084  0.4653      10.3544    0.9177
+full    0.9230  0.5070      11.2836    1.0000
 
 Fitting folds: quantiles_v1
 ---------------------------
@@ -281,14 +281,11 @@ By read depth
 -------------
 C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\src\m6a\figures.py:75: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`). Consider using `matplotlib.pyplot.close()`.
   figure, axes = plt.subplots(figsize=figsize, dpi=DPI)
-wandb: uploading artifact run-d403bn74-stratifiedfeatures_motif-LklGTA; uploading artifact run-d403bn74-strata_observations; uploading artifact run-d403bn74-armquantiles_v1per_fold-AEx6MA; uploading artifact lightgbm_nbr_struct-report; uploading media\table\per_fold_201_f034799371e19485857a.table.json (+ 8 more)
-wandb: uploading artifact run-d403bn74-armquantiles_v1per_fold-AEx6MA; uploading artifact lightgbm_nbr_struct-report; uploading media\table\depth_sweep_204_3c588803e8776395b147.table.json; uploading media\table\stratified\features_motif_207_0968e17118b4d676b565.table.json; uploading media\table\strata_observations_208_4771f5104e54cf0c6be3.table.json (+ 4 more)
-wandb: uploading artifact run-d403bn74-armquantiles_v1per_fold-AEx6MA; uploading artifact lightgbm_nbr_struct-report
-wandb: uploading artifact lightgbm_nbr_struct-report
-wandb: uploading media\images\fig\depth_sweep_210_30a66e568ab25f687105.png; uploading output.log; uploading media\images\fig\roc_auc_distribution_210_9a38c192ef5449f74bc1.png; uploading media\images\fig\depth_bands_210_1c1428bd7a4b9be9d669.png; uploading media\images\fig\arm\quantiles_v1\pr_auc_distribution_210_57a9fb535a472700ce3b.png (+ 20 more)
-wandb: uploading media\images\fig\roc_auc_distribution_210_9a38c192ef5449f74bc1.png; uploading media\images\fig\depth_bands_210_1c1428bd7a4b9be9d669.png; uploading media\images\fig\arm\quantiles_v1\depth_bands_210_b6ef8ff3276f458823c0.png; uploading media\images\fig\arm\quantiles_v1\reliability_210_5a6ec7d6f28661f48744.png; uploading media\images\fig\arm\quantiles_v1\depth_sweep_210_042ce02d088968353d5d.png (+ 17 more)
-wandb: uploading media\images\fig\arm\quantiles_v1\reliability_210_5a6ec7d6f28661f48744.png; uploading media\images\fig\compare\features\distribution_210_fd59f130a7a6645a3d7c.png; uploading media\images\fig\compare\features_motif\by_stratum_210_4636954a7057af27a9e4.png; uploading media\images\fig\band_distribution_210_0cde7f279139cd5de4fa.png; uploading media\images\fig\reliability_210_6f2293af4a82e0b8c2bd.png (+ 6 more)
-wandb: uploading history steps 0-210, summary, console lines 476-507
+wandb: uploading artifact run-e71f14jf-stratifiedfeatures_motif-nRw3Og; uploading artifact run-e71f14jf-strata_observations; uploading artifact run-e71f14jf-armquantiles_v1per_fold-sxkLRg; uploading artifact lightgbm_transcript-report; uploading media\table\stratified\features_motif_207_e142debffb6dc19a8152.table.json (+ 9 more)
+wandb: uploading artifact run-e71f14jf-strata_observations; uploading artifact run-e71f14jf-armquantiles_v1per_fold-sxkLRg; uploading artifact lightgbm_transcript-report; uploading media\table\strata_observations_208_d4d4e12e6ebb799ccc33.table.json; uploading media\table\by_depth_202_8245ac1a05264f182b3e.table.json (+ 3 more)
+wandb: uploading artifact lightgbm_transcript-report
+wandb: uploading media\images\fig\depth_bands_210_dc6b8f007c04ab8ec054.png; uploading media\images\fig\arm\quantiles_v1\pr_auc_distribution_210_57a9fb535a472700ce3b.png; uploading media\images\fig\arm\quantiles_v1\depth_bands_210_b6ef8ff3276f458823c0.png; uploading media\images\fig\arm\quantiles_v1\roc_curve_210_ea32937e4b09671d29ff.png; uploading media\images\fig\arm\quantiles_v1\depth_sweep_210_042ce02d088968353d5d.png (+ 19 more)
+wandb: uploading media\images\fig\band_distribution_210_0763f10b9e194e724f67.png
 wandb: 
 wandb: Run summary:
 wandb:        arm/quantiles_v1/band/20-31/pr_auc 0.44293
@@ -303,10 +300,10 @@ wandb:         arm/quantiles_v1/band/600+/pr_auc 0.40174
 wandb:    arm/quantiles_v1/band/600+/pr_auc_lift 8.8352
 wandb:                                      +382 ...
 wandb: 
-wandb:  View run lightgbm_nbr_struct at: https://wandb.ai/dsa4262-team/dsa4262-project/runs/d403bn74
+wandb:  View run lightgbm_transcript at: https://wandb.ai/dsa4262-team/dsa4262-project/runs/e71f14jf
 wandb:  View project at: https://wandb.ai/dsa4262-team/dsa4262-project
 wandb: Synced 5 W&B file(s), 31 media file(s), 20 artifact file(s) and 0 other file(s)
-wandb: Find logs at: .\wandb\run-20260924_202230-d403bn74\logs
+wandb: Find logs at: .\wandb\run-20260924_210643-e71f14jf\logs
              n  n_positive  positive_rate  roc_auc  pr_auc  pr_auc_lift note
 group                                                                       
 20-31    30138        1352         0.0449   0.9132  0.4429       9.8735     
@@ -420,85 +417,85 @@ depth
 25      0.8996  0.4389       9.7660    0.9221
 full    0.9169  0.4759      10.5914    1.0000
 
-Paired: quantiles_nbr_struct_v1 vs quantiles_v1 (same model, same parameters, same folds)
+Paired: quantiles_transcript_v1 vs quantiles_v1 (same model, same parameters, same folds)
 -----------------------------------------------------------------------------------------
-                 quantiles_v1  quantiles_nbr_struct_v1  difference
+                 quantiles_v1  quantiles_transcript_v1  difference
 repetition fold                                                   
-0          0           0.4548                   0.4871      0.0323
-           1           0.5081                   0.5226      0.0145
-           2           0.4685                   0.5026      0.0340
-           3           0.4704                   0.5048      0.0344
-           4           0.4855                   0.5086      0.0230
-1          0           0.4863                   0.5116      0.0254
-           1           0.5070                   0.5200      0.0131
-           2           0.5010                   0.5172      0.0163
-           3           0.4757                   0.5063      0.0306
-           4           0.4271                   0.4536      0.0266
-2          0           0.5023                   0.5266      0.0243
-           1           0.4974                   0.5152      0.0178
-           2           0.4610                   0.4747      0.0137
-           3           0.4846                   0.5075      0.0229
-           4           0.4614                   0.4956      0.0342
-3          0           0.4676                   0.4954      0.0279
-           1           0.4841                   0.5269      0.0428
-           2           0.4781                   0.5084      0.0303
-           3           0.4898                   0.5029      0.0131
-           4           0.4665                   0.4886      0.0221
-4          0           0.4883                   0.5020      0.0138
-           1           0.4910                   0.5187      0.0277
-           2           0.5023                   0.5150      0.0127
-           3           0.4283                   0.4533      0.0250
-           4           0.4707                   0.5197      0.0490
-5          0           0.4671                   0.4943      0.0272
-           1           0.4927                   0.5249      0.0322
-           2           0.4757                   0.4828      0.0071
-           3           0.4471                   0.4654      0.0183
-           4           0.5117                   0.5527      0.0410
-6          0           0.4689                   0.4997      0.0307
-           1           0.4615                   0.4733      0.0118
-           2           0.4976                   0.5210      0.0234
-           3           0.4305                   0.4548      0.0243
-           4           0.5264                   0.5422      0.0157
-7          0           0.4777                   0.5028      0.0251
-           1           0.4968                   0.5113      0.0145
-           2           0.4965                   0.5236      0.0271
-           3           0.4601                   0.4838      0.0236
-           4           0.4508                   0.4725      0.0218
-8          0           0.4263                   0.4505      0.0242
-           1           0.5042                   0.5334      0.0292
-           2           0.4740                   0.4913      0.0173
-           3           0.4932                   0.5064      0.0131
-           4           0.4954                   0.4962      0.0008
-9          0           0.4564                   0.4940      0.0376
-           1           0.4860                   0.5001      0.0141
-           2           0.4848                   0.5030      0.0182
-           3           0.4832                   0.5069      0.0236
-           4           0.5031                   0.5423      0.0392
+0          0           0.4548                   0.4908      0.0360
+           1           0.5081                   0.5171      0.0090
+           2           0.4685                   0.4975      0.0289
+           3           0.4704                   0.5113      0.0409
+           4           0.4855                   0.5285      0.0430
+1          0           0.4863                   0.5134      0.0272
+           1           0.5070                   0.5386      0.0317
+           2           0.5010                   0.5185      0.0176
+           3           0.4757                   0.4951      0.0194
+           4           0.4271                   0.4673      0.0402
+2          0           0.5023                   0.5248      0.0225
+           1           0.4974                   0.5289      0.0315
+           2           0.4610                   0.4992      0.0382
+           3           0.4846                   0.4984      0.0138
+           4           0.4614                   0.5039      0.0425
+3          0           0.4676                   0.4773      0.0097
+           1           0.4841                   0.5220      0.0379
+           2           0.4781                   0.5127      0.0345
+           3           0.4898                   0.5200      0.0302
+           4           0.4665                   0.4913      0.0249
+4          0           0.4883                   0.5122      0.0240
+           1           0.4910                   0.5303      0.0393
+           2           0.5023                   0.5191      0.0168
+           3           0.4283                   0.4471      0.0188
+           4           0.4707                   0.5260      0.0553
+5          0           0.4671                   0.4964      0.0293
+           1           0.4927                   0.5255      0.0328
+           2           0.4757                   0.4803      0.0046
+           3           0.4471                   0.4807      0.0336
+           4           0.5117                   0.5560      0.0443
+6          0           0.4689                   0.4882      0.0193
+           1           0.4615                   0.4791      0.0176
+           2           0.4976                   0.5532      0.0555
+           3           0.4305                   0.4634      0.0329
+           4           0.5264                   0.5495      0.0231
+7          0           0.4777                   0.4908      0.0131
+           1           0.4968                   0.5187      0.0219
+           2           0.4965                   0.5303      0.0338
+           3           0.4601                   0.4873      0.0272
+           4           0.4508                   0.4850      0.0343
+8          0           0.4263                   0.4569      0.0306
+           1           0.5042                   0.5506      0.0464
+           2           0.4740                   0.4935      0.0195
+           3           0.4932                   0.5101      0.0169
+           4           0.4954                   0.5066      0.0112
+9          0           0.4564                   0.4859      0.0295
+           1           0.4860                   0.5107      0.0247
+           2           0.4848                   0.5046      0.0198
+           3           0.4832                   0.5247      0.0415
+           4           0.5031                   0.5378      0.0347
 
 quantiles_v1           mean 0.4785  sd 0.0229
-quantiles_nbr_struct_v1 mean 0.5023  sd 0.0232
+quantiles_transcript_v1 mean 0.5071  sd 0.0249
 
-unpaired  (wrong)     gap +0.0238 against a fold sd of ~0.0229, Welch p = 0.0000
-paired    (optimistic) mean difference +0.0238  sd 0.0097  95% CI [+0.0210, +0.0265]  t = 17.39  p = 0.0000  wins 50/50
-corrected (quote this) 95% CI [+0.0137, +0.0339]  t = 4.73  p = 0.0000
+unpaired  (wrong)     gap +0.0286 against a fold sd of ~0.0229, Welch p = 0.0000
+paired    (optimistic) mean difference +0.0286  sd 0.0116  95% CI [+0.0253, +0.0319]  t = 17.43  p = 0.0000  wins 50/50
+corrected (quote this) 95% CI [+0.0165, +0.0408]  t = 4.74  p = 0.0000
 
 The corrected row is Nadeau & Bengio: it inflates the variance to admit
 that each fold's model trains on the other 4, so the observations are not
 independent. Its p-value is always the larger of the two, and it is the one to
 quote - a difference that only clears 0.05 uncorrected has not cleared it.
 
-quantiles_nbr_struct_v1 is +0.0238 better than quantiles_v1, winning 50/50 paired observations, corrected p = 0.0000. Consistent in direction and significant even after correcting for the overlap between training sets.
+quantiles_transcript_v1 is +0.0286 better than quantiles_v1, winning 50/50 paired observations, corrected p = 0.0000. Consistent in direction and significant even after correcting for the overlap between training sets.
 
-Paired within read depth: quantiles_nbr_struct_v1 vs quantiles_v1
+Paired within read depth: quantiles_transcript_v1 vs quantiles_v1
 -----------------------------------------------------------------
          baseline_mean  candidate_mean  mean_difference win_ratio  p_value_corrected
 stratum                                                                             
-20-31           0.4431          0.4656           0.0225     49/50             0.0072
-32-46           0.4682          0.4914           0.0232     48/50             0.0038
-47-83           0.5017          0.5268           0.0251     49/50             0.0063
-84-303          0.5235          0.5489           0.0254     47/50             0.0115
-304-599         0.4535          0.4652           0.0116     27/47             0.5179
-600+            0.4294          0.4462           0.0168     30/49             0.4245
+20-31           0.4431          0.4723           0.0292     46/50             0.0045
+32-46           0.4682          0.5053           0.0371     50/50             0.0005
+47-83           0.5017          0.5246           0.0230     43/50             0.0600
+84-303          0.5235          0.5484           0.0249     42/50             0.0410
+304-599         0.4535          0.4796           0.0260     31/47             0.3302
+600+            0.4294          0.4561           0.0267     38/49             0.2613
 
 6 strata means 6 p-values, and at least one will
 look significant by chance. They are NOT corrected for that here,
@@ -510,25 +507,25 @@ concentrates, and the overall paired test as the confirmatory one. Do not
 quote a band p-value as a headline; picking the band after seeing the
 result is how a significant finding gets manufactured.
 
-Paired within DRACH motif: quantiles_nbr_struct_v1 vs quantiles_v1
+Paired within DRACH motif: quantiles_transcript_v1 vs quantiles_v1
 ------------------------------------------------------------------
          baseline_mean  candidate_mean  mean_difference win_ratio  p_value_corrected
 stratum                                                                             
-AAACA           0.0220          0.0210          -0.0010      9/14             0.9045
-AAACT           0.2828          0.2840           0.0012     27/50             0.9468
-AGACA           0.4051          0.4235           0.0184     31/50             0.5192
-AGACC           0.1880          0.1751          -0.0129     13/35             0.6403
-AGACT           0.4796          0.5099           0.0303     45/50             0.0618
-GAACA           0.1097          0.1261           0.0163     35/50             0.2952
-GAACC           0.1226          0.1534           0.0308     42/50             0.2134
-GAACT           0.4047          0.4177           0.0130     38/50             0.2533
-GGACA           0.5824          0.6039           0.0215     42/50             0.1150
-GGACC           0.5012          0.5170           0.0159     33/50             0.2995
-GGACT           0.6423          0.6821           0.0398     49/50             0.0001
-TAACT           0.0853          0.1077           0.0224     33/45             0.2497
-TGACA           0.1636          0.1637           0.0002     21/40             0.9941
-TGACC           0.0661          0.0760           0.0099     35/48             0.3363
-TGACT           0.4405          0.4521           0.0115     35/50             0.4069
+AAACA           0.0220          0.0396           0.0177     12/14             0.3805
+AAACT           0.2828          0.3018           0.0191     34/50             0.3594
+AGACA           0.4051          0.4304           0.0253     33/50             0.3874
+AGACC           0.1880          0.1868          -0.0012     16/35             0.9639
+AGACT           0.4796          0.5233           0.0437     46/50             0.0199
+GAACA           0.1097          0.1155           0.0057     26/50             0.7067
+GAACC           0.1226          0.1234           0.0008     31/50             0.9712
+GAACT           0.4047          0.4328           0.0281     43/50             0.0523
+GGACA           0.5824          0.6162           0.0338     47/50             0.0098
+GGACC           0.5012          0.5211           0.0199     41/50             0.1205
+GGACT           0.6423          0.6805           0.0382     50/50             0.0004
+TAACT           0.0853          0.0999           0.0146     31/45             0.3835
+TGACA           0.1636          0.1505          -0.0131     19/40             0.5771
+TGACC           0.0661          0.0698           0.0037     28/48             0.8166
+TGACT           0.4405          0.4583           0.0178     36/50             0.2181
 
 15 strata means 15 p-values, and at least one will
 look significant by chance. They are NOT corrected for that here,
@@ -540,5 +537,5 @@ concentrates, and the overall paired test as the confirmatory one. Do not
 quote a band p-value as a headline; picking the band after seeing the
 result is how a significant finding gets manufactured.
 
-report -> analysis\evaluation\reports\lightgbm_nbr_struct.json   (1315.7s)
-  logged to W&B: https://wandb.ai/dsa4262-team/dsa4262-project/runs/d403bn74
+report -> analysis\evaluation\reports\lightgbm_transcript.json   (1236.0s)
+  logged to W&B: https://wandb.ai/dsa4262-team/dsa4262-project/runs/e71f14jf

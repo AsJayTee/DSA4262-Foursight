@@ -275,3 +275,51 @@ class TranscriptLevelFeatures(QuantileFeatures):
     def finalise(self, frame: pd.DataFrame, sites: pd.DataFrame) -> pd.DataFrame:
         extra = _transcript_level(frame, sites).astype(np.float32)
         return pd.concat([frame, extra], axis=1)
+
+
+# The count column is the only transcript-level feature that a sparser input
+# file biases. Everything else here is a mean, and a mean is an unbiased
+# estimator of a transcript's level however many of its sites you sample.
+_DENSITY_COLUMNS = ("tx_n_sites",)
+
+
+@register("features", "quantiles_transcript_robust_v1")
+class RobustTranscriptFeatures(QuantileFeatures):
+    """`quantiles_transcript_v1` minus the one column that does not transfer.
+
+    **The problem this exists to solve.** A `finalise` feature set is computed
+    from whatever sites are in the input file, and `scripts/predict.py` runs on
+    an evaluation file nobody here has seen. Simulated by dropping half the
+    sites at random and re-extracting, then measured against the full-file
+    values in units of each column's own standard deviation:
+
+    | feature set | median bias | worst |
+    |---|---:|---:|
+    | `quantiles_nbr_signal_v1` | 0.638 | 1.172 (`nbrsig_n_w200`) |
+    | `quantiles_nbr_struct_v1` | 0.202 | 0.929 (`nbr_count_100`) |
+    | `quantiles_transcript_v1` | **0.020** | 0.927 (`tx_n_sites`) |
+
+    **Bias is the thing that breaks a model; noise only costs accuracy.** A
+    model trained on `nbr_count_100 = 12` and shown `nbr_count_100 = 6` for the
+    same site is being fed a different variable. The split above is not luck:
+
+    - a **count** is proportional to candidate density, so halving the file
+      halves it;
+    - a **max** over fewer neighbours is systematically smaller, which is why
+      every `nbrsig_*_max` is biased by 0.76 or more;
+    - a **mean** is unbiased at any sample size, which is why the four
+      `tx_*_loo_mean` columns come in at 0.008 to 0.085.
+
+    So this drops `tx_n_sites` and keeps the means. It should retain most of
+    `quantiles_transcript_v1`'s +0.0286 while being the only cross-site set that
+    can honestly be shipped through `predict.py`.
+
+    It is still not free of the concern - the aggregates get noisier on a
+    sparser file, and nothing here measures what that costs in PR AUC. What it
+    removes is the systematic shift.
+    """
+
+    def finalise(self, frame: pd.DataFrame, sites: pd.DataFrame) -> pd.DataFrame:
+        extra = _transcript_level(frame, sites)
+        extra = extra.drop(columns=[c for c in _DENSITY_COLUMNS if c in extra.columns])
+        return pd.concat([frame, extra.astype(np.float32)], axis=1)

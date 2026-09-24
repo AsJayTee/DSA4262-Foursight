@@ -50,6 +50,7 @@ groupA|flank_ablation|--config configs/quantiles_flank.yaml --ablate
 groupC|nbr_struct|--config configs/nbr_struct.yaml --compare-features quantiles_v1
 groupC|nbr_signal|--config configs/nbr_signal.yaml --compare-features quantiles_v1
 groupC|transcript|--config configs/transcript.yaml --compare-features quantiles_v1
+groupF|transcript_robust|--config configs/transcript_robust.yaml --compare-with configs/transcript.yaml
 groupB|coupling|--config configs/coupling.yaml --compare-features quantiles_v1
 groupD|calib_prior_shift|--config configs/calibrated_prior_shift.yaml
 groupD|calib_platt|--config configs/calibrated_platt.yaml

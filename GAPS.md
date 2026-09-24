@@ -663,6 +663,67 @@ regenerated, and the JSON reports behind the current ones are in
   missing. Every `grid` column sat at abs(r) = 0.86-0.97 against a column the
   model already had; that measurement takes seconds and would have predicted the
   null. It is now part of the screen.
+- **CROSS-SITE FEATURES ARE THE LARGEST EFFECT IN THE PROJECT, and the
+  transcript-GNN premise that was priced at +0.004 and dropped is worth seven
+  times that as a feature set.** All three variants
+  ([0025](docs/decisions/0025-a-feature-set-may-see-every-site.md)) run on
+  2026-09-24, each `--compare-features quantiles_v1` at 50 observations:
+
+  | | adds | `oof/pr_auc` | difference | wins | corrected p |
+  |---|---|---:|---:|---:|---:|
+  | `quantiles_nbr_struct_v1` | where neighbours are | 0.5036 | +0.0238 | **50/50** | 0.0000 |
+  | `quantiles_nbr_signal_v1` | what they measured, +/-50 and +/-200 nt | 0.5059 | +0.0254 | **50/50** | 0.0000 |
+  | **`quantiles_transcript_v1`** | whole transcript, leave-one-out | **0.5070** | **+0.0286** | **50/50** | 0.0000 |
+
+  For scale, the previous best single change was `quantiles_v1` over `pooled_v1`
+  at +0.0164, and the flank columns at +0.0109. The gain is also consistent
+  across depth bands (+0.023 to +0.037), which is what a regional effect should
+  look like rather than a quirk of one stratum.
+
+  **No label is used anywhere.** `finalise` is handed features and coordinates
+  only, every aggregate is leave-one-out, and the mechanism is the intended one:
+  a neighbour's *measurements* are a noisy observation of its latent state, so
+  aggregating them is evidence about the region. The 6.54x label clustering
+  itself remains unusable - every site of a held-out gene is held out together.
+
+  **The structural arm winning +0.0238 on its own is the surprise.** It uses no
+  neighbour measurements at all - only distances, candidate density and position
+  along the transcript. `nbr_rel_position` was the strongest of its columns in
+  the screen (0.0791), which is consistent with m6A's known positional
+  enrichment along transcripts, though nothing here establishes that.
+
+- **AND THEY MAY NOT SHIP, WHICH IS THE MORE IMPORTANT HALF.** A `finalise`
+  feature set is computed from whatever sites are in the input file, and
+  `scripts/predict.py` runs on an evaluation file nobody here has seen. Dropping
+  half the training sites at random and re-extracting, measured against the
+  full-file values in units of each column's own standard deviation:
+
+  | feature set | median **bias** | worst | median noise |
+  |---|---:|---:|---:|
+  | `quantiles_nbr_signal_v1` | **0.638** | 1.172 (`nbrsig_n_w200`) | ~1.2 |
+  | `quantiles_nbr_struct_v1` | **0.202** | 0.929 (`nbr_count_100`) | ~0.7 |
+  | `quantiles_transcript_v1` | **0.020** | 0.927 (`tx_n_sites`) | ~1.1 |
+
+  **Bias is what breaks a model; noise only costs accuracy.** A model trained on
+  `nbr_count_100 = 12` and shown `6` for the same site is being fed a different
+  variable. The split is not luck and it is predictable from first principles:
+
+  - a **count** is proportional to candidate density, so halving the file halves
+    it;
+  - a **max** over fewer neighbours is systematically smaller - every
+    `nbrsig_*_max` is biased by 0.76 or more;
+  - a **mean** is an unbiased estimator at any sample size, which is why the
+    four `tx_*_loo_mean` columns come in at 0.008 to 0.085.
+
+  So the best-performing cross-site set is also the only transferable one, and
+  it has exactly one bad column. `configs/transcript_robust.yaml` drops
+  `tx_n_sites` and keeps the means; it is queued and will say what that column
+  was worth.
+
+  **Until that runs, no cross-site model should be put in `models/final/`.**
+  The cross-validated gains above are honest about this dataset and say nothing
+  about a file built differently.
+
 - **THE CURRENT BEST MODEL: `quantiles_flank_v1` trained at five depths.** The
   two things that have worked are orthogonal and they stack - on the depth
   sweep, which is not where the headline test looks.

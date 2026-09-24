@@ -1,0 +1,37 @@
+# The cross-site feature set that can actually be shipped.
+#
+# quantiles_transcript_v1 is the best feature set in the project (+0.0286,
+# 50/50, corrected p = 0.0000) - but a finalise feature set is computed from
+# whatever sites are in the input file, and predict.py runs on an evaluation
+# file nobody here has seen. Dropping half the sites at random and
+# re-extracting moves its columns by, in units of each column's own sd:
+#
+#     tx_n_sites               bias 0.927   <- a count scales with density
+#     tx_mean_m1_q50_loo_mean  bias 0.085
+#     tx_mean_0_q95_loo_mean   bias 0.025
+#     tx_sd_0_q95_loo_mean     bias 0.015
+#     tx_dwell_0_q95_loo_mean  bias 0.008
+#
+# A mean is an unbiased estimator of a transcript's level however many of its
+# sites you sample; a count is not. This config keeps the means and drops the
+# count, so it should retain most of the gain while transferring honestly.
+#
+#   python scripts/evaluate.py --config configs/transcript_robust.yaml \
+#          --compare-with configs/transcript.yaml
+name: lightgbm_transcript_robust
+features: quantiles_transcript_robust_v1
+model: lightgbm
+model_params:
+  learning_rate: 0.05
+  num_leaves: 63
+  n_estimators: 600
+  min_child_samples: 40
+  feature_fraction: 0.7
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: >
+  quantiles_transcript_v1 without tx_n_sites. Tests what the one input-density
+  dependent column was worth, and whether the transferable half of the
+  cross-site gain survives on its own.
