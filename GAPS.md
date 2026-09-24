@@ -391,6 +391,36 @@ regenerated, and the JSON reports behind the current ones are in
   paired p = 0.0433 - which carries the same correction problem as every other
   five-fold p-value here, see Evaluation), and 0.1537 on its own. Both from
   `evaluate.py --config configs/quantiles.yaml --ablate`.
+- **The experiment queue, ranked by what this harness can actually measure.**
+  Derived from [docs/literature-review.md](docs/literature-review.md) and a
+  follow-up exchange with it, then filtered through the detection threshold
+  below. **The harness resolves effects between +0.006 and +0.016 at 50
+  observations** - measured: +0.0164 came back at corrected p = 0.000095,
+  +0.0056 at p = 0.2605, -0.0021 at p = 0.7029. An experiment whose honest prior
+  is +0.004 cannot be established here however well it is run.
+
+  Cheap first, because two of these are feature sets testable in ~15 minutes
+  with full statistical power, and one of them de-risks a ~26-hour GPU job:
+
+  | # | experiment | prior | cost | resolvable? |
+  |---|---|---:|---|---|
+  | A1 | recover the 7-mer flanking bases (26 sequence columns, not 18) | +0.003–0.009 | ~15 min | borderline |
+  | A2 | joint within-read features (per-read Mahalanobis from the site's own centroid) | unknown | ~15 min | — |
+  | A3 | cross-site features (candidate density, distance to nearest site) | unknown | needs 0025 | — |
+  | B1 | the existing attention-MIL + 7-mer conditioning + mean/std branch + log N | +0.009 | ~26 h GPU | borderline |
+  | B2 | contextual Deep Set (bag-context interaction layer) | +0.015 | GPU | yes |
+  | C1 | Platt calibration | 0 on PR AUC | ~1 h | n/a |
+
+  **A2 is the one to run first with A1.** Both the literature review and the
+  entry above identify marginal-vs-joint read features as the best remaining
+  lead, and the neural answer costs ~30 GPU-hours. A hand-crafted joint feature
+  tests the same hypothesis for fifteen minutes: if it moves nothing, the
+  expensive version probably chases noise.
+
+  **Not being built**: transcript GNN (+0.004), deeper residual read encoder
+  (+0.002), Perceiver (~0). All below the detection threshold. A3 is the cheap
+  test of whether the GNN premise - that m6A clusters along transcripts - shows
+  up in our data at all.
 - **No hyperparameter search has been run.** Every value in `configs/` was
   chosen by hand and none has been tuned. **One of them can now be sanity-checked
   without a search**: models record how the fit progressed
@@ -528,12 +558,21 @@ regenerated, and the JSON reports behind the current ones are in
 
   What would explain it, in order of likelihood:
 
-  1. **PR AUC is not comparable across datasets at all.** It is bounded below by
-     the positive rate. Ours is 4.49%, so 0.4759 is a **10.59x lift**. If
-     m6Anet's evaluation had a 2% positive rate, their 0.35 is a 17.5x lift -
-     better than ours while looking worse. **Nobody has read their base rate out
-     of the paper.** Until someone does, the comparison means nothing. This is
-     the cheapest thing on this list and it is still not done.
+  1. **PR AUC is not comparable across datasets at all** - and the base rate is
+     now known, which retires most of the suspicion. It is bounded below by the
+     positive rate. Ours is 4.49%, so 0.4759 is a **10.59x lift**. m6Anet's
+     HEK293T figure reports 5,579 m6ACE-positive against 121,853 negative
+     candidate positions, i.e. **4.38%** - so their 0.35 is roughly an **8.0x
+     lift**, against our 10.59x. We are plausibly ahead rather than
+     implausibly.
+
+     Two caveats keep this from being settled. Their PR AUC is computed on
+     positives defined as m6ACE **union miCLIP**, whereas 4.38% is the
+     m6ACE-only count, so the prevalence behind the 0.35 is not established by
+     that count. And their candidate universe is restricted to sites with >= 20
+     reads, like ours, but is otherwise a different site set. Source:
+     [docs/literature-review.md](docs/literature-review.md) - external, and the
+     arithmetic is verified but the citation is not.
   2. **Different cell line, labels and site universe.** Theirs is HEK293T; ours
      is Hct116 with m6ACE-Seq labels and a site set the course pre-selected.
   3. **Possibly easier data.** Our own depth sweep says we score 0.2458 at depth
