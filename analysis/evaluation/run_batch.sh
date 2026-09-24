@@ -51,6 +51,10 @@ groupC|nbr_struct|--config configs/nbr_struct.yaml --compare-features quantiles_
 groupC|nbr_signal|--config configs/nbr_signal.yaml --compare-features quantiles_v1
 groupC|transcript|--config configs/transcript.yaml --compare-features quantiles_v1
 groupB|coupling|--config configs/coupling.yaml --compare-features quantiles_v1
+groupD|calib_prior_shift|--config configs/calibrated_prior_shift.yaml
+groupD|calib_platt|--config configs/calibrated_platt.yaml
+groupE|best_ablation|--config configs/quantiles_flank_depth_augmented.yaml --ablate
+groupE|budget_450|--config configs/best_shorter.yaml --compare-with configs/quantiles_flank_depth_augmented.yaml
 PLAN
 )
 
