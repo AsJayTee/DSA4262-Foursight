@@ -768,15 +768,34 @@ regenerated, and the JSON reports behind the current ones are in
   keyed on the full 7-mer.
 
   **What is left of the original entry.** The motif still contributes +0.0123
-  PR AUC over signal-only features (5/5 folds, naive paired p = 0.0433 - which
-  carries the same correction problem as every other five-fold p-value here, see
-  Evaluation), and 0.1537 on its own, from
-  `evaluate.py --config configs/quantiles.yaml --ablate`. **That 0.1537 floor is
-  now stale as a reference point**: it is an 18-way motif-only classifier, and
-  the sequence-only model that would match the new feature set has flanks in it
-  and has not been run. Anyone quoting "at one read the model is doing nothing
-  but reading the sequence pattern" should re-run `--ablate` on
-  `configs/quantiles_flank.yaml` first.
+  PR AUC over signal-only features on `quantiles.yaml`, and **0.1537 on its
+  own**. That 0.1537 floor is quoted in README.md, docs/wandb-panels.md,
+  docs/running-experiments.md and twice more in this file, and it is **stale as
+  a reference point for anything with flanks in it**: it is an 18-way motif-only
+  classifier, while the sequence now available is 26 columns.
+
+  **`--ablate` cannot currently measure the replacement, and that is a bug
+  worth knowing about.** Run on `configs/quantiles_flank.yaml` it reports:
+
+  | subset | columns | PR AUC |
+  |---|---:|---:|
+  | signal-only | **91** | 0.4724 |
+  | motif-only | 18 | 0.1537 |
+
+  91 = 83 signal + **the 8 flank columns**. `crossval.column_subsets`
+  ([crossval.py:116](src/m6a/crossval.py#L116)) splits on the `motif_` prefix
+  and nothing else, so `left_A` and `right_G` are classified as *signal*. So
+  that run's headline - "+0.0169 over signal-only, 5/5, corrected p = 0.0027" -
+  means **the 18-way motif adds +0.0169 on top of signal-and-flanks**, not that
+  sequence adds +0.0169. The sequence-only floor including flanks is still
+  unmeasured.
+
+  It is a silent misclassification: nothing warns, the column counts are only
+  visible if you read them, and any future sequence feature that is not named
+  `motif_*` will be swallowed the same way. Fixing it means either a prefix list
+  or letting an extractor declare which of its columns are sequence - a change
+  to shared infrastructure that also redefines the `ablation/*` metric keys, so
+  it needs a decision record.
 
   Two things this opens rather than closes:
 
