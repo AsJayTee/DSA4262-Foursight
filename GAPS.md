@@ -716,13 +716,41 @@ regenerated, and the JSON reports behind the current ones are in
     four `tx_*_loo_mean` columns come in at 0.008 to 0.085.
 
   So the best-performing cross-site set is also the only transferable one, and
-  it has exactly one bad column. `configs/transcript_robust.yaml` drops
-  `tx_n_sites` and keeps the means; it is queued and will say what that column
-  was worth.
+  it had exactly one bad column.
 
-  **Until that runs, no cross-site model should be put in `models/final/`.**
-  The cross-validated gains above are honest about this dataset and say nothing
-  about a file built differently.
+  **RESOLVED: dropping that column costs nothing.**
+  `configs/transcript_robust.yaml` is `quantiles_transcript_v1` without
+  `tx_n_sites`. Paired against the unrestricted version over 50 observations:
+  **-0.0019, 20/50 wins, corrected p = 0.6564**, and the pooled numbers are
+  identical to four decimals (0.5070 both). **The entire +0.0286 survives in the
+  transferable subset**, so there is no accuracy/robustness trade-off to argue
+  about here - the biased column was carrying nothing the means did not already
+  have.
+
+  The same logic identifies two *structural* columns worth keeping, measured the
+  same way: `nbr_rel_position` (bias **0.006**, noise 0.262) and
+  `nbr_rank_on_transcript` (bias 0.007, noise 0.306) - the most robust
+  cross-site features of any, and `nbr_rel_position` was also the strongest
+  structural column in the screen. `nbr_dist_nearest` is unbiased (0.067) and
+  useless anyway (noise 1.488). Everything else - every count, every windowed
+  max, `nbr_dist_prev`/`_next` - is biased and dropped.
+
+  `quantiles_crosssite_robust_v1` is those two plus the transcript means;
+  `quantiles_flank_crosssite_v1` adds the flank columns on top, and
+  `configs/final_candidate.yaml` runs it with depth augmentation. Both queued.
+
+  **Why relative position is worth having on its own terms.** The positive rate
+  climbs monotonically across a transcript's candidate span - 2.54% in the first
+  tenth, 3.72% at 0.3-0.4, 5.99% at 0.6-0.7, peaking at **6.67%** at 0.8-0.9,
+  then falling to 4.24% in the last tenth. A 2.6x swing over 115,100 sites on
+  4,098 transcripts. That is the shape m6A's known enrichment near the stop
+  codon would produce, and **this repo has no annotation to confirm that
+  reading** - the span is bounded by the first and last *candidate*, not by the
+  true transcript ends. Consistent with, not evidence for.
+
+  **Until the robust variants have run, no cross-site model should be put in
+  `models/final/`.** The cross-validated gains are honest about this dataset and
+  say nothing about a file built differently.
 
 - **THE CURRENT BEST MODEL: `quantiles_flank_v1` trained at five depths.** The
   two things that have worked are orthogonal and they stack - on the depth

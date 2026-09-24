@@ -1,0 +1,9 @@
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
+wandb: Currently logged in as: jinthau-siah (dsa4262-team) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run 4mud39gc
+wandb: Tracking run with wandb version 0.30.0
+wandb: Run data is saved locally in C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\wandb\run-20260924_215924-4mud39gc
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run crosssite_robust
+wandb:  View project at https://wandb.ai/dsa4262-team/dsa4262-project
+wandb:  View run at https://wandb.ai/dsa4262-team/dsa4262-project/runs/4mud39gc
