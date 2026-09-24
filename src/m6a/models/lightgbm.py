@@ -18,6 +18,22 @@ import pandas as pd
 from m6a.models.base import BaseModel
 from m6a.registry import register
 
+# **No training curve here, deliberately.** LightGBM does train iteratively —
+# one boosting round per tree — and it used to fill `curve/train/*` and `fit/*`
+# (docs/decisions/0021). It no longer does: the training-curve panel is for
+# models that learn by gradient descent, and a boosting round is not an epoch.
+# 600 rounds beside 40 epochs on one x axis is a picture nobody can read, and
+# the units are not comparable even when both are honestly called iterations.
+# See docs/decisions/0024, which amends 0021 on this point.
+#
+# Do not re-enable it by setting REPORTS_TRAINING_CURVE here. For a one-off
+# diagnostic — "is n_estimators far wrong?" — set the flag locally, run, and do
+# not commit it; the numbers that came from doing exactly that are in GAPS.md.
+#
+# The side effect of removing it is that fits are faster again: passing a
+# valid_set made LightGBM score the held-out fold every round, which cost 1.65x
+# on the one repetition that recorded it.
+
 
 @register("models", "lightgbm")
 class LightGBMModel(BaseModel):

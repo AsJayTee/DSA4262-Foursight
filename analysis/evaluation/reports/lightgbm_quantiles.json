@@ -1,5 +1,5 @@
 {
-  "created": "2026-09-21T08:49:31+00:00",
+  "created": "2026-09-23T05:30:19+00:00",
   "profile": "standard",
   "subsample_seed": 4262,
   "source": {
@@ -12145,38 +12145,38 @@
     "operating_points": {
       "f1_max": {
         "threshold": 0.58,
-        "predicted_positives": 6290.0,
-        "predicted_rate": 0.051626,
-        "true_positives": 3050.0,
-        "false_positives": 3240.0,
-        "precision": 0.484897,
-        "recall": 0.557078,
-        "f1": 0.518487
+        "precision": 0.4848966613672496,
+        "recall": 0.5570776255707762,
+        "f1": 0.5184870378240543,
+        "predicted_positives": 6290,
+        "predicted_rate": 0.051625929512959835,
+        "true_positives": 3050,
+        "false_positives": 3240
       },
       "count_matched": {
         "threshold": 0.65,
-        "predicted_positives": 5492.0,
-        "predicted_rate": 0.045076,
-        "true_positives": 2819.0,
-        "false_positives": 2673.0,
-        "precision": 0.513292,
-        "recall": 0.514886,
-        "f1": 0.514088
+        "precision": 0.513292061179898,
+        "recall": 0.5148858447488585,
+        "f1": 0.5140877176985502,
+        "predicted_positives": 5492,
+        "predicted_rate": 0.04507624878937606,
+        "true_positives": 2819,
+        "false_positives": 2673
       },
       "half": {
         "threshold": 0.5,
-        "predicted_positives": 7250.0,
-        "predicted_rate": 0.059505,
-        "true_positives": 3272.0,
-        "false_positives": 3978.0,
-        "precision": 0.45131,
-        "recall": 0.597626,
-        "f1": 0.514263
+        "precision": 0.4513103448275862,
+        "recall": 0.5976255707762557,
+        "f1": 0.5142632612966601,
+        "predicted_positives": 7250,
+        "predicted_rate": 0.05950524466915084,
+        "true_positives": 3272,
+        "false_positives": 3978
       }
     },
     "count_swing": {
       "low_threshold": 0.3,
-      "high_threshold": 0.7000000000000001,
+      "high_threshold": 0.7,
       "low_count": 10610,
       "high_count": 4943,
       "ratio": 2.146469755209387
@@ -12184,6 +12184,7 @@
   },
   "depth_sweep": {
     "subsample_seed": 4262,
+    "train_depths": "full",
     "note": "trained at full depth, scored at the stated depth",
     "rows": [
       {
@@ -12265,5 +12266,5 @@
       }
     ]
   },
-  "elapsed_seconds": 499.1
+  "elapsed_seconds": 682.5
 }

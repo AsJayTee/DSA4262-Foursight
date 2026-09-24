@@ -268,37 +268,116 @@ regenerated, and the JSON reports behind the current ones are in
   nine raw measurements. Whatever addresses low depth, it is not feature
   selection within this family — but see the read-level entry below, where
   the same nine numbers produce a much better result under different training.
-- **No model in the repo treats the reads as a set**, though the briefing
-  frames this explicitly as a Multiple Instance Learning problem — the site
-  carries the label, the reads do not, and only a fraction of reads at a
-  positive site are modified. A throwaway torch-free probe suggests there is
-  a lot here, and that it matters most exactly where the current models are
-  weakest. A read-level gradient-boosted tree (every read inheriting its site's
-  label, trained fold-out, read probabilities then combined by a fixed
+- **A plain neural net ties LightGBM on the headline and is much worse where it
+  matters.** `configs/mlp.yaml` is a 128/64 feed-forward net on the *same*
+  `quantiles_v1` columns ([run 1wzvr5hi](https://wandb.ai/dsa4262-team/dsa4262-project/runs/1wzvr5hi)).
+  Paired over 50 observations against `lightgbm_quantiles` it is **-0.0021,
+  21/50 wins, corrected p = 0.7029** — indistinguishable. Then:
+
+  | | `oof/pr_auc` | `depth/3` | `depth/1` | `calib/count_ratio` |
+  |---|---:|---:|---:|---:|
+  | `lightgbm_quantiles` | 0.4759 | 0.2458 | 0.1527 | 1.80x |
+  | `mlp_quantiles` | 0.4783 | **0.2019** | **0.1045** | **4.31x** |
+
+  **At one read the net scores 0.1045, below the 0.1537 a motif-only classifier
+  gets with no signal data at all** — it has not merely degraded, it has become
+  worse than reading the sequence. It also overcounts by 4.31x against 1.80x.
+  Two models that are a coin-flip apart on the headline are nowhere near each
+  other on the two numbers Task 2 actually depends on. Nobody has looked at why
+  the net is so much more brittle to depth shift; depth-augmented training
+  (`train_depths` on the mlp config) is the obvious first thing to try and has
+  not been run.
+- **The reads can now reach a model, and one does — but it has never been run
+  on the full dataset and the cost is the problem.** The pipeline used to be
+  structurally site-level end to end: `FeatureExtractor.site_features` returns
+  one row per site, `Dataset` carried only `X` (site x feature), and
+  `Site.reads` was consumed by extraction and discarded. Ragged per-read data
+  now travels beside the feature table as a `ReadBlocks`
+  ([0023](docs/decisions/0023-reads-travel-beside-the-feature-table.md)), and
+  `configs/mil.yaml` is a gated-attention MIL model (Ilse et al. 2018) that
+  consumes it.
+
+  It works end to end on a 5,000-site smoke run. **It has not been run on the
+  full training set, and on this machine it should not be**: measured at about
+  3.4 s per epoch per fold on 4,000 sites, which extrapolates to **~1 hour for
+  one repetition and ~10 hours for a `standard` run**, CPU-only. So the MIL arm
+  needs a GPU instance or a deliberately reduced profile, and AGENTS.md section 6
+  says a `--quick` number is not a number to quote. **Budget for it before
+  starting the instance, not after.**
+
+  When it is run, compare it against `configs/quantiles_depth_augmented.yaml`
+  and not against `configs/quantiles.yaml` — otherwise it repeats the exact
+  confound the entry two below resolved, and credits the architecture for what
+  training depth does.
+- **A read-level model cannot be shipped through `scripts/predict.py`.**
+  `predict.py` calls `extractor.transform(iter_sites(...))` and then
+  `model.predict_proba(features)` with no reads, so a model declaring
+  `CONSUMES_READS` would raise there. Teaching it to build a `ReadBlocks` means
+  either a second pass over the input file or restructuring the single pass it
+  makes. Until that is done the MIL model is a research arm and not a candidate
+  for `models/final/` — which matters, because the graded deliverable is what
+  `predict.py` loads.
+- **The read-level probe that started all of this, kept for reference.** A
+  throwaway torch-free read-level gradient-boosted tree (every read inheriting
+  its site's label, trained fold-out, read probabilities combined by a fixed
   mean/max/90th-percentile rule with no learned second stage):
 
   | reads per site | 1 | 3 | 10 | full |
   |---|---:|---:|---:|---:|
-  | read-level, best pooling | **0.2692** | **0.3303** | 0.3453 | 0.3666 |
-  | `quantiles_v1` | 0.1527 | 0.2458 | **0.3716** | **0.4759** |
+  | read-level, best pooling | 0.2692 | 0.3303 | 0.3453 | 0.3666 |
+  | `quantiles_v1`, trained at full depth | 0.1527 | 0.2458 | **0.3716** | **0.4759** |
 
   (The read-level row came from `analysis/evaluation/scratch/mil_lite.py`, which
   is not part of the harness and draws its own subsample; the `quantiles_v1` row
   is from `--depth-sweep`. The two are close enough to compare but were not
   drawn together, so treat the crossover point as approximate.)
 
-  The two approaches cross over somewhere around depth 5-10. At one read the
-  read-level model scores 0.2692 against 0.1543 — a 74% improvement in the
-  regime that makes up a quarter of SG-NEx. At full depth it loses badly.
-- **The low-depth read-level result is confounded and the controlled
-  experiment has not been run.** A read-level model is *implicitly trained at
-  depth 1*, because each read is its own training row; it has no train/test
-  mismatch at any depth. The site-level models were trained only at full depth.
-  So the table above conflates "read-level architecture" with "trained at the
-  depth it is tested at", and it is not known which is doing the work. The
-  controlled comparison — a depth-augmented site-level model against the
-  read-level one — is the obvious missing experiment, and it is far cheaper
-  than building an attention-MIL network.
+  **Read this table together with the resolved entry below, not on its own.**
+  The low-depth gap it shows is almost entirely training depth rather than
+  read-level architecture — a depth-augmented site-level model closes it.
+- **RESOLVED: the read-level probe's low-depth win was training depth, not
+  architecture.** This entry used to say the comparison was confounded — a
+  read-level model is *implicitly trained at depth 1*, because each read is its
+  own training row, while every site-level model here was trained only at full
+  depth. The control has now been run. Train the **same** site-level model on
+  rows drawn at several depths
+  ([0022](docs/decisions/0022-training-rows-may-come-from-several-depths.md),
+  `configs/quantiles_depth_augmented.yaml`) and almost all of the gap closes:
+
+  | reads per site | 1 | 3 | 5 | 10 | 20 | full |
+  |---|---:|---:|---:|---:|---:|---:|
+  | `quantiles_v1`, trained at full depth | 0.1527 | 0.2458 | 0.2991 | 0.3716 | 0.4277 | 0.4759 |
+  | **same, trained at 1/3/5/10/full** | **0.2593** | **0.3434** | **0.3735** | **0.4166** | **0.4495** | **0.4844** |
+  | read-level probe | 0.2692 | 0.3303 | - | 0.3453 | - | 0.3666 |
+
+  At one read the depth-augmented site-level model lands within 0.01 of the
+  read-level probe; at depth 3 it passes it; at depth 10 and full depth it is
+  far ahead. **And it costs nothing at full depth** — paired over 50
+  observations against the plain run, +0.0056, 39/50 wins, corrected
+  p = 0.2605: not established as better, not worse.
+
+  Regenerate:
+  ```bash
+  python scripts/evaluate.py --config configs/quantiles_depth_augmented.yaml \
+         --compare-run 1cn5n37z
+  ```
+  ([run psdwqobf](https://wandb.ai/dsa4262-team/dsa4262-project/runs/psdwqobf)
+  against [1cn5n37z](https://wandb.ai/dsa4262-team/dsa4262-project/runs/1cn5n37z);
+  about 37 minutes on a warm cache.)
+
+  **What this does not establish.** The depth-sweep rows are single values per
+  depth with no per-fold vector underneath
+  ([0018](docs/decisions/0018-per-stratum-vectors-are-logged-for-later.md)), so
+  +0.1066 at depth 1 is an effect size and not a p-value. The read-level row
+  came from `mil_lite.py` with its own subsample draw, so the crossover is
+  approximate. And both arms still inherit the depth >= 20 floor, so none of
+  this says what happens on genuinely shallow sites.
+
+  **The open question is now much narrower**: is there anything left for a
+  read-level architecture *after* controlling for training depth? Two cheap
+  things nobody has done — `train_depths: [1]` (trained at depth 1 only, the
+  probe's implicit setting exactly), and running `configs/mil.yaml` against
+  `configs/quantiles_depth_augmented.yaml` rather than against the plain one.
 - **Read-level features are computed marginally, one feature at a time.**
   `mean_0_q95` is the 95th percentile of the `mean_0` column across reads, so
   the representation cannot express "these particular reads are jointly
@@ -313,7 +392,69 @@ regenerated, and the JSON reports behind the current ones are in
   five-fold p-value here, see Evaluation), and 0.1537 on its own. Both from
   `evaluate.py --config configs/quantiles.yaml --ablate`.
 - **No hyperparameter search has been run.** Every value in `configs/` was
-  chosen by hand and none has been tuned.
+  chosen by hand and none has been tuned. **One of them can now be sanity-checked
+  without a search**: models record how the fit progressed
+  ([0021](docs/decisions/0021-models-report-how-the-fit-progressed.md)), so
+  `n_estimators` was briefly visible. Measured on `configs/quantiles.yaml`, full
+  training set, on a run that **no longer exists** — see the provenance note
+  below:
+
+  | picked by | iteration | value |
+  |---|---:|---:|
+  | held-out PR AUC | 431 | 0.4821 |
+  | held-out logloss | 600 (still falling) | 0.1387 |
+  | where the fit stops | 600 | 0.4775 |
+
+  So `n_estimators: 600` is **past** the held-out PR AUC peak, and the two
+  objectives disagree about it — LightGBM minimises logloss, which is still
+  improving at 600, while average precision peaked at 431 and has drifted down
+  since. **This is a diagnosis and not a number to act on and then quote**: the
+  peak is read off the same held-out folds the headline score comes from, so
+  copying 431 into the config and reporting this run's PR AUC is the flat-tuning
+  trap below, one parameter at a time. The honest route is to change the config
+  and compare the two paired, like any other pair of runs. Nobody has.
+- **The booster very nearly memorises its training fold, and nothing had
+  measured it.** Same run: training-fold average precision **0.9963** against
+  **0.4775** held out, a gap of 0.5188 (`fit/train_valid_gap`). That is not
+  automatically a problem — a heavily-regularised model can be worse — but it
+  says the capacity is nowhere near the constraint, so `num_leaves`,
+  `min_child_samples` and `feature_fraction` are the parameters most likely to
+  be badly chosen, and none of them has been varied either.
+
+  `quantiles_depth_augmented` shows a gap of only 0.0561, and **that is not
+  evidence of regularisation** — an earlier version of this entry said it was.
+  Its training rows are drawn at depths 1/3/5/10/full while its held-out fold is
+  full depth only, so it is scored on easier rows than it trained on; its train
+  logloss sits *above* its valid logloss (0.2880 vs 0.2479), which is the
+  giveaway. **`fit/train_valid_gap` only measures overfitting when
+  `train_depths` is `full`.** Whether depth augmentation regularises is
+  untested: the clean measurement is that model's average precision on
+  full-depth *training* rows, which nothing logs. See
+  [0022](docs/decisions/0022-training-rows-may-come-from-several-depths.md).
+
+  Across the battery, `n_estimators` is **not** uniformly wrong — the training
+  curve said it is wrong in one config out of three:
+
+  | config | `n_estimators` | held-out PR AUC peaks at | overfit gap |
+  |---|---:|---:|---:|
+  | `lightgbm_pooled` | 400 | 390 | 0.3897 |
+  | `lightgbm_quantiles` | 600 | **431** | 0.5188 |
+  | `quantiles_depth_augmented` | 600 | 548 | 0.0561 (not an overfit measure — see above) |
+
+  Only `quantiles.yaml` overshoots meaningfully. Changing it and comparing the
+  two configs paired is the legitimate way to act on that; reading the peak and
+  quoting this run's score is not. **Nobody has done it.**
+
+  **These numbers are frozen, no committed command regenerates them, and the
+  runs they came from have been deleted.** Measured 2026-09-22 on runs
+  `yl6mkdo2`, `3fyr70t8` and `7trai6e4` — all since retired, because
+  [0024](docs/decisions/0024-the-training-curve-is-for-gradient-descent-models.md)
+  scoped the training curve to gradient-descent models — LightGBM no longer
+  reports one, because a boosting round and an epoch on a shared axis make an
+  unreadable panel. To retake the measurement: set
+  `REPORTS_TRAINING_CURVE = True` on `LightGBMModel`, run, read it, and do not
+  commit the edit. Whether that trade was right is worth revisiting if anyone
+  wants to tune a booster; a `--fit-curve` flag was considered and not built.
 
   A nested-CV + Optuna protocol was designed and costed on 2026-09-22, then
   **dropped**, and the costing is worth keeping so it is not re-derived: a
@@ -588,6 +729,27 @@ catalogued, and one blocker is much larger than expected.
   dataset profile, the read-level MIL probe, and the Hct116-vs-A549 comparison,
   which additionally needs an input file nothing in this repo produces). See the
   README there.
+- **`fit/logloss_best_iteration` is a plain argmin over a non-monotone curve,
+  and it reads as something it is not.** Held-out logloss here dips by round 2,
+  humps to a peak near round 50, then declines — so the argmin lands on the
+  early dip whenever the run is too short for the late decline to get back under
+  it. It reports **2** for `lightgbm_pooled` (where PR AUC is 0.338 against
+  0.465 at the end) and **600** for `lightgbm_quantiles`, and those two numbers
+  are not comparable. Nobody should read either as "where the fit should stop".
+  The key was left as logged rather than redefined mid-battery
+  ([0007](docs/decisions/0007-evaluating-without-a-baseline.md) section 4); the
+  fix is to report the argmin *after* the hump, or to log the hump's height
+  beside it, and it needs a decision record. Documented in
+  [docs/wandb-panels.md](docs/wandb-panels.md) meanwhile.
+- **A W&B artifact download is committed to the repo.**
+  `artifacts/run-3bw2tvmm-strata_observations-v0/strata_observations.table.json`
+  is tracked. Nothing put it there deliberately: W&B's API downloads into
+  `artifacts/` whenever something calls `.download()`, which
+  `tracking.fetch_strata` does on **every** `--compare-run`, and the directory
+  was not gitignored. It is now, so this stops growing — but the already-tracked
+  file needs `git rm --cached` by someone who is sure nothing reads it from
+  disk. It is a re-downloadable copy of what is already in W&B, so it is cache
+  rather than record, and it is 121 KB per comparison anyone runs.
 - **No CI.** Tests run only when someone remembers to run them.
 - **The SSH access story is undecided** — whether instances come from Ronin or
   are self-funded, and how keys reach teammates.

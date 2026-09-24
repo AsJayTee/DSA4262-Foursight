@@ -32,6 +32,7 @@ from test_smoke import make_fake_dataset  # noqa: E402
 from m6a import crossval, feature_cache, registry  # noqa: E402
 from m6a.compare import paired_comparison  # noqa: E402
 from m6a.data import Site, iter_sites, subsample_reads  # noqa: E402
+from m6a.models.base import BaseModel  # noqa: E402
 from m6a.evaluation import (  # noqa: E402
     calibration_summary,
     calibration_table,
@@ -43,6 +44,12 @@ from m6a.evaluation import (  # noqa: E402
     operating_points,
     threshold_table,
 )
+
+
+def _have_torch() -> bool:
+    import importlib.util
+
+    return importlib.util.find_spec("torch") is not None
 
 
 @pytest.fixture
@@ -629,3 +636,419 @@ def test_the_diagonal_is_only_drawn_between_comparable_axes():
     assert module.same_quantity("fold/0/pr_auc", "rep/pr_auc_mean") is False
     assert not module.same_quantity("oof/pr_auc", "calib/calibrated")
     assert not module.same_quantity("oof/pr_auc", "calib/ece")
+
+
+# --------------------------------------------------------------------------
+# the training curve (docs/decisions/0021)
+# --------------------------------------------------------------------------
+
+class _PlainModel(BaseModel):
+    """A model that does not train iteratively - and cannot accept a validation set.
+
+    `fit` deliberately has no `validation` parameter. That is the normal shape
+    for a model in this repo, and it is what makes the guard below meaningful:
+    if cross-validation ever hands an eval set to a model that did not ask for
+    one, this raises a TypeError instead of ignoring it.
+    """
+
+    def fit(self, X, y, groups=None):
+        self.n_rows = len(X)
+
+    def predict_proba(self, X):
+        return np.linspace(0.1, 0.9, len(X))
+
+
+class _IterativeModel(BaseModel):
+    REPORTS_TRAINING_CURVE = True
+
+    def fit(self, X, y, groups=None, validation=None):
+        self.n_rows = len(X)
+        self.validation_rows = None if validation is None else len(validation[0])
+        self.history = [
+            {"iteration": float(i + 1),
+             "train_logloss": 1.0 - 0.1 * i,
+             "valid_logloss": 1.2 - 0.1 * i,
+             "train_pr_auc": 0.1 * i,
+             "valid_pr_auc": 0.05 * i + len(X) / 1e6}
+            for i in range(4)
+        ]
+
+    def predict_proba(self, X):
+        return np.linspace(0.1, 0.9, len(X))
+
+
+def test_a_model_that_does_not_train_iteratively_is_never_handed_a_validation_set(fake):
+    """The capability flag is the opt-in, not the `fit` signature.
+
+    Most models cannot say how their fit progressed, and forcing every one of
+    them to absorb a parameter so they can ignore it is how an eval set ends up
+    silently discarded. `_PlainModel.fit` would raise on an unexpected keyword,
+    so this passing is the assertion.
+    """
+    json_path, labels_path = fake
+    dataset = crossval.build_dataset(
+        json_path, labels_path, "pooled_v1", log=lambda *_: None
+    )
+
+    plain = crossval.cross_validate(dataset, _PlainModel, log=lambda *_: None)
+    assert plain.histories == [[]] * 5, "a plain model contributes no history"
+
+    iterative = crossval.cross_validate(dataset, _IterativeModel, log=lambda *_: None)
+    assert all(len(history) == 4 for history in iterative.histories)
+    # The held-out rows, and only those: a model handed its own training rows as
+    # a validation set would report a curve that means nothing.
+    for fold, model in zip(sorted(np.unique(dataset.folds)), iterative.models):
+        assert model.validation_rows == int((dataset.folds == fold).sum())
+
+
+def test_the_booster_reports_no_training_curve(fake):
+    """LightGBM must stay out of the training-curve panel (docs/decisions/0024).
+
+    It *does* train iteratively - one boosting round per tree - so the temptation
+    to set the flag is real and the comment in lightgbm.py says not to. A
+    boosting round is not an epoch, and 600 of one beside 40 of the other on a
+    shared x axis is a panel nobody can read.
+
+    This also pins the fit signature: no `validation` parameter at all, so
+    handing it one raises instead of being silently ignored.
+    """
+    import inspect
+
+    model_class = registry.get("models", "lightgbm")
+    assert model_class.REPORTS_TRAINING_CURVE is False
+    assert "validation" not in inspect.signature(model_class.fit).parameters
+
+    json_path, labels_path = fake
+    dataset = crossval.build_dataset(
+        json_path, labels_path, "pooled_v1", log=lambda *_: None
+    )
+    result = crossval.cross_validate(
+        dataset, model_class, {"n_estimators": 20}, log=lambda *_: None
+    )
+    assert result.histories == [[]] * 5
+
+    from m6a import report as reporting
+    from m6a.tracking import flat_metrics
+
+    report = reporting.new("quick", subsample_seed=4262, log=lambda *_: None)
+    reporting.training_curve(report, result)
+    assert not any(key.startswith("fit/") for key in flat_metrics(report.data))
+
+
+@pytest.mark.skipif(
+    not _have_torch(), reason="torch not installed - pip install -e '.[mil]'"
+)
+def test_recording_the_training_curve_does_not_change_the_model(fake):
+    """Scoring the held-out fold each epoch must cost time and nothing else.
+
+    The curve is computed with the network in eval mode under `no_grad`, so it
+    draws no randomness and updates no weights - but that is a property of how
+    it is written, not a guarantee of the framework. If it ever perturbed the
+    fit, every number a torch model reports would move by a little, which is the
+    hardest kind of regression to notice.
+    """
+    json_path, labels_path = fake
+    dataset = crossval.build_dataset(
+        json_path, labels_path, "pooled_v1", log=lambda *_: None
+    )
+    model_class = registry.get("models", "mlp")
+    params = {"epochs": 3, "hidden": [8], "batch_size": 64}
+
+    without = crossval.cross_validate(
+        dataset, model_class, params, record_history=False, log=lambda *_: None
+    )
+    with_curve = crossval.cross_validate(
+        dataset, model_class, params, record_history=True, log=lambda *_: None
+    )
+
+    assert without.histories == [[]] * 5
+    assert all(len(history) == 3 for history in with_curve.histories)
+    np.testing.assert_allclose(
+        without.oof["score"].to_numpy(), with_curve.oof["score"].to_numpy(), rtol=0, atol=0
+    )
+
+
+def test_the_training_curve_is_the_mean_over_the_canonical_splits_folds():
+    """One curve per run, meaned over folds - and it is repetition 0's.
+
+    Five curves on one panel would be unreadable and would not overlay against
+    another run, which is the whole reason it is logged as a series at all
+    (docs/decisions/0016).
+    """
+    from m6a import report as reporting
+
+    histories = [
+        [{"iteration": 1.0, "train_logloss": 0.5, "valid_logloss": 0.6,
+          "train_pr_auc": 0.30, "valid_pr_auc": 0.20},
+         {"iteration": 2.0, "train_logloss": 0.4, "valid_logloss": 0.5,
+          "train_pr_auc": 0.40, "valid_pr_auc": 0.40}],
+        [{"iteration": 1.0, "train_logloss": 0.7, "valid_logloss": 0.8,
+          "train_pr_auc": 0.50, "valid_pr_auc": 0.30},
+         {"iteration": 2.0, "train_logloss": 0.6, "valid_logloss": 0.9,
+          "train_pr_auc": 0.60, "valid_pr_auc": 0.20}],
+    ]
+    result = crossval.CVResult(
+        oof=pd.DataFrame(), per_fold=[], pooled={}, histories=histories
+    )
+    report = reporting.new("quick", subsample_seed=4262, log=lambda *_: None)
+    reporting.training_curve(report, result, name="probe")
+
+    series = report.data["curves"]["series"]
+    assert series["curve/train/iteration"] == [1.0, 2.0]
+    assert series["curve/train/valid_pr_auc"] == pytest.approx([0.25, 0.30])
+    assert series["curve/train/train_pr_auc"] == pytest.approx([0.40, 0.50])
+    assert series["curve/train/valid_pr_auc_sd"] == pytest.approx(
+        [np.std([0.2, 0.3], ddof=1), np.std([0.4, 0.2], ddof=1)]
+    )
+
+    summary = report.data["training_curve"]
+    # The two objectives disagree, which is the point of logging both: held-out
+    # PR AUC is best at iteration 2 and held-out logloss at iteration 1.
+    assert summary["best_iteration"] == 2
+    assert summary["logloss_best_iteration"] == 1
+    assert summary["n_folds"] == 2
+
+    from m6a.tracking import flat_metrics
+
+    flat = flat_metrics(report.data)
+    assert flat["fit/best_iteration"] == 2
+    assert flat["fit/n_iterations"] == 2
+
+
+# --------------------------------------------------------------------------
+# read-level data (docs/decisions/0023)
+# --------------------------------------------------------------------------
+
+def test_read_blocks_hold_exactly_the_reads_the_sites_had():
+    """The ragged structure is only useful if it is lossless, and `take` reorders.
+
+    `ReadBlocks` carries no site ids - its whole contract is "row i here is row
+    i there" - so the fold split and the label join both go through `take`, and
+    a `take` that dropped or reordered reads would be undetectable downstream.
+    """
+    from m6a.data import read_blocks
+
+    sites = [a_site(n) for n in (20, 47, 3, 91)]
+    for i, site in enumerate(sites):
+        site.transcript_id = f"ENST{i:011d}"
+
+    blocks = read_blocks(sites)
+    assert len(blocks) == 4
+    assert blocks.counts.tolist() == [20, 47, 3, 91]
+    assert blocks.total_reads == 161
+    for i, site in enumerate(sites):
+        np.testing.assert_array_equal(blocks.site(i), site.reads)
+
+    picked = blocks.take(np.array([3, 0]))
+    assert picked.counts.tolist() == [91, 20]
+    np.testing.assert_array_equal(picked.site(0), sites[3].reads)
+    np.testing.assert_array_equal(picked.site(1), sites[0].reads)
+
+    masked = blocks.take(np.array([False, True, False, True]))
+    assert masked.counts.tolist() == [47, 91]
+    with pytest.raises(IndexError):
+        blocks.take(np.array([9]))
+
+
+def test_subsampling_blocks_matches_subsampling_sites():
+    """One keyed draw, two call sites, and they must not drift apart.
+
+    docs/decisions/0003 put the draw in `data.py` so there would be exactly one
+    implementation. A ragged-array version that re-derived the key would be a
+    second one, and the two would disagree the first time either was touched.
+    """
+    from m6a.data import read_blocks, subsample_blocks
+
+    sites = [
+        Site(f"ENST{i:011d}", 100 + i, "AAGACCA",
+             np.arange(n * 9, dtype=np.float32).reshape(n, 9))
+        for i, n in enumerate((40, 25, 2, 60))
+    ]
+    blocks = read_blocks(sites)
+    keys = [(s.transcript_id, s.position) for s in sites]
+
+    for depth in (1, 3, 10):
+        thinned = subsample_blocks(blocks, keys, depth)
+        for i, site in enumerate(sites):
+            np.testing.assert_array_equal(
+                thinned.site(i), subsample_reads(site, depth).reads
+            )
+    # A site already at or below the depth is untouched, here as there.
+    assert subsample_blocks(blocks, keys, 10).counts.tolist() == [10, 10, 2, 10]
+
+    with pytest.raises(ValueError, match="out of step"):
+        subsample_blocks(blocks, keys[:2], 3)
+
+
+def test_reads_follow_the_label_join_and_are_checked_against_the_site_table(fake):
+    """The join is inner and can reorder, so the reads are reindexed, not assumed."""
+    json_path, labels_path = fake
+    built = crossval.build_datasets(
+        json_path, labels_path, "pooled_v1", [None, 3],
+        with_reads=True, log=lambda *_: None,
+    )
+    full, thin = built[None], built[3]
+
+    assert full.reads is not None and len(full.reads) == len(full)
+    # `sites.n_reads` is the true depth recorded during extraction. If the reads
+    # had not followed the join, these would disagree - which is exactly the
+    # check build_datasets makes, and this asserts it means something.
+    np.testing.assert_array_equal(
+        full.reads.counts, full.sites["n_reads"].to_numpy()
+    )
+    # The subsampled dataset shares the row order and carries thinned reads.
+    assert thin.X.index.equals(full.X.index)
+    assert (thin.reads.counts <= 3).all()
+    np.testing.assert_array_equal(
+        thin.reads.counts, np.minimum(full.reads.counts, 3)
+    )
+
+    # Without with_reads, nothing is loaded and nothing pays for it.
+    plain = crossval.build_dataset(
+        json_path, labels_path, "pooled_v1", log=lambda *_: None
+    )
+    assert plain.reads is None
+
+
+def test_a_read_level_model_refuses_a_dataset_with_no_reads(fake):
+    """Loud, not silent. A MIL model quietly scoring on site features alone
+    looks exactly like a MIL model that does not work, and the whole question
+    being asked is which of those is true.
+    """
+    json_path, labels_path = fake
+    dataset = crossval.build_dataset(
+        json_path, labels_path, "pooled_v1", log=lambda *_: None
+    )
+
+    class _NeedsReads(BaseModel):
+        CONSUMES_READS = True
+
+        def fit(self, X, y, groups=None, validation=None, reads=None):
+            assert reads is not None
+
+        def predict_proba(self, X, reads=None):
+            return np.full(len(X), 0.5)
+
+    with pytest.raises(RuntimeError, match="with_reads=True"):
+        crossval.cross_validate(dataset, _NeedsReads, log=lambda *_: None)
+
+    with_reads = crossval.build_dataset(
+        json_path, labels_path, "pooled_v1", with_reads=True, log=lambda *_: None
+    )
+    result = crossval.cross_validate(with_reads, _NeedsReads, log=lambda *_: None)
+    assert len(result.per_fold) == 5
+
+
+# --------------------------------------------------------------------------
+# depth-augmented training (docs/decisions/0022)
+# --------------------------------------------------------------------------
+
+def test_stacked_training_rows_are_the_same_sites_at_several_depths(fake):
+    """Five depths is five copies of every site, not five times the evidence.
+
+    The labels are tiled rather than recomputed, because they come from
+    m6ACE-Seq and not from the reads (docs/decisions/0003) - so a site that is
+    positive at full depth is positive at depth 1 with less to go on.
+    """
+    json_path, labels_path = fake
+    built = crossval.build_datasets(
+        json_path, labels_path, "pooled_v1", [None, 1, 5], log=lambda *_: None
+    )
+    sources = [built[None], built[1], built[5]]
+    columns = built[None].columns
+
+    holdout = built[None].folds == 0
+    X, y, reads = crossval.stack_rows(sources, columns, ~holdout)
+
+    assert reads is None, "no source carries reads, so neither does the stack"
+    assert len(X) == 3 * int((~holdout).sum())
+    assert len(y) == len(X)
+    np.testing.assert_array_equal(y, np.tile(built[None].y[~holdout], 3))
+    # No held-out site is anywhere in the training rows, at any depth. That is
+    # the guarantee the whole harness rests on and stacking is where it would
+    # quietly break.
+    held_out_sites = set(built[None].X.index[holdout])
+    assert not held_out_sites & set(X.index)
+    # The first block is the full-depth rows, unchanged.
+    pd.testing.assert_frame_equal(
+        X.iloc[: int((~holdout).sum())], built[None].X.loc[~holdout, columns]
+    )
+
+
+def test_one_training_set_is_indistinguishable_from_no_stacking(fake):
+    """The default path has to be the old path exactly, or every number moves."""
+    json_path, labels_path = fake
+    dataset = crossval.build_dataset(
+        json_path, labels_path, "pooled_v1", log=lambda *_: None
+    )
+    model_class = registry.get("models", "lightgbm")
+    params = {"n_estimators": 30}
+
+    plain = crossval.cross_validate(dataset, model_class, params, log=lambda *_: None)
+    explicit = crossval.cross_validate(
+        dataset, model_class, params, train_on=[dataset], log=lambda *_: None
+    )
+    np.testing.assert_array_equal(
+        plain.oof["score"].to_numpy(), explicit.oof["score"].to_numpy()
+    )
+
+
+def test_training_rows_in_a_different_order_are_refused(fake):
+    """The fold mask is positional, so a misaligned training set is a silent lie.
+
+    It would not raise and it would not look wrong - it would train on the
+    wrong sites and report a plausible number, which is the failure mode this
+    repo spends most of its guards on.
+    """
+    json_path, labels_path = fake
+    built = crossval.build_datasets(
+        json_path, labels_path, "pooled_v1", [None, 1], log=lambda *_: None
+    )
+    shuffled = crossval.Dataset(
+        X=built[1].X.iloc[::-1],
+        y=built[1].y[::-1],
+        folds=built[1].folds[::-1],
+        sites=built[1].sites.iloc[::-1],
+        columns=built[1].columns,
+        depth=1,
+    )
+    with pytest.raises(RuntimeError, match="same order"):
+        crossval.cross_validate(
+            built[None], registry.get("models", "lightgbm"), {"n_estimators": 5},
+            train_on=[built[None], shuffled], log=lambda *_: None,
+        )
+
+
+def test_train_depths_are_parsed_and_checked():
+    """`null` is full depth, and anything that is not a read count is refused."""
+    from m6a.config import describe_train_depths, parse_train_depths
+
+    assert parse_train_depths(None) == [None]
+    assert parse_train_depths([1, 3, None]) == [1, 3, None]
+    assert parse_train_depths(["full", 5, 5]) == [None, 5], "duplicates collapse"
+    assert describe_train_depths([1, 3, None]) == "1,3,full"
+
+    with pytest.raises(ValueError, match="below 1"):
+        parse_train_depths([0])
+    with pytest.raises(ValueError, match="not a read count"):
+        parse_train_depths(["shallow"])
+    with pytest.raises(ValueError, match="non-empty list"):
+        parse_train_depths([])
+
+
+def test_a_model_with_no_curve_logs_no_fit_keys():
+    """A run that cannot report a curve must leave the keys absent, not zero.
+
+    `fit/best_iteration = 0` in the run table would read as "the fit peaked
+    immediately", which is a claim; a blank reads as "this model does not train
+    in steps", which is the truth.
+    """
+    from m6a import report as reporting
+    from m6a.tracking import flat_metrics
+
+    result = crossval.CVResult(oof=pd.DataFrame(), per_fold=[], pooled={}, histories=[[]])
+    report = reporting.new("quick", subsample_seed=4262, log=lambda *_: None)
+    reporting.training_curve(report, result)
+
+    assert "training_curve" not in report.data
+    assert not any(key.startswith("fit/") for key in flat_metrics(report.data))

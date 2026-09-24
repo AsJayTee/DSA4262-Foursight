@@ -147,15 +147,38 @@ diagonal costs the most, because the diagonal is the claim.
 ## How to check it still holds
 
 ```bash
-python scripts/compare_runs.py 1w0mx9m1 zisc9uoj 2hrzxrwc --pair
+python scripts/compare_runs.py 1cn5n37z 5vdhkur4 4mzwnrfh --pair
 ```
 
 writes `report/figures/runs_distribution.png` and `runs_scatter.png`, and prints
 a corrected p-value per candidate against the first run. Checked 2026-09-21 on
-those three: 50 observations each, `lightgbm_pooled` -0.0153 at 0/50 wins
+the then-current runs `1w0mx9m1 zisc9uoj 2hrzxrwc`: 50 observations each,
+`lightgbm_pooled` -0.0153 at 0/50 wins (corrected p = 0.00024) and
+`baseline_logistic` -0.0653 at 0/50 (corrected p = 6e-13), with all three
+sitting far below the diagonal on the scatter.
+
+**The ids above are the replacements.** The project was cleared on 2026-09-22 so
+that every run would carry `fit/*`, `curve/train/*` and `train_depths`
+([0021](0021-models-report-how-the-fit-progressed.md),
+[0022](0022-training-rows-may-come-from-several-depths.md)); the three runs this
+check originally named are gone. The configs, the seed and the numbers are
+unchanged — each replacement reproduces its predecessor's `oof/pr_auc` exactly,
+which was verified before the old run was deleted. **This is the cost of
+clearing W&B**: a run id in a record is a reference that a later clear-out
+breaks, and the number it carried has to be re-verified rather than assumed.
+
+Re-checked on the replacements, 2026-09-22: `lightgbm_pooled` -0.0153 at 0/50
 (corrected p = 0.00024) and `baseline_logistic` -0.0653 at 0/50
-(corrected p = 6e-13), with all three sitting far below the diagonal on the
-scatter.
+(corrected p = 6e-13) — identical to the 2026-09-21 values above, to every digit
+recorded. Two arms have been added since and the command now reads
+
+```bash
+python scripts/compare_runs.py 1cn5n37z psdwqobf 1wzvr5hi 5vdhkur4 4mzwnrfh --pair
+```
+
+which also reports `quantiles_depth_augmented` +0.0056 at 39/50
+(corrected p = 0.2605) and `mlp_quantiles` -0.0021 at 21/50
+(corrected p = 0.7029).
 
 **Prefer ids to names.** Names work while each is unique, and stop working the
 moment a config is re-run — which happened during this record's own testing,

@@ -35,7 +35,13 @@ from typing import Sequence
 import numpy as np
 import pandas as pd
 
-from m6a.data import SUBSAMPLE_SEED, iter_sites, subsample_reads
+from m6a.data import (
+    N_READ_FEATURES,
+    SUBSAMPLE_SEED,
+    ReadBlocks,
+    iter_sites,
+    subsample_reads,
+)
 
 # Bump when a feature extractor changes meaning, or when the storage layout
 # below changes. The key cannot notice either on its own.
@@ -266,6 +272,91 @@ def extract(
         out[depth] = extraction
 
     return {depth: out[depth] for depth in depths}
+
+
+# --------------------------------------------------------------------------
+# the read-level cache
+# --------------------------------------------------------------------------
+#
+# Separate from the feature cache, and keyed **without a depth**, because reads
+# do not need one: every depth is a subset of the full-depth reads chosen by a
+# hash (`m6a.data.subsample_blocks`), so one entry serves the whole sweep. The
+# feature cache cannot do that - its rows are computed *from* the reads, and
+# recomputing them is the 90 seconds it exists to avoid.
+#
+# It is big. 11,027,106 reads x 9 float32 is ~397 MB on the full training set,
+# against ~50 MB for a feature entry. That is the cost of read-level modelling
+# and it is why `with_reads` is opt-in rather than always on.
+
+def _reads_key(source: str, limit) -> dict:
+    return {"version": CACHE_VERSION, "kind": "reads", "source": source, "limit": limit}
+
+
+def _reads_path(key: dict) -> Path:
+    stamp = hashlib.blake2b(
+        json.dumps(key, sort_keys=True).encode(), digest_size=8
+    ).hexdigest()
+    return cache_dir() / f"reads_{stamp}.npz"
+
+
+def _load_reads(key: dict) -> ReadBlocks | None:
+    path = _reads_path(key)
+    if not path.exists():
+        return None
+    try:
+        with np.load(path, allow_pickle=False) as stored:
+            if json.loads(str(stored["key"])) != key:
+                return None
+            return ReadBlocks(stored["values"], stored["offsets"].astype(np.int64))
+    except (OSError, ValueError, KeyError):
+        return None  # a half-written entry is a miss, never an error
+
+
+def _store_reads(key: dict, blocks: ReadBlocks) -> None:
+    path = _reads_path(key)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(".tmp")
+    np.savez(
+        temporary,
+        key=json.dumps(key, sort_keys=True),
+        values=blocks.values,
+        offsets=blocks.offsets,
+    )
+    Path(str(temporary) + ".npz").replace(path)
+
+
+def extract_reads(
+    json_path: str | Path,
+    *,
+    limit: int | None = None,
+    use_cache: bool = True,
+    log=print,
+) -> ReadBlocks:
+    """Every read of every site, in file order, at full depth.
+
+    Returned in the order `iter_sites` yields, which is the order `extract`
+    builds its index in - so the two line up row for row before the label join,
+    and `m6a.crossval` reindexes from there.
+    """
+    from m6a.data import read_blocks
+
+    source = file_digest(json_path) if use_cache else "uncached"
+    key = _reads_key(source, limit)
+    if use_cache:
+        hit = _load_reads(key)
+        if hit is not None:
+            return hit
+
+    log(f"  reading every read from {Path(json_path).name} ...")
+    blocks = read_blocks(iter_sites(json_path, limit=limit))
+    megabytes = blocks.values.nbytes / (1 << 20)
+    log(
+        f"  {blocks.total_reads:,} reads over {len(blocks):,} sites "
+        f"({megabytes:,.0f} MB, {N_READ_FEATURES} features each)"
+    )
+    if use_cache:
+        _store_reads(key, blocks)
+    return blocks
 
 
 def clear(features: str | None = None) -> int:

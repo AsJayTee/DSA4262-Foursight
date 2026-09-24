@@ -66,6 +66,12 @@ class Dataset:
     sites: pd.DataFrame  # gene_id, motif, n_reads - indexed like X
     columns: list[str]
     depth: int | None = None
+    # The raw reads behind each row, ragged, in the same row order as X - or
+    # None, which is the normal case. Only a model that declares CONSUMES_READS
+    # ever sees them, and only `build_datasets(with_reads=True)` loads them,
+    # because they are ~397 MB on the full training set against 49 MB for X.
+    # See docs/decisions/0023.
+    reads: "object | None" = None
 
     def __len__(self) -> int:
         return len(self.y)
@@ -81,6 +87,10 @@ class CVResult:
     models: list = field(default_factory=list)
     columns: list[str] = field(default_factory=list)
     label: str = ""
+    # One entry per fold, each a list of per-iteration dicts - empty for a model
+    # that does not train iteratively, which is most of them. See
+    # `m6a.models.base.BaseModel.REPORTS_TRAINING_CURVE` and docs/decisions/0021.
+    histories: list[list[dict]] = field(default_factory=list)
 
     @property
     def per_fold_pr_auc(self) -> np.ndarray:
@@ -126,6 +136,7 @@ def build_datasets(
     subsample_seed: int = SUBSAMPLE_SEED,
     limit: int | None = None,
     use_cache: bool = True,
+    with_reads: bool = False,
     log=print,
 ) -> dict[int | None, Dataset]:
     """One Dataset per requested read depth, reading the input file once.
@@ -153,6 +164,15 @@ def build_datasets(
     )
 
     labels = load_labels(labels_path)
+    # Read-level data is depth-independent on disk: every depth is a hash-chosen
+    # subset of the full-depth reads, so one extraction serves the whole sweep
+    # and each depth is derived from it in memory. See docs/decisions/0023.
+    all_reads = None
+    if with_reads:
+        all_reads = feature_cache.extract_reads(
+            json_path, limit=limit, use_cache=use_cache, log=log
+        )
+
     out: dict[int | None, Dataset] = {}
     reference: Dataset | None = None
 
@@ -172,7 +192,12 @@ def build_datasets(
         sites = extraction.sites.loc[X.index, ["motif", "n_reads"]].copy()
         sites["gene_id"] = joined["gene_id"].to_numpy()
 
-        dataset = Dataset(X=X, y=y, folds=folds, sites=sites, columns=columns, depth=depth)
+        reads = None
+        if all_reads is not None:
+            reads = _reads_for(all_reads, extraction, X.index, depth, subsample_seed)
+
+        dataset = Dataset(X=X, y=y, folds=folds, sites=sites, columns=columns,
+                          depth=depth, reads=reads)
         if reference is None:
             reference = dataset
         elif not dataset.X.index.equals(reference.X.index) or not (
@@ -186,6 +211,48 @@ def build_datasets(
         out[depth] = dataset
 
     return out
+
+
+def _reads_for(all_reads, extraction, index, depth, subsample_seed):
+    """Reindex the full-depth reads onto a dataset's rows, then thin them.
+
+    Two things happen between extraction and a `Dataset` that the reads have to
+    survive: the label join is an **inner** join, so rows can be dropped, and it
+    can reorder them. `ReadBlocks` carries no site ids of its own - it is a pair
+    of arrays whose meaning is "row i here is row i there" - so this is the one
+    place the correspondence is established, and it is established by position
+    lookup rather than by trusting the two to have stayed parallel.
+    """
+    from m6a.data import subsample_blocks
+
+    positions = extraction.features.index.get_indexer(index)
+    if (positions < 0).any():
+        raise RuntimeError(
+            "A labelled site is missing from the extracted read blocks. The "
+            "feature table and the reads came from different files or different "
+            "site limits; rebuild with --no-cache."
+        )
+    # The join usually keeps every site in file order, and `take` copies ~400 MB
+    # on the full training set. Skip it when there is nothing to do: identity is
+    # cheap to check and the copy is not.
+    identity = (
+        positions.size == len(all_reads)
+        and bool(np.array_equal(positions, np.arange(positions.size)))
+    )
+    blocks = all_reads if identity else all_reads.take(positions)
+    # Checked rather than assumed: `sites.n_reads` is the true depth recorded
+    # during extraction, and if it disagrees with the reads we actually have,
+    # some row is carrying another site's reads.
+    expected = extraction.sites["n_reads"].to_numpy()[positions]
+    if not np.array_equal(blocks.counts, expected):
+        raise RuntimeError(
+            "Read counts do not match the extracted site table, so the reads "
+            "and the feature rows are out of step. This would train a model on "
+            "one site's reads under another site's label."
+        )
+    if depth is None:
+        return blocks
+    return subsample_blocks(blocks, list(index), depth, subsample_seed)
 
 
 def build_dataset(
@@ -208,6 +275,8 @@ def cross_validate(
     columns: list[str] | None = None,
     label: str = "",
     keep_models: bool = True,
+    record_history: bool = True,
+    train_on: Sequence[Dataset] = (),
     log=print,
 ) -> CVResult:
     """Fit one model per fold and score the sites it never saw.
@@ -216,25 +285,81 @@ def cross_validate(
     the only number worth comparing. Per-fold metrics are *kept*: collapsing them
     to one pooled figure throws away the only thing that can tell a real
     improvement from fold noise.
+
+    `record_history` hands each fold's held-out rows to a model that declares
+    `REPORTS_TRAINING_CURVE`, so it can report how its fit progressed. It costs
+    extra time inside every fit - the model scores the held-out set at every
+    iteration - which is why repeated cross-validation turns it off for every
+    repetition but the one whose curve is logged. See docs/decisions/0021.
+
+    `train_on` is where the **training** rows come from, and it defaults to
+    `dataset` itself. Passing several read depths of the same sites stacks one
+    copy of every training site per depth, which is how a site-level model is
+    trained at the depth it will be tested at. Scoring never changes: the
+    held-out rows always come from `dataset`, so the headline number means the
+    same thing as every other run's. See docs/decisions/0022.
     """
     model_params = dict(model_params or {})
     use = list(columns) if columns is not None else list(dataset.columns)
     X, y, folds = dataset.X, dataset.y, dataset.folds
 
+    sources = list(train_on) or [dataset]
+    for source in sources:
+        # The fold mask is positional, so a training set whose rows are in a
+        # different order would quietly train on the wrong sites and produce a
+        # plausible number. build_datasets guarantees this already; checking it
+        # here means an externally built Dataset cannot slip through.
+        if not source.X.index.equals(X.index):
+            raise RuntimeError(
+                "A training set passed to cross_validate has different rows from "
+                "the dataset being scored. They must be the same sites in the "
+                "same order - build them together with crossval.build_datasets."
+            )
+
     oof = np.zeros(len(y), dtype=float)
     models: list = []
     per_fold: list[dict] = []
+    histories: list[list[dict]] = []
 
     for fold in sorted(np.unique(folds)):
         holdout = folds == fold
+        train_X, train_y, train_reads = stack_rows(sources, use, ~holdout)
         model = model_class(**model_params)
-        model.fit(X.loc[~holdout, use], y[~holdout])
-        oof[holdout] = model.predict_proba(X.loc[holdout, use])
+
+        # Two opt-in capabilities, each passed **only** to a model that declared
+        # it. Handing an argument to a model that did not ask for it either
+        # raises on a signature that never expected it or - far worse - is
+        # silently ignored, and a model quietly scoring without the reads it was
+        # supposed to use looks exactly like a model that is simply worse. The
+        # flags are what make that loud.
+        fit_kwargs: dict = {}
+        score_kwargs: dict = {}
+        if getattr(model, "CONSUMES_READS", False):
+            if train_reads is None or dataset.reads is None:
+                raise RuntimeError(
+                    f"{model_class.__name__} declares CONSUMES_READS but this "
+                    "dataset carries no reads. Build it with "
+                    "crossval.build_datasets(..., with_reads=True)."
+                )
+            fit_kwargs["reads"] = train_reads
+            score_kwargs["reads"] = dataset.reads.take(holdout)
+
+        if record_history and getattr(model, "REPORTS_TRAINING_CURVE", False):
+            # `validation` is (X, y) - plus the held-out reads for a read-level
+            # model, which is the same pair of flags agreeing with each other
+            # rather than a third convention.
+            held_out = (X.loc[holdout, use], y[holdout])
+            if score_kwargs:
+                held_out = (*held_out, score_kwargs["reads"])
+            fit_kwargs["validation"] = held_out
+        model.fit(train_X, train_y, **fit_kwargs)
+        oof[holdout] = model.predict_proba(X.loc[holdout, use], **score_kwargs)
         per_fold.append({"fold": int(fold), **metrics(y[holdout], oof[holdout])})
+        histories.append(list(getattr(model, "history", []) or []))
         if keep_models:
             models.append(model)
         log(
-            f"  fold {fold}: trained on {int((~holdout).sum()):,}, "
+            f"  fold {fold}: trained on {len(train_X):,}, "
             f"scored {int(holdout.sum()):,}, PR AUC {per_fold[-1]['pr_auc']:.4f}"
         )
 
@@ -245,6 +370,66 @@ def cross_validate(
         models=models,
         columns=use,
         label=label,
+        histories=histories,
+    )
+
+
+def stack_rows(
+    sources: Sequence[Dataset],
+    columns: list[str],
+    mask: np.ndarray | None = None,
+) -> tuple[pd.DataFrame, np.ndarray, object | None]:
+    """Training rows drawn from one or several read depths of the same sites.
+
+    One `Dataset` in gives exactly what indexing it would have given, so the
+    ordinary path pays nothing. Several stack one copy of each row per depth.
+
+    **The labels are simply repeated.** They come from m6ACE-Seq and not from
+    the nanopore reads, so dropping reads changes how much evidence a row
+    carries and not what is true about the site (docs/decisions/0003). Nothing
+    here invents a site: the same 97,524 training sites appear five times at
+    five depths, which is why the stacked rows are correlated in a way ordinary
+    extra data would not be - see docs/decisions/0022.
+    """
+    if not sources:
+        raise ValueError("stack_rows needs at least one Dataset to draw rows from.")
+    first = sources[0]
+    keep = np.ones(len(first.y), dtype=bool) if mask is None else mask
+    reads = _stack_reads(sources, keep)
+    if len(sources) == 1:
+        return first.X.loc[keep, columns], first.y[keep], reads
+    return (
+        pd.concat([source.X.loc[keep, columns] for source in sources], axis=0),
+        np.tile(first.y[keep], len(sources)),
+        reads,
+    )
+
+
+def _stack_reads(sources: Sequence[Dataset], keep: np.ndarray):
+    """The read blocks for the same rows, stacked in the same order as the frame.
+
+    Returns None when no source carries reads, which is every run that is not
+    read-level. A source set where only *some* carry reads is a bug rather than
+    a configuration: the stacked rows would silently lose their reads for some
+    depths and keep them for others.
+    """
+    from m6a.data import ReadBlocks
+
+    present = [source.reads is not None for source in sources]
+    if not any(present):
+        return None
+    if not all(present):
+        raise RuntimeError(
+            "Some training depths carry read-level data and some do not. Build "
+            "every depth with build_datasets(with_reads=True) or none of them."
+        )
+    blocks = [source.reads.take(keep) for source in sources]
+    if len(blocks) == 1:
+        return blocks[0]
+    counts = np.concatenate([block.counts for block in blocks])
+    return ReadBlocks(
+        np.concatenate([block.values for block in blocks]),
+        np.concatenate([[0], np.cumsum(counts)]).astype(np.int64),
     )
 
 
@@ -261,7 +446,21 @@ def score_folds(models: list, dataset: Dataset, columns: list[str] | None = None
     scores = np.zeros(len(dataset), dtype=float)
     for position, fold in enumerate(sorted(np.unique(dataset.folds))):
         holdout = dataset.folds == fold
-        scores[holdout] = models[position].predict_proba(dataset.X.loc[holdout, use])
+        model = models[position]
+        # The sweep scores the *subsampled* dataset, so a read-level model gets
+        # that dataset's thinned reads - which is the whole point: fewer reads
+        # is less evidence, and a MIL model should feel that directly rather
+        # than through a summary statistic computed over fewer of them.
+        extra = {}
+        if getattr(model, "CONSUMES_READS", False):
+            if dataset.reads is None:
+                raise RuntimeError(
+                    "A read-level model cannot score a dataset built without "
+                    "reads. Pass with_reads=True when building the depth sweep's "
+                    "datasets too, or the sweep silently measures nothing."
+                )
+            extra["reads"] = dataset.reads.take(holdout)
+        scores[holdout] = model.predict_proba(dataset.X.loc[holdout, use], **extra)
     return scores
 
 
@@ -391,6 +590,7 @@ def repeated_cross_validate(
     columns: list[str] | None = None,
     label: str = "",
     keep_models: bool = True,
+    train_on: Sequence[Dataset] = (),
     log=print,
 ) -> RepeatedResult:
     """Cross-validate `n_repeats` times over independently seeded splits.
@@ -420,6 +620,17 @@ def repeated_cross_validate(
             # Only repetition 0's models are kept: the depth sweep scores with
             # them, and holding fifty boosters in memory buys nothing.
             keep_models=keep_models and repetition == 0,
+            # Same for the training curve, and here it saves time rather than
+            # memory: an iterative model scores its held-out fold at every
+            # iteration, which is a real slowdown paid once instead of ten
+            # times. Only repetition 0's curve is ever logged - consistent with
+            # fold/* and the depth sweep being repetition-0 quantities.
+            record_history=repetition == 0,
+            # The extra depths are the same rows in the same order, so the
+            # re-split fold mask applies to them unchanged - only `split` needs
+            # refolding. cross_validate checks the index alignment rather than
+            # assuming it.
+            train_on=train_on,
             log=log if n_repeats == 1 else (lambda *_: None),
         )
         if repetition == 0:

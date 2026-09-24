@@ -78,6 +78,11 @@ def test_registry_finds_the_builtin_implementations():
     assert "quantiles_v1" in registry.available("features")
     assert "lightgbm" in registry.available("models")
     assert "logistic" in registry.available("models")
+    # Discoverable **with or without torch installed**, because m6a.models.mlp
+    # imports it inside its methods. A module-level import would make this
+    # module fail to import on a machine with only the base dependencies, and
+    # `mlp` would quietly disappear from the registry instead of erroring.
+    assert "mlp" in registry.available("models")
 
 
 def test_registry_reports_modules_it_could_not_import():
@@ -123,7 +128,30 @@ def test_pr_auc_lift_is_one_for_a_random_classifier():
 # end to end
 # --------------------------------------------------------------------------
 
-@pytest.mark.parametrize("config", ["configs/baseline.yaml", "configs/lightgbm.yaml"])
+def _have(module: str) -> bool:
+    import importlib.util
+
+    return importlib.util.find_spec(module) is not None
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        "configs/baseline.yaml",
+        "configs/lightgbm.yaml",
+        # A torch model saves a state_dict plus the architecture and the scaling
+        # statistics beside it, and `load` has to rebuild all three. That is the
+        # part most likely to rot, and it only shows up as a broken predict.py.
+        # Skipped rather than failed where the mil extra is not installed: torch
+        # is not a dev dependency and must never become one.
+        pytest.param(
+            "configs/mlp.yaml",
+            marks=pytest.mark.skipif(
+                not _have("torch"), reason="torch not installed - pip install -e '.[mil]'"
+            ),
+        ),
+    ],
+)
 def test_train_then_predict_produces_a_valid_submission(tmp_path, config):
     json_path, labels_path = make_fake_dataset(tmp_path)
     model_dir = tmp_path / "model"

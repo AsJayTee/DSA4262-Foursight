@@ -626,6 +626,149 @@ def curves(report: Report, arms: dict[str, tuple[np.ndarray, np.ndarray]]) -> No
     report.figure("fig/roc_curve", figures.roc_curve(arms))
 
 
+# The history keys a model may fill, and the order they are read in. `iteration`
+# is the x. Everything else is `{split}_{metric}`, which is what keeps a booster
+# and a network interchangeable here - see m6a.models.base.BaseModel.history.
+FIT_SERIES = ("train_logloss", "valid_logloss", "train_pr_auc", "valid_pr_auc")
+
+
+def training_curve(report: Report, result, name: str = "") -> None:
+    """How the fit progressed, meaned over the folds of the canonical split.
+
+    Nothing else in the harness can answer "is `n_estimators: 600` right?". Every
+    metric is computed on a finished model, so a config value that was chosen by
+    hand - and every value in `configs/` was - looks exactly the same whether it
+    is twice what the model needs or half.
+
+    **Both objectives are drawn.** LightGBM minimises logloss; this project ranks
+    on average precision. The round where the two stop agreeing is the useful
+    part of the picture, and one curve on its own cannot show it.
+
+    Silently does nothing for a model that does not train iteratively, which is
+    most of them. That is the flag doing its job, not a failure.
+    """
+    histories = [h for h in getattr(result, "histories", []) if h]
+    if not histories:
+        return
+
+    lengths = {len(h) for h in histories}
+    n_iterations = min(lengths)
+    if len(lengths) > 1:
+        report.log(
+            f"  folds ran for different numbers of iterations {sorted(lengths)}; "
+            f"the curve is truncated to {n_iterations}."
+        )
+
+    iterations = [float(histories[0][i]["iteration"]) for i in range(n_iterations)]
+    # Mean across folds at each iteration, keeping only the series every fold
+    # reported. A key one fold happened to emit is not a curve.
+    available = [
+        key for key in FIT_SERIES
+        if all(key in history[0] for history in histories)
+    ]
+    if not available:
+        return
+    means = {
+        key: np.array([
+            float(np.mean([history[i][key] for history in histories]))
+            for i in range(n_iterations)
+        ])
+        for key in available
+    }
+    # The spread over folds, on the one series a decision would be made from.
+    # Five folds of a 4.49%-positive problem disagree by more than most of the
+    # movement along this curve, which is the point of drawing it.
+    valid_sd = None
+    if "valid_pr_auc" in means and len(histories) > 1:
+        valid_sd = np.array([
+            float(np.std([history[i]["valid_pr_auc"] for history in histories], ddof=1))
+            for i in range(n_iterations)
+        ])
+
+    report.heading("Training curve")
+    report.log(
+        f"{len(histories)} folds of the canonical split, meaned. "
+        f"{n_iterations} iterations.\n"
+        "An `iteration` is a boosting round here and a solver step or an epoch\n"
+        "elsewhere; the field is deliberately not called `epoch` because nothing\n"
+        "in this repo has them."
+    )
+
+    summary: dict[str, float] = {
+        "n_folds": len(histories),
+        "n_iterations": int(n_iterations),
+    }
+    if "valid_pr_auc" in means:
+        best = int(np.argmax(means["valid_pr_auc"]))
+        summary["best_iteration"] = float(iterations[best])
+        summary["best_valid_pr_auc"] = float(means["valid_pr_auc"][best])
+        summary["final_valid_pr_auc"] = float(means["valid_pr_auc"][-1])
+    if "valid_logloss" in means:
+        cheapest = int(np.argmin(means["valid_logloss"]))
+        summary["logloss_best_iteration"] = float(iterations[cheapest])
+        summary["best_valid_logloss"] = float(means["valid_logloss"][cheapest])
+    if "train_pr_auc" in means and "valid_pr_auc" in means:
+        summary["train_valid_gap"] = float(
+            means["train_pr_auc"][-1] - means["valid_pr_auc"][-1]
+        )
+
+    rows = []
+    if "best_iteration" in summary:
+        rows.append({
+            "picked by": "held-out PR AUC",
+            "iteration": int(summary["best_iteration"]),
+            "value": summary["best_valid_pr_auc"],
+        })
+    if "logloss_best_iteration" in summary:
+        rows.append({
+            "picked by": "held-out logloss",
+            "iteration": int(summary["logloss_best_iteration"]),
+            "value": summary["best_valid_logloss"],
+        })
+    if "final_valid_pr_auc" in summary:
+        rows.append({
+            "picked by": "where the fit stopped",
+            "iteration": int(n_iterations),
+            "value": summary["final_valid_pr_auc"],
+        })
+    if rows:
+        report.show(pd.DataFrame(rows).set_index("picked by"))
+
+    if {"best_iteration", "final_valid_pr_auc"} <= summary.keys():
+        moved = summary["best_valid_pr_auc"] - summary["final_valid_pr_auc"]
+        report.log(
+            f"\nStopping at the held-out PR AUC peak rather than at iteration "
+            f"{n_iterations} would move the mean by {moved:+.4f}."
+        )
+    report.log(
+        "**That is a diagnosis, not a number to act on and then quote.** The peak\n"
+        "is read off the same held-out folds the run's headline PR AUC comes from,\n"
+        "so choosing an iteration count here and reporting this run's score is\n"
+        "selection on the test set - the flat-tuning trap recorded under Modelling\n"
+        "in GAPS.md, arrived at one parameter at a time. Change the config, then\n"
+        "compare the two configs paired like any other pair of runs.\n"
+        "Read it for shape instead: a curve still climbing at the last iteration\n"
+        "says the budget is too small, and a valid curve flat while the train\n"
+        "curve keeps rising says the rest of the budget is buying memorisation."
+    )
+
+    report.data["training_curve"] = summary
+
+    series = {f"curve/train/{key}": means[key] for key in available}
+    if valid_sd is not None:
+        series["curve/train/valid_pr_auc_sd"] = valid_sd
+    report.series("curve/train/iteration", iterations, series)
+
+    if report.profile.plots:
+        from m6a import figures
+
+        report.figure(
+            "fig/training_curve",
+            figures.training_curve(iterations, means, valid_sd, summary,
+                                   name or (result.label or "this run")),
+        )
+
+
 def depth_sweep(
     report: Report,
     datasets: dict,
@@ -633,12 +776,24 @@ def depth_sweep(
     columns: list[str],
     oof_full: pd.DataFrame,
     subsample_seed: int,
+    train_depths: list | None = None,
 ) -> None:
     """Score the fold models on read-subsampled copies of their own held-out fold.
 
     The largest known risk in the project: every training site has at least 20
     reads and SG-NEx has a median of 3.
+
+    `train_depths` is what the models were *trained* at, and it is here only so
+    the section cannot say something false. The sweep used to state "models are
+    fitted on FULL-depth training folds" unconditionally, which stopped being
+    true the moment depth-augmented training existed (docs/decisions/0022) -
+    and a caption that is wrong about what was held fixed is worse than no
+    caption, because nothing about the numbers looks different.
     """
+    from m6a.config import describe_train_depths
+
+    trained = list(train_depths or [None])
+    full_depth_only = trained == [None]
     rows = []
     for depth, dataset in datasets.items():
         if depth is None:
@@ -653,18 +808,36 @@ def depth_sweep(
     frame["retained"] = frame["pr_auc"] / frame.loc["full", "pr_auc"]
 
     report.heading("Depth sweep")
-    report.log(
-        "Models are fitted on FULL-depth training folds and scored on read-\n"
-        "subsampled copies of their own held-out fold. That is the Task 2\n"
-        "situation: we train on depth >= 20 data and predict on SG-NEx, whose\n"
-        "median depth is 3. Labels come from m6ACE-Seq rather than from the\n"
-        "nanopore reads, so they stay valid when reads are dropped.\n"
-        f"Subsample seed {subsample_seed} (not the split seed; safe to vary)."
-    )
+    if full_depth_only:
+        report.log(
+            "Models are fitted on FULL-depth training folds and scored on read-\n"
+            "subsampled copies of their own held-out fold. That is the Task 2\n"
+            "situation: we train on depth >= 20 data and predict on SG-NEx, whose\n"
+            "median depth is 3. Labels come from m6ACE-Seq rather than from the\n"
+            "nanopore reads, so they stay valid when reads are dropped.\n"
+            f"Subsample seed {subsample_seed} (not the split seed; safe to vary)."
+        )
+    else:
+        report.log(
+            f"Models are fitted on training rows drawn at depth "
+            f"{describe_train_depths(trained)} and scored on read-subsampled\n"
+            "copies of their own held-out fold. **This is not the same sweep as a\n"
+            "full-depth run's** - the train/test depth mismatch the sweep exists to\n"
+            "measure is partly closed by construction here, which is the point of\n"
+            "the experiment and makes the row-by-row numbers comparable with another\n"
+            "run only if that run says the same thing. Labels come from m6ACE-Seq\n"
+            "rather than from the nanopore reads, so they stay valid when reads are\n"
+            f"dropped. Subsample seed {subsample_seed} (not the split seed)."
+        )
     report.show(frame)
     report.data["depth_sweep"] = {
         "subsample_seed": subsample_seed,
-        "note": "trained at full depth, scored at the stated depth",
+        "train_depths": describe_train_depths(trained),
+        "note": (
+            "trained at full depth, scored at the stated depth" if full_depth_only
+            else f"trained at depth {describe_train_depths(trained)}, "
+                 "scored at the stated depth"
+        ),
         "rows": records(frame),
     }
 
@@ -695,7 +868,8 @@ def depth_sweep(
 
         report.figure(
             "fig/depth_sweep",
-            figures.depth_sweep(report.data["depth_sweep"]["rows"], subsample_seed),
+            figures.depth_sweep(report.data["depth_sweep"]["rows"], subsample_seed,
+                                describe_train_depths(trained)),
         )
 
 

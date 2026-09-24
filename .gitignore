@@ -45,5 +45,12 @@ dist/
 wandb/
 .DS_Store
 
+# W&B downloads artifacts here when something calls `.download()` -
+# tracking.fetch_strata does, on every --compare-run. They are re-downloadable
+# copies of what is already in W&B, so they are cache, not record. One slipped
+# into git before this line existed (artifacts/run-3bw2tvmm-*); adding the rule
+# does not untrack that one. See GAPS.md under Infrastructure.
+artifacts/
+
 # --- evaluation feature cache (rebuildable; see src/m6a/feature_cache.py) ---
 .cache/

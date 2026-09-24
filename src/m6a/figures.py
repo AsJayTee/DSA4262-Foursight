@@ -390,10 +390,112 @@ def reliability(table: pd.DataFrame, summary: dict) -> Any:
 
 
 # --------------------------------------------------------------------------
+# how the fit progressed
+# --------------------------------------------------------------------------
+
+def training_curve(
+    iterations: Sequence[float],
+    means: dict[str, np.ndarray],
+    valid_sd: np.ndarray | None,
+    summary: dict,
+    name: str = "",
+) -> Any:
+    """Loss and average precision against boosting round, held-out and training.
+
+    **Two panels, not two axes on one.** Logloss falls and PR AUC rises, on
+    scales three orders of magnitude apart; a twin axis makes the crossing point
+    of two lines look meaningful when it is an artefact of where the axes were
+    put. Stacked panels sharing an x let the reader see the one thing worth
+    seeing - that the round where logloss stops improving and the round where
+    PR AUC stops improving are not the same round.
+
+    Held-out is BLUE and training ORANGE, the only pair in this palette that may
+    share a figure as categories. The band behind the held-out PR AUC is +/- 1 sd
+    over folds; it is usually wider than the whole tail of the curve, which is
+    the honest impression to leave.
+    """
+    plt = _plt()
+    x = np.asarray(iterations, dtype=float)
+    panels = [
+        ("logloss", "train_logloss", "valid_logloss", "binary logloss"),
+        ("pr_auc", "train_pr_auc", "valid_pr_auc", "average precision"),
+    ]
+    panels = [p for p in panels if p[1] in means or p[2] in means]
+    if not panels:
+        return None
+
+    figure, axes_list = plt.subplots(
+        len(panels), 1, figsize=(FIGSIZE[0], 2.5 * len(panels) + 1.4),
+        dpi=DPI, sharex=True,
+    )
+    if len(panels) == 1:
+        axes_list = [axes_list]
+    figure.patch.set_facecolor(SURFACE)
+
+    for axes, (_, train_key, valid_key, ylabel) in zip(axes_list, panels):
+        axes.set_facecolor(SURFACE)
+        axes.set_ylabel(ylabel, color=INK_SOFT, fontsize=9)
+        axes.grid(True, color=GRID, linewidth=0.8, linestyle="-")
+        axes.set_axisbelow(True)
+        for side in ("top", "right"):
+            axes.spines[side].set_visible(False)
+        for side in ("left", "bottom"):
+            axes.spines[side].set_color(GRID)
+            axes.spines[side].set_linewidth(0.8)
+        axes.tick_params(colors=MUTED, labelsize=8.5, length=0)
+
+        if valid_key == "valid_pr_auc" and valid_sd is not None and valid_key in means:
+            axes.fill_between(x, means[valid_key] - valid_sd, means[valid_key] + valid_sd,
+                              color=BLUE, alpha=0.14, linewidth=0, zorder=2)
+        if train_key in means:
+            axes.plot(x, means[train_key], color=ORANGE, linewidth=1.8, zorder=3)
+            axes.annotate("training fold", xy=(x[-1], means[train_key][-1]),
+                          xytext=(-4, 6), textcoords="offset points",
+                          color=ORANGE, fontsize=8.5, ha="right")
+        if valid_key in means:
+            axes.plot(x, means[valid_key], color=BLUE, linewidth=2, zorder=4)
+            axes.annotate("held out", xy=(x[-1], means[valid_key][-1]),
+                          xytext=(-4, -14), textcoords="offset points",
+                          color=BLUE, fontsize=8.5, ha="right")
+
+        marker = summary.get(
+            "best_iteration" if valid_key == "valid_pr_auc" else "logloss_best_iteration"
+        )
+        if marker is not None:
+            axes.axvline(marker, color=MUTED, linewidth=1.1, linestyle=(0, (4, 3)),
+                         zorder=1)
+            axes.annotate(f"best {int(marker)}", xy=(marker, axes.get_ylim()[0]),
+                          xytext=(4, 8), textcoords="offset points",
+                          color=MUTED, fontsize=8)
+
+    axes_list[0].set_title(
+        f"How the fit progressed{f' - {name}' if name else ''}",
+        color=INK, fontsize=11, loc="left", pad=12,
+    )
+    axes_list[-1].set_xlabel("iteration (boosting round)", color=INK_SOFT, fontsize=9)
+
+    best = summary.get("best_iteration")
+    stopped = summary.get("n_iterations")
+    caption = (
+        f"Mean over {summary.get('n_folds', '?')} folds of the canonical split; "
+        "shaded band is +/- 1 sd over folds.\n"
+    )
+    if best is not None and stopped is not None:
+        caption += (
+            f"Held-out PR AUC peaks at {int(best)} and the fit ran to {int(stopped)}. "
+            "The peak is read off the\nsame folds the headline score comes from, so "
+            "it diagnoses the budget - it does not set it."
+        )
+    figure.text(0.012, 0.012, caption, color=MUTED, fontsize=7.6, ha="left", va="bottom")
+    figure.subplots_adjust(bottom=0.17, hspace=0.12)
+    return figure
+
+
+# --------------------------------------------------------------------------
 # read depth - two different questions, two figures
 # --------------------------------------------------------------------------
 
-def depth_sweep(rows: list[dict], subsample_seed: int) -> Any:
+def depth_sweep(rows: list[dict], subsample_seed: int, train_depths: str = "full") -> Any:
     """PR AUC when the same sites are scored with reads thrown away.
 
     Not the same question as `depth_bands` below, and the two are easy to
@@ -432,10 +534,18 @@ def depth_sweep(rows: list[dict], subsample_seed: int) -> Any:
     axes.set_xticks(x)
     axes.set_xticklabels(labels)
     axes.set_ylim(0, 1)
+    # What the models were trained at is not decoration on this figure: the whole
+    # question it asks is what a train/test depth mismatch costs, so a caption
+    # that assumes full-depth training is a wrong caption on a depth-augmented
+    # run. See docs/decisions/0022.
+    trained = (
+        "Models trained at full depth" if train_depths in ("full", "", None)
+        else f"Models trained at depth {train_depths}"
+    )
     _caption(
         figure,
         "Depth is the number of distinct RNA molecules measured at a site, not repeated "
-        "readings\nof one (docs/data.md#read-depth). Models trained at full depth; "
+        f"readings\nof one (docs/data.md#read-depth). {trained}; "
         f"subsample seed {subsample_seed}.",
     )
     return figure

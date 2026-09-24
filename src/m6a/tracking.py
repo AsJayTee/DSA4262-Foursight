@@ -560,6 +560,7 @@ def require_same_dataset(local: dict, remote: dict, name: str) -> None:
 #   oof/*        pooled out-of-fold, the headline
 #   fold/*       the per-fold vector and its spread
 #   rep/*        repeated-CV summary, when there is one
+#   fit/*        how the fit progressed, for a model that trains in steps
 #   depth/*      the sweep: the same sites scored at reduced read depth
 #   band/*       true depth: how the model does on sites that really are shallow
 #   motif/*      per-DRACH-motif lift
@@ -613,6 +614,21 @@ def flat_metrics(report: dict) -> dict[str, float]:
             key = f"rep/{int(row['repetition'])}/fold/{int(row['fold'])}"
             flat[f"{key}/pr_auc"] = float(row["pr_auc"])
             flat[f"{key}/roc_auc"] = float(row["roc_auc"])
+
+    # How the fit progressed. Only a model that declares REPORTS_TRAINING_CURVE
+    # produces these, so most runs have none of them and show as blanks.
+    # `fit/best_iteration` against `fit/logloss_best_iteration` is the pair to
+    # read: LightGBM minimises logloss and we rank on average precision, so the
+    # two disagree about when the fit was done. Neither is a value to copy into
+    # a config and then quote this run's score against - see docs/decisions/0021.
+    fit = report.get("training_curve")
+    if fit:
+        for key in ("n_iterations", "n_folds", "best_iteration",
+                    "best_valid_pr_auc", "final_valid_pr_auc",
+                    "logloss_best_iteration", "best_valid_logloss",
+                    "train_valid_gap"):
+            if fit.get(key) is not None:
+                flat[f"fit/{key}"] = float(fit[key])
 
     sweep = report.get("depth_sweep")
     if sweep:

@@ -1,0 +1,26 @@
+# Quantile features + a small feed-forward network.
+# The first model here with real epochs, so it is what the training curve
+# (docs/decisions/0021) was built against. Same features as configs/quantiles.yaml
+# and the same split, so the two are directly comparable:
+#   python scripts/evaluate.py --config configs/mlp.yaml --compare-with configs/quantiles.yaml
+# Needs the MIL extras:  pip install -e '.[mil]'
+name: mlp_quantiles
+features: quantiles_v1
+model: mlp
+model_params:
+  hidden: [128, 64]
+  dropout: 0.15
+  learning_rate: 0.001
+  batch_size: 1024
+  epochs: 40
+  seed: 4262        # weight init and batch order, NOT the split seed
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: >
+  A network on site-level summary statistics, not a MIL model - the reads never
+  reach it. Expected to lose to the gradient-boosted tree on 101 tabular
+  columns; it is here to prove the epoch-level training curve end to end and to
+  give the read-level work a torch path that has already been through
+  cross-validation and predict.py once.

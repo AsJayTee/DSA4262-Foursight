@@ -1,5 +1,5 @@
 {
-  "created": "2026-09-21T08:58:12+00:00",
+  "created": "2026-09-22T09:20:13+00:00",
   "profile": "standard",
   "subsample_seed": 4262,
   "source": {
@@ -12180,6 +12180,7 @@
   },
   "depth_sweep": {
     "subsample_seed": 4262,
+    "train_depths": "full",
     "note": "trained at full depth, scored at the stated depth",
     "rows": [
       {
@@ -12261,5 +12262,5 @@
       }
     ]
   },
-  "elapsed_seconds": 187.4
+  "elapsed_seconds": 167.4
 }

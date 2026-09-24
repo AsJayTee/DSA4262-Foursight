@@ -74,6 +74,95 @@ class Site:
         return (self.transcript_id, self.position)
 
 
+@dataclass(slots=True)
+class ReadBlocks:
+    """Every read of every site, ragged, in one pair of arrays.
+
+    The pipeline is otherwise site-level: a `FeatureExtractor` turns one `Site`
+    into one row of numbers, and nothing downstream of that can see an
+    individual read. A Multiple Instance Learning model needs the reads
+    themselves - the site carries the label, the reads do not, and only a
+    fraction of the reads at a modified site actually carry the modification
+    (docs/data.md#read-depth). This is how they travel.
+
+    Sites have wildly different read counts (20 to 991 here), so a rectangular
+    array would be mostly padding. Instead: one flat `values` array with every
+    site's reads concatenated, and `offsets` saying where each site starts, the
+    way a CSR matrix stores its rows. Site `i` is
+    `values[offsets[i]:offsets[i + 1]]`.
+
+    **The row order is the contract.** A ReadBlocks is only meaningful next to
+    the feature table it was built with - site `i` here must be row `i` there.
+    `m6a.crossval` reindexes it to match after the label join and checks the
+    counts, because a silent misalignment would train a model on one site's
+    reads under another site's label and report a plausible number.
+
+    numpy only, so this stays importable on the frozen prediction path
+    (AGENTS.md section 4).
+    """
+
+    values: np.ndarray    # (total_reads, N_READ_FEATURES) float32
+    offsets: np.ndarray   # (n_sites + 1,) int64, ascending, offsets[0] == 0
+
+    def __len__(self) -> int:
+        return int(self.offsets.size - 1)
+
+    @property
+    def counts(self) -> np.ndarray:
+        """Reads per site, in row order."""
+        return np.diff(self.offsets)
+
+    @property
+    def total_reads(self) -> int:
+        return int(self.values.shape[0])
+
+    def site(self, i: int) -> np.ndarray:
+        """One site's reads, as an (n_reads, 9) view - no copy."""
+        return self.values[self.offsets[i]:self.offsets[i + 1]]
+
+    def take(self, rows) -> "ReadBlocks":
+        """A new ReadBlocks holding only `rows`, in the order given.
+
+        Accepts a boolean mask or an array of positions. Used for the fold
+        split, and to reorder after the label join. Copies, because the reads of
+        a subset are not contiguous in the original.
+        """
+        positions = np.asarray(rows)
+        if positions.dtype == bool:
+            positions = np.flatnonzero(positions)
+        if positions.size and (positions.min() < 0 or positions.max() >= len(self)):
+            raise IndexError(
+                f"ReadBlocks.take was given a row outside 0..{len(self) - 1}. "
+                "The reads and the feature table have gone out of step."
+            )
+        counts = self.counts[positions]
+        offsets = np.concatenate([[0], np.cumsum(counts)]).astype(np.int64)
+        if positions.size == 0:
+            return ReadBlocks(
+                np.empty((0, self.values.shape[1]), dtype=self.values.dtype), offsets
+            )
+        values = np.concatenate([self.site(int(i)) for i in positions])
+        return ReadBlocks(values, offsets)
+
+
+def read_blocks(sites: Iterator[Site] | list[Site]) -> ReadBlocks:
+    """Collect an iterable of Site into one ReadBlocks, in the order given.
+
+    Peaks at roughly twice the final size during the concatenation - about
+    800 MB on the full training set's 11,027,106 reads. That is the price of a
+    single pass; counting first would mean parsing the 625 MB stream twice.
+    """
+    chunks: list[np.ndarray] = []
+    counts: list[int] = []
+    for site in sites:
+        chunks.append(np.asarray(site.reads, dtype=np.float32))
+        counts.append(site.n_reads)
+    offsets = np.concatenate([[0], np.cumsum(counts)]).astype(np.int64)
+    if not chunks:
+        return ReadBlocks(np.empty((0, N_READ_FEATURES), dtype=np.float32), offsets)
+    return ReadBlocks(np.concatenate(chunks), offsets)
+
+
 def resolve_data_dir() -> Path:
     """Where the raw data lives. Override with M6A_DATA_DIR for local work."""
     return Path(os.environ.get("M6A_DATA_DIR", "data/raw"))
@@ -137,18 +226,78 @@ def subsample_reads(site: Site, depth: int, seed: int = SUBSAMPLE_SEED) -> Site:
     the same on every machine. A shared stream is reproducible only if nobody
     ever edits the depth list, which is not a property worth relying on.
     """
+    keep = kept_reads(site.transcript_id, site.position, site.n_reads, depth, seed)
+    if keep is None:
+        return site
+    return Site(site.transcript_id, site.position, site.kmer, site.reads[keep])
+
+
+def kept_reads(
+    transcript_id: str,
+    position: int,
+    n_reads: int,
+    depth: int,
+    seed: int = SUBSAMPLE_SEED,
+) -> np.ndarray | None:
+    """Which read indices survive subsampling to `depth`. `None` means all of them.
+
+    The keyed draw itself, factored out so that subsampling a `Site` and
+    subsampling a `ReadBlocks` cannot drift apart. docs/decisions/0003 asks for
+    one implementation, one seed, one meaning; two call sites is exactly how a
+    repo ends up with two.
+    """
     if depth < 1:
         raise ValueError(f"depth must be >= 1, got {depth}")
-    if site.n_reads <= depth:
-        return site
+    if n_reads <= depth:
+        return None
 
-    key = f"{seed}:{depth}:{site.transcript_id}:{site.position}".encode()
+    key = f"{seed}:{depth}:{transcript_id}:{position}".encode()
     stream = int.from_bytes(hashlib.blake2b(key, digest_size=8).digest(), "big")
     rng = np.random.default_rng(stream)
     # Sorted so the kept reads stay in file order. Every feature we compute is
     # order-invariant, but a diffable subsample is worth the free sort.
-    keep = np.sort(rng.choice(site.n_reads, size=depth, replace=False))
-    return Site(site.transcript_id, site.position, site.kmer, site.reads[keep])
+    return np.sort(rng.choice(n_reads, size=depth, replace=False))
+
+
+def subsample_blocks(
+    blocks: ReadBlocks,
+    keys: "pd.MultiIndex | list[tuple[str, int]]",
+    depth: int,
+    seed: int = SUBSAMPLE_SEED,
+) -> ReadBlocks:
+    """`blocks` thinned to `depth` reads per site, keyed exactly as `subsample_reads`.
+
+    `keys` supplies each row's (transcript_id, transcript_position), in row
+    order, because the draw is keyed on the site's identity rather than on its
+    position in the file - that is what makes it independent of iteration order
+    and of which depths were asked for (docs/decisions/0003).
+
+    **This is why a read-level cache needs only one entry.** The site-level
+    feature cache stores one file per depth because the features differ per
+    depth and are expensive to recompute. Reads do not: every depth is a subset
+    of the full-depth reads, selected by a hash, so the full-depth blocks are
+    stored once and any depth is derived from them in memory.
+    """
+    rows = list(keys)
+    if len(rows) != len(blocks):
+        raise ValueError(
+            f"subsample_blocks got {len(rows):,} keys for {len(blocks):,} sites. "
+            "The reads and the site index have gone out of step."
+        )
+    chunks: list[np.ndarray] = []
+    counts: list[int] = []
+    for i, (transcript_id, position) in enumerate(rows):
+        reads = blocks.site(i)
+        keep = kept_reads(str(transcript_id), int(position), reads.shape[0], depth, seed)
+        chosen = reads if keep is None else reads[keep]
+        chunks.append(chosen)
+        counts.append(chosen.shape[0])
+    offsets = np.concatenate([[0], np.cumsum(counts)]).astype(np.int64)
+    if not chunks:
+        return ReadBlocks(
+            np.empty((0, blocks.values.shape[1]), dtype=blocks.values.dtype), offsets
+        )
+    return ReadBlocks(np.concatenate(chunks), offsets)
 
 
 def load_labels(path: str | Path) -> pd.DataFrame:

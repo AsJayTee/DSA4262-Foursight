@@ -63,7 +63,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from m6a import crossval, registry, report as reporting, tracking
-from m6a.config import Config
+from m6a.config import Config, describe_train_depths
 from m6a.data import SUBSAMPLE_SEED, resolve_data_dir
 from m6a.env import load_env
 from m6a import evaluation
@@ -501,6 +501,9 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
     depths = parse_depths(args.depths) if sweep else [None]
     if None not in depths:
         depths.append(None)  # the full-depth models are what the sweep scores with
+    # The config's training depths have to be extracted too, whether or not a
+    # sweep was asked for.
+    depths = list(dict.fromkeys(depths + config.train_depths))
 
     report.log(f"[{config.name}] features={features} model={config.model}")
     report.log(
@@ -530,26 +533,38 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
         "limit": limit,
     }
 
+    # Resolved before the data is built: a read-level model needs the raw reads
+    # loaded beside the feature table, which is ~397 MB nothing else should pay
+    # for. See docs/decisions/0023.
+    model_class = registry.get("models", config.model)
     build = dict(
         seed=config.split.seed, n_folds=config.split.n_folds,
         group_by=config.split.group_by, subsample_seed=args.subsample_seed,
         limit=limit, use_cache=not args.no_cache, log=report.log,
+        with_reads=bool(getattr(model_class, "CONSUMES_READS", False)),
     )
     datasets = crossval.build_datasets(json_path, labels_path, features, depths, **build)
     dataset = datasets[None]
-    model_class = registry.get("models", config.model)
+    train_on = [datasets[depth] for depth in config.train_depths]
 
     report.log(
         f"  {len(dataset):,} sites, {int(dataset.y.sum()):,} positive "
         f"({100 * dataset.y.mean():.2f}%), {config.split.n_folds} folds grouped by "
         f"{config.split.group_by} (seed {config.split.seed})"
     )
+    if config.train_depths != [None]:
+        report.log(
+            f"  training rows drawn at depth "
+            f"{describe_train_depths(config.train_depths)} - {len(train_on)} copies "
+            f"of every training site. Scoring is unchanged: the held-out fold is "
+            "always at full depth."
+        )
     report.heading("Fitting folds")
     repeated = crossval.repeated_cross_validate(
         dataset, model_class, config.model_params,
         n_repeats=repeats, seed=config.split.seed,
         n_folds=config.split.n_folds, group_by=config.split.group_by,
-        label=config.name, log=report.log,
+        label=config.name, train_on=train_on, log=report.log,
     )
     # Everything except the comparison is computed from repetition 0, the
     # canonical split, so a repeated run reports the same headline as a plain one.
@@ -566,6 +581,7 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
         reporting.strata(report, result.oof, args.by.split(","), args.min_positive)
     reporting.calibration(report, result.oof)
     reporting.thresholds(report, result.oof)
+    reporting.training_curve(report, result, name=config.name)
     reporting.curves(
         report,
         {config.name: (result.oof["label"].to_numpy(), result.oof["score"].to_numpy())},
@@ -573,8 +589,8 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
 
     if sweep:
         reporting.depth_sweep(
-            report, {d: datasets[d] for d in depths}, result.models, result.columns,
-            result.oof, args.subsample_seed,
+            report, {d: datasets[d] for d in parse_depths(args.depths)}, result.models,
+            result.columns, result.oof, args.subsample_seed, config.train_depths,
         )
 
     if ablate:
@@ -593,6 +609,9 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
             ablations[which] = crossval.cross_validate(
                 dataset, model_class, config.model_params,
                 columns=columns, label=f"{config.name}:{which}", keep_models=False,
+                # Same training depths as the full feature set, so the ablation
+                # varies the columns and nothing else.
+                train_on=train_on,
                 log=report.log,
             )
             reporting.show_pooled(
@@ -631,7 +650,12 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
             other_sets[None], model_class, config.model_params,
             n_repeats=repeats, seed=config.split.seed,
             n_folds=config.split.n_folds, group_by=config.split.group_by,
-            label=args.compare_features, log=report.log,
+            label=args.compare_features,
+            # Same config, so the same training depths: --compare-features
+            # varies the feature set and nothing else, which is what makes the
+            # difference attributable.
+            train_on=[other_sets[depth] for depth in config.train_depths],
+            log=report.log,
         )
         reporting.show_pooled(
             report.log, baseline.canonical.pooled, prefix=f"{args.compare_features} OOF"
@@ -746,15 +770,25 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
                 "A paired comparison needs the same folds - see AGENTS.md section 3."
             )
         other_sets = crossval.build_datasets(
-            json_path, labels_path, other_config.features, depths, **build
+            json_path, labels_path, other_config.features,
+            # The other arm gets its own training depths extracted, which is the
+            # point when the thing being compared *is* the training depth.
+            list(dict.fromkeys(depths + other_config.train_depths)), **build
         )
         report.heading(f"Fitting folds: {other_config.name}")
+        if other_config.train_depths != [None]:
+            report.log(
+                f"  its training rows are drawn at depth "
+                f"{describe_train_depths(other_config.train_depths)}"
+            )
         baseline = crossval.repeated_cross_validate(
             other_sets[None], registry.get("models", other_config.model),
             other_config.model_params,
             n_repeats=repeats, seed=config.split.seed,
             n_folds=config.split.n_folds, group_by=config.split.group_by,
-            label=other_config.name, log=report.log,
+            label=other_config.name,
+            train_on=[other_sets[depth] for depth in other_config.train_depths],
+            log=report.log,
         )
         reporting.show_pooled(
             report.log, baseline.canonical.pooled, prefix=f"{other_config.name} OOF"
@@ -791,6 +825,12 @@ def main() -> int:
     report = reporting.new(args.profile, subsample_seed=args.subsample_seed)
 
     fingerprint: dict = {}
+    # What the run was configured with, beyond the fingerprint. `train_depths`
+    # is load-bearing rather than decoration: a depth-augmented run's depth/*
+    # keys answer a *different question* from a full-depth run's, and without
+    # this in the run config the two are indistinguishable in the run table.
+    # See docs/decisions/0022 section 4.
+    settings: dict = {}
     if args.model:
         stem = Path(args.model).name
         run_name = stem
@@ -807,6 +847,11 @@ def main() -> int:
             json_path, labels_path, config,
             SMOKE_SITES if args.smoke else args.limit,
         )
+        settings = {
+            "features": args.features or config.features,
+            "model": config.model,
+            "train_depths": describe_train_depths(config.train_depths),
+        }
 
     tracker = tracking.start(
         run_name,
@@ -818,7 +863,7 @@ def main() -> int:
                 "repeats": (args.repeats if args.repeats is not None
                             else reporting.profile(args.profile).repeats),
                 "bootstrap": args.bootstrap,
-                **fingerprint},
+                **settings, **fingerprint},
         tags=[tracking.EVAL_TAG],
         job_type="evaluate",
         resume_id=find_training_run(run_name),

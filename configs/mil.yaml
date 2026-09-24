@@ -1,0 +1,42 @@
+# Attention-MIL over the reads at each site.
+#
+# The first model here that sees individual reads rather than summary statistics
+# over them. The briefing frames m6A calling as Multiple Instance Learning and
+# nothing in the repo treated it that way until now - see docs/decisions/0023
+# for what had to change to get ragged per-read data to a model at all.
+#
+# It is deliberately NOT depth-augmented: a read-level model is implicitly
+# trained at every depth already, because attention pooling over 20 reads and
+# over 3 reads is the same network. Compare it against the depth-augmented
+# site-level control rather than against the plain one, or the comparison
+# repeats the confound recorded in GAPS.md:
+#
+#   python scripts/evaluate.py --config configs/mil.yaml \
+#          --compare-with configs/quantiles_depth_augmented.yaml
+#
+# Needs the MIL extras:  pip install -e '.[mil]'
+# Needs the reads loaded, which the harness does automatically because the model
+# declares CONSUMES_READS - budget ~400 MB of RAM and ~400 MB of feature cache.
+name: attention_mil_quantiles
+features: quantiles_v1
+model: attention_mil
+model_params:
+  read_hidden: 64
+  attention_hidden: 32
+  site_hidden: 64
+  dropout: 0.1
+  learning_rate: 0.001
+  batch_size: 128
+  epochs: 20
+  max_train_reads: 128
+  seed: 4262        # weight init and batch order, NOT the split seed
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: >
+  Gated-attention MIL (Ilse et al. 2018) over the nine per-read measurements,
+  concatenated with the site-level feature row so the DRACH motif one-hot is not
+  thrown away. The site features are still quantiles_v1; what is new is that the
+  network also sees the reads themselves. Expensive: reads are ~400 MB and every
+  epoch pads and masks per batch.

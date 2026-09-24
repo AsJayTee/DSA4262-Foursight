@@ -1,0 +1,43 @@
+# The control for the read-level result, and the cheap half of it.
+#
+# GAPS.md records that a read-level model beats `quantiles_v1` badly at depth 1
+# and 3 and loses at full depth - and that the comparison is CONFOUNDED. A
+# read-level model is implicitly trained at depth 1, because each read is its
+# own training row, so it has no train/test mismatch at any depth. Every
+# site-level model in this repo was trained only at full depth. The table
+# therefore conflates "read-level architecture" with "trained at the depth it
+# is tested at", and nobody knows which is doing the work.
+#
+# This is the same feature set, the same model, the same parameters and the same
+# folds as configs/quantiles.yaml, differing in exactly one thing: the training
+# rows are drawn at five depths instead of one. Whatever it gains at low depth
+# is what "trained at the depth it is tested at" was worth, with the
+# architecture held fixed.
+#
+#   python scripts/evaluate.py --config configs/quantiles_depth_augmented.yaml \
+#          --compare-with configs/quantiles.yaml
+#
+# See docs/decisions/0022.
+name: quantiles_depth_augmented
+features: quantiles_v1
+model: lightgbm
+model_params:
+  learning_rate: 0.05
+  num_leaves: 63
+  n_estimators: 600
+  min_child_samples: 40
+  feature_fraction: 0.7
+# Dense where SG-NEx lives (median depth 3, p25 1), plus full depth so the
+# model is not made worse at the regime it is currently good at. `null` is full
+# depth. Five copies of every training site, so five times the training rows.
+train_depths: [1, 3, 5, 10, null]
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: >
+  The depth-augmented control for the read-level/MIL comparison. Identical to
+  configs/quantiles.yaml except that training rows come from five read depths
+  rather than one. Scoring is unchanged - the held-out fold is always at full
+  depth - so oof/pr_auc is directly comparable, and the depth sweep is where the
+  answer is.

@@ -41,7 +41,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from m6a import crossval, registry, report as reporting, tracking
-from m6a.config import Config
+from m6a.config import Config, describe_train_depths
 from m6a.data import SUBSAMPLE_SEED, resolve_data_dir
 from m6a.env import load_env
 
@@ -156,7 +156,15 @@ def main() -> int:
     )
 
     started = time.time()
+    # Resolved before the data is built, because a read-level model needs the
+    # raw reads loaded alongside the feature table and that is a ~397 MB
+    # decision nothing else should pay for. See docs/decisions/0023.
+    model_class = registry.get("models", config.model)
+    with_reads = bool(getattr(model_class, "CONSUMES_READS", False))
     depths = list(DEFAULT_DEPTHS) if report.profile.depth_sweep else [None]
+    # The training depths have to be extracted too, and full depth is always
+    # extracted because it is what every model is scored on.
+    depths = list(dict.fromkeys(depths + config.train_depths + [None]))
     datasets = crossval.build_datasets(
         json_path,
         labels_path,
@@ -168,10 +176,11 @@ def main() -> int:
         subsample_seed=args.subsample_seed,
         limit=limit,
         use_cache=not args.no_cache,
+        with_reads=with_reads,
     )
     dataset = datasets[None]
     feature_columns = dataset.columns
-    X, y = dataset.X, dataset.y
+    y = dataset.y
     print(
         f"  features: {len(dataset):,} sites x {len(feature_columns)} columns "
         f"({time.time() - started:.1f}s)"
@@ -182,7 +191,15 @@ def main() -> int:
         f"grouped by {config.split.group_by}"
     )
 
-    model_class = registry.get("models", config.model)
+    train_on = [datasets[depth] for depth in config.train_depths]
+    if config.train_depths != [None]:
+        print(
+            f"  training rows drawn at depth "
+            f"{describe_train_depths(config.train_depths)} - "
+            f"{len(train_on)} copies of every training site, "
+            f"{len(dataset) * len(train_on):,} rows. Scoring is unchanged: the "
+            "held-out fold is always at full depth."
+        )
 
     # Out-of-fold predictions: every site is scored by a model that never saw
     # any transcript of its gene. This is the only number worth comparing.
@@ -193,7 +210,7 @@ def main() -> int:
         dataset, model_class, config.model_params,
         n_repeats=repeats, seed=config.split.seed,
         n_folds=config.split.n_folds, group_by=config.split.group_by,
-        label=config.name,
+        label=config.name, train_on=train_on,
     )
     # Repetition 0 is the canonical seed-4262 split, so the shipped model's
     # headline metrics are exactly what a single-split run would have reported.
@@ -221,19 +238,26 @@ def main() -> int:
         reporting.strata(report, result.oof, ["depth", "motif"], min_positive=10)
     reporting.calibration(report, result.oof)
     reporting.thresholds(report, result.oof)
+    reporting.training_curve(report, result, name=config.name)
     reporting.curves(
         report,
         {config.name: (result.oof["label"].to_numpy(), result.oof["score"].to_numpy())},
     )
     if report.profile.depth_sweep:
         reporting.depth_sweep(
-            report, datasets, result.models, result.columns,
-            result.oof, args.subsample_seed,
+            report, {d: datasets[d] for d in DEFAULT_DEPTHS}, result.models,
+            result.columns, result.oof, args.subsample_seed, config.train_depths,
         )
 
-    # Refit on everything for the model we actually ship.
+    # Refit on everything for the model we actually ship - drawn at the same
+    # depths the fold models were, or the shipped model is not the model these
+    # numbers describe.
     final = model_class(**config.model_params)
-    final.fit(X, y)
+    final_X, final_y, final_reads = crossval.stack_rows(train_on, feature_columns)
+    final.fit(
+        final_X, final_y,
+        **({"reads": final_reads} if getattr(final, "CONSUMES_READS", False) else {}),
+    )
 
     out_dir = Path(args.out) if args.out else Path("models") / config.name
     final.save(out_dir)
@@ -254,6 +278,7 @@ def main() -> int:
         # predict.py reads and must not change shape; everything below is
         # additive, so a model trained before the harness existed still loads.
         "metrics_per_fold": result.per_fold,
+        "train_depths": config.train_depths,
         "profile": args.profile,
         "wandb_run_id": run.id or None,
         "n_sites": int(len(y)),

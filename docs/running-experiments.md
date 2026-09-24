@@ -83,6 +83,17 @@ probability. The figures are on the run page: start with the **PR AUC
 distribution**, which shows all five folds as points rather than collapsing them
 to one number.
 
+**[wandb-panels.md](wandb-panels.md) is the setup guide for the workspace** —
+which line panels to build, which metric key goes on which axis, and how to read
+each one without misinterpreting it. Build them once and every run anyone adds
+afterwards lands on them automatically. It also says which two figures W&B
+cannot draw at all, and what to run instead.
+
+One trap worth knowing before you read any depth number: check the run's
+`train_depths` column first. A run trained at full depth and a run trained on
+several depths are answering different questions on the depth axis, and nothing
+about the numbers looks different.
+
 **Read `oof/pr_auc` first.** At 4.49% positives, ROC AUC flatters everything —
 every model we have tried sits above 0.90 on it. `oof/pr_auc_lift` tells you
 how many times better than random the model is; 1.0× means it learned nothing.
