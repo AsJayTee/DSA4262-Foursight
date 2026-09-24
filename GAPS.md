@@ -226,6 +226,34 @@ regenerated, and the JSON reports behind the current ones are in
   positive rate by reweighting, and every one of them therefore emits scores
   calibrated to a rebalanced world rather than the real one. Nothing downstream
   of a score is currently safe to read as a probability.
+
+  **And depth augmentation roughly doubles it, which nobody had noticed.**
+  Measured across every current report:
+
+  | config | `oof/pr_auc` | `calib/count_ratio` |
+  |---|---:|---:|
+  | `lightgbm_quantiles` | 0.4759 | 1.80x |
+  | `lightgbm_quantiles_flank` | 0.4897 | 1.76x |
+  | `quantiles_depth_augmented` | 0.4844 | **3.99x** |
+  | **`quantiles_flank_depth_augmented`** | **0.4933** | **3.83x** |
+
+  Adding flanks leaves calibration alone (1.80x -> 1.76x). Adding depth
+  augmentation more than doubles the overcount, in both pairs. **So the best
+  model in the project is also the worst-calibrated of the gradient-boosted
+  ones** - and the reason to carry depth augmentation at all is Task 2, which is
+  precisely the thing that needs counts.
+
+  The mechanism is not established. A plausible route: the model is fitted on a
+  mixture of depths and scored only on full-depth rows, which are the easiest in
+  that mixture, so its scores on them sit high relative to the mixture it was
+  calibrated against - the same asymmetry
+  [0022](docs/decisions/0022-training-rows-may-come-from-several-depths.md)
+  records when it notes that this run's train logloss sits *above* its held-out
+  logloss. Nobody has tested that.
+
+  This makes calibration a prerequisite for shipping the best model rather than
+  a nice-to-have. `configs/calibrated_platt.yaml` targets exactly this
+  configuration.
 - **CORRECTION (2026-09-24): the 600+ "cliff" does not survive a significance
   test, and the entry below overstates it.** The numbers below are real; the
   conclusion drawn from them is not supported. Nobody had tested it, because
