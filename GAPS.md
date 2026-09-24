@@ -652,17 +652,34 @@ regenerated, and the JSON reports behind the current ones are in
   **Read the two halves of this differently, because they carry very different
   weight:**
 
-  - **It is established against both of its parents, and the two ingredients are
-    independent.** Paired at 50 observations:
+  - **The flank gain is the same with and without depth augmentation, so the two
+    ingredients are independent.** Paired at 50 observations:
 
-    | | mean difference | wins | corrected p |
-    |---|---:|---:|---:|
-    | vs `quantiles_v1` | +0.0113 | 48/50 | 0.0030 |
-    | vs `quantiles_depth_augmented` (`--compare-run psdwqobf`, no refit) | **+0.0113** | **48/50** | **0.0030** |
+    | comparison | depth augmentation | difference | wins | corrected p |
+    |---|---|---:|---:|---:|
+    | `flank` vs `quantiles_v1` | off in both arms | +0.0109 | 48/50 | 0.0006 |
+    | `flank` vs `quantiles_v1` | **on in both arms** | +0.0113 | 48/50 | 0.0030 |
 
-    The flank gain is **+0.0113 whether or not depth augmentation is already
-    present**, and +0.0109 on its own - the same number three times. Sequence
-    context and training depth do not overlap at all.
+    **Read the second row carefully - it is easy to mis-state, and this entry
+    did at first.** `--compare-features` holds the whole config fixed and varies
+    only the feature set, *including* `train_depths`
+    ([evaluate.py](scripts/evaluate.py), "Same config, so the same training
+    depths"). So running
+    `--config quantiles_flank_depth_augmented --compare-features quantiles_v1`
+    does **not** compare against plain `quantiles_v1`; its baseline arm is
+    `quantiles_v1` trained at five depths, which is
+    `quantiles_depth_augmented`. Both rows above are therefore
+    "what do the eight flank columns buy", once without depth augmentation and
+    once with it - and the answer is the same both times.
+  - **An accidental validation of `--compare-run`, worth recording.** The second
+    row was computed twice by different routes on the same day: once by
+    refitting the baseline locally (`--compare-features quantiles_v1`) and once
+    by pulling the finished run's metric vector out of W&B with no refit at all
+    (`--compare-run psdwqobf`). They agree to every digit reported - +0.0113,
+    48/50, corrected p = 0.0030.
+    [0015](docs/decisions/0015-comparing-against-a-run-that-no-longer-exists.md)
+    built that path and nothing had ever checked it against the refitting route
+    on real data.
   - **At full depth, depth augmentation is still the part that buys nothing
     measurable.** flank+depth-aug against flank alone is 0.4933 against 0.4897,
     or +0.0036 - under the ~+0.006 the harness resolves, and never tested
