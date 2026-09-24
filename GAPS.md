@@ -475,6 +475,48 @@ regenerated, and the JSON reports behind the current ones are in
   The signal is attenuated by construction. A global (cross-site) whitening
   would not have that problem and does not fit `site_features(site)`, which sees
   one site at a time.
+- **TESTED, NOT RESOLVED: the 3 x 3 measurement grid inside each read.** The
+  nine numbers per read are three measurements at three **ordered, adjacent**
+  pore positions - a 5-mer sits in the pore and the RNA ratchets one base at a
+  time, so -1, 0 and +1 are consecutive states of the same molecule. Every
+  feature set flattens that away and treats the nine columns as interchangeable;
+  `attention_mil`'s encoder (`Linear(9 -> 64)`) does too.
+
+  `quantiles_grid_v1`
+  ([run 7ryz89r8](https://wandb.ai/dsa4262-team/dsa4262-project/runs/7ryz89r8))
+  adds 21 columns: per-read centre-surround and gradient contrasts along the
+  position axis - the only two length-3 convolutions that exist - quantiled
+  across reads.
+
+  Paired over 50 observations: **+0.0032, 29/50 wins, corrected p = 0.4070**,
+  95% CI [-0.0045, +0.0109]. Below what the harness resolves, and the 29/50 win
+  count says the direction is not consistent either. It is also **worse at one
+  read** (0.1409 against 0.1527), which contradicts the prediction that a
+  within-read feature would help where cross-read features cannot.
+
+  So the CNN-over-the-position-axis premise is **weakly supported at best**. The
+  information exists but the tree is evidently already extracting it from the
+  marginal columns.
+
+- **A method correction, recorded because it cost a run and will cost another
+  one otherwise: a univariate screen predicts MARGINAL signal, not INCREMENTAL
+  value.** Before building `quantiles_grid_v1` its columns were screened
+  univariately on 40,000 sites and looked excellent - the quantile of per-read
+  differences scored |AUC - 0.5| = **0.1198**, second only to `mean_m1_q50` at
+  0.1320, while the *difference of quantiles* (which the model already has)
+  scored 0.0008. That contrast is real and it is still the reason the feature is
+  not derivable from what exists.
+
+  It did not survive contact with the other 101 columns: **+0.0032, corrected
+  p = 0.4070.** A column can be strongly predictive on its own and add nothing
+  once a gradient-boosted tree has had a hundred correlated columns to work
+  with.
+
+  The screen is still worth the minute it costs - it is a cheap way to *reject*
+  a feature with no marginal signal at all - but it must not be read as a
+  prior on the paired result. Scoreboard so far: `flank` screened strong and won
+  (+0.0109), `grid` screened strong and did not (+0.0032), `joint` was never
+  screened and lost (+0.0013). One for two on the positive direction.
 - **RESOLVED: the 7-mer's flanking bases were being thrown away, and they are
   worth +0.0109.** This entry used to say only that they were discarded and that
   nobody had measured the cost. They have now been measured, and recovering them
@@ -552,7 +594,11 @@ regenerated, and the JSON reports behind the current ones are in
   |---|---|---:|---|---|---|
   | A1 | recover the 7-mer flanking bases (26 sequence columns, not 18) | +0.003–0.009 | ~15 min | borderline | **WON: +0.0109, 48/50, corrected p = 0.0006** |
   | A2 | joint within-read features (per-read Mahalanobis from the site's own centroid) | unknown | ~15 min | — | **NULL: +0.0013, 29/50, corrected p = 0.7140** |
-  | A3 | cross-site features (candidate density, distance to nearest site) | unknown | needs 0025 | — | not started |
+  | A3a | cross-site: candidate density and spacing (`nbr_struct`) | unknown | ~35 min | — | built, queued |
+  | A3b | cross-site: neighbour *measurements*, +/-50 and +/-200 nt (`nbr_signal`) | unknown | ~45 min | — | built, queued |
+  | A3c | cross-site: transcript-level leave-one-out (`transcript`) | unknown | ~35 min | — | built, queued |
+  | A4 | the 3x3 within-read grid (`quantiles_grid_v1`) | unknown | ~35 min | — | **NOT RESOLVED: +0.0032, 29/50, p = 0.4070** |
+  | A5 | `flank` x depth augmentation | stacked? | ~50 min | — | built, queued |
   | B1 | the existing attention-MIL + 7-mer conditioning + mean/std branch + log N | +0.009 | ~26 h GPU | borderline | **weakened by A2** |
   | B2 | contextual Deep Set (bag-context interaction layer) | +0.015 | GPU | yes | gated on B1 |
   | C1 | Platt calibration | 0 on PR AUC | ~1 h | n/a | not started |

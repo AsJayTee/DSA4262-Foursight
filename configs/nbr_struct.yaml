@@ -1,0 +1,33 @@
+# quantiles_v1 + cross-site features. See docs/decisions/0025.
+#
+# m6A clusters along transcripts: P(neighbour positive | this positive) = 0.2937
+# against a 4.49% base rate, a 6.54x lift that survives conditioning on the
+# neighbour's motif in all eighteen. That premise is now measured; whether a
+# model can EXPLOIT it is what these three configs settle, because the label
+# correlation itself is unusable - every site of a held-out gene is held out
+# together, so no neighbour label exists at prediction time.
+#
+# This one adds: where the neighbouring candidate sites are - distance to the nearest either side, candidate density within +/-20/50/100 nt, and position along the transcript. Tests whether genomic context alone carries signal, with no reference to what the neighbours measured.
+#
+# Run all three and read them together - they attribute the effect to a
+# structure, which is what says whether a graph model is worth building:
+#
+#   python scripts/evaluate.py --config configs/nbr_struct.yaml #          --compare-features quantiles_v1
+name: lightgbm_nbr_struct
+features: quantiles_nbr_struct_v1
+model: lightgbm
+model_params:
+  learning_rate: 0.05
+  num_leaves: 63
+  n_estimators: 600
+  min_child_samples: 40
+  feature_fraction: 0.7
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: >
+  Cross-site features via the finalise hook (docs/decisions/0025). Identical to
+  configs/quantiles.yaml except for the added columns. NOTE: a feature set using
+  finalise is sensitive to the candidate density of the input file, so anything
+  shipped on one has to say so.

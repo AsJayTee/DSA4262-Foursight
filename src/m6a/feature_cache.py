@@ -264,8 +264,14 @@ def extract(
     )
 
     for depth in missing:
+        # The cross-site pass (docs/decisions/0025). A no-op unless the extractor
+        # overrides it, and it must be called here as well as in
+        # FeatureExtractor.transform - those are the two paths that build a
+        # feature table, and an extractor wired into only one of them would
+        # behave differently in predict.py than in training, silently.
         extraction = Extraction(
-            blocks[depth].frame(site_index), sites, depth, from_cache=False
+            extractor.finalise(blocks[depth].frame(site_index), sites),
+            sites, depth, from_cache=False,
         )
         if use_cache:
             _store(keys[depth], extraction)

@@ -1,0 +1,277 @@
+"""What the *neighbouring* candidate sites on the same transcript look like.
+
+m6A clusters along transcripts, and it is not a small effect. Measured on the
+training set over 116,505 adjacent same-transcript pairs
+([0025](../../../docs/decisions/0025-a-feature-set-may-see-every-site.md)):
+
+| | P(neighbour positive) | lift vs the 4.49% base |
+|---|---:|---:|
+| this site negative | 0.0337 | 0.75x |
+| this site **positive** | **0.2937** | **6.54x** |
+
+which splits into a **transcript-level** effect (3.60x - a random other site on
+the same transcript, and positives-per-transcript carries 4.68x the binomial
+variance) and **local adjacency** on top of it (1.82x, decaying from 10.9x at
+11-25 nt to 1.66x past 250 nt). It survives conditioning on the neighbour's
+motif in all eighteen.
+
+## The thing that cannot be done, and why this module is shaped around avoiding it
+
+**That 6.54x is a label-label correlation and it is unusable directly.** The
+split groups by gene, so at prediction time every site of a held-out gene is
+held out together and *no neighbour label is ever available*. A feature set
+reaching for one would score beautifully out of fold and be worthless in
+`predict.py`.
+
+What is usable: if a neighbour is genuinely modified, **its reads carry that
+signature**, so its measurements are a noisy observation of its latent state and
+aggregating them is evidence about the region. That is what `finalise` is handed
+- features and coordinates, never labels (0025 section 1).
+
+## Three feature sets, because they answer three different questions
+
+Splitting them costs three runs and buys attribution - it says *which* graph is
+worth building, which is the whole point of doing this before a GNN:
+
+| name | adds | the question |
+|---|---|---|
+| `quantiles_nbr_struct_v1` | where the neighbours are | is candidate *density* alone informative? |
+| `quantiles_nbr_signal_v1` | what the neighbours *measure*, +/-50 and +/-200 nt | the real message-passing proxy |
+| `quantiles_transcript_v1` | the whole transcript, leave-one-out | is it regional at all, or just "this transcript is methylated"? |
+
+If `signal` wins and `struct` does not, the payload is in neighbour
+measurements and a chain model over sites is justified. If only `transcript`
+wins, a transcript-level random effect is all there is and a per-site graph is
+overkill. If none wins, the GNN premise does not survive contact with a model,
+however strong the label correlation looks.
+
+**A transcript is one-dimensional**, so these edges form a *path*, not a general
+graph - which is why the architecture this licenses is a dilated 1-D CNN or a
+Bi-GRU over the ordered site chain rather than message passing.
+
+## Two implementation rules, both load-bearing
+
+**Every aggregate is leave-one-out.** A window mean that includes the centre
+site re-reads that site's own features under a new name.
+
+**No neighbours means the aggregate is 0.0 and the count column says so.** The
+count is always emitted beside the aggregate, so a tree can branch on "I had no
+neighbours" rather than being handed a sentinel it has to guess the meaning of.
+Nothing here is ever NaN or infinite.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+import pandas as pd
+
+from m6a.features.quantiles import QuantileFeatures
+from m6a.registry import register
+
+# Windows in nucleotides, each side. The measured decay puts almost all of the
+# local effect inside 100 nt; 200 is carried as the "regional" scale to sit
+# between local adjacency and the whole transcript.
+WINDOWS = (50, 200)
+
+# Distance windows for the structural counts.
+COUNT_WINDOWS = (20, 50, 100)
+
+# Reported when a site has no neighbour on its transcript at all. Finite and far
+# outside the real range (the largest observed gap is a few thousand nt), so a
+# tree can isolate it with one split.
+NO_NEIGHBOUR = 100_000.0
+
+# Which of the 101 quantiles_v1 columns get aggregated over neighbours. Chosen
+# from a univariate screen on 40,000 sites rather than by taste: mean_m1_q50 is
+# the strongest single feature in the whole table (|AUC-0.5| = 0.1320) and the
+# three centre-position q95s are the tail statistics that carry the "a minority
+# of molecules is modified" signal quantiles.py exists for. Aggregating all 101
+# would add 400+ columns to test one idea.
+AGGREGATED = ("mean_m1_q50", "mean_0_q95", "sd_0_q95", "dwell_0_q95")
+
+
+def _ordered(frame: pd.DataFrame):
+    """Row order sorted by (transcript, position), plus the sorted keys.
+
+    The frame arrives in file order, which happens to be sorted on this dataset
+    and is not promised to be on any other, so this sorts rather than assuming.
+    """
+    transcripts = frame.index.get_level_values(0).to_numpy()
+    positions = frame.index.get_level_values(1).to_numpy().astype(np.int64)
+    order = np.lexsort((positions, transcripts))
+    return order, transcripts[order], positions[order]
+
+
+def _transcript_slices(sorted_transcripts: np.ndarray):
+    """(start, stop) for each run of one transcript in the sorted order."""
+    if sorted_transcripts.size == 0:
+        return []
+    boundaries = np.flatnonzero(sorted_transcripts[1:] != sorted_transcripts[:-1]) + 1
+    starts = np.concatenate([[0], boundaries])
+    stops = np.concatenate([boundaries, [sorted_transcripts.size]])
+    return list(zip(starts.tolist(), stops.tolist()))
+
+
+def _blank(frame: pd.DataFrame, columns) -> dict[str, np.ndarray]:
+    return {name: np.zeros(len(frame), dtype=np.float64) for name in columns}
+
+
+def _structural(frame: pd.DataFrame) -> pd.DataFrame:
+    order, transcripts, positions = _ordered(frame)
+    names = (
+        ["nbr_dist_prev", "nbr_dist_next", "nbr_dist_nearest"]
+        + [f"nbr_count_{w}" for w in COUNT_WINDOWS]
+        + ["nbr_n_on_transcript", "nbr_rel_position", "nbr_rank_on_transcript"]
+    )
+    out = _blank(frame, names)
+
+    for start, stop in _transcript_slices(transcripts):
+        pos = positions[start:stop]
+        n = pos.size
+        rows = order[start:stop]
+
+        previous = np.full(n, NO_NEIGHBOUR)
+        following = np.full(n, NO_NEIGHBOUR)
+        if n > 1:
+            previous[1:] = (pos[1:] - pos[:-1]).astype(np.float64)
+            following[:-1] = (pos[1:] - pos[:-1]).astype(np.float64)
+        out["nbr_dist_prev"][rows] = previous
+        out["nbr_dist_next"][rows] = following
+        out["nbr_dist_nearest"][rows] = np.minimum(previous, following)
+
+        for window in COUNT_WINDOWS:
+            lo = np.searchsorted(pos, pos - window, side="left")
+            hi = np.searchsorted(pos, pos + window, side="right")
+            out[f"nbr_count_{window}"][rows] = (hi - lo - 1).astype(np.float64)
+
+        out["nbr_n_on_transcript"][rows] = float(n)
+        span = float(pos[-1] - pos[0]) if n > 1 else 0.0
+        # Relative position is bounded by the first and last CANDIDATE, not by
+        # the transcript's true length, which nothing here knows. A proxy, and
+        # a coarse one on transcripts with few candidates.
+        out["nbr_rel_position"][rows] = (
+            (pos - pos[0]) / span if span > 0 else np.zeros(n)
+        )
+        out["nbr_rank_on_transcript"][rows] = (
+            np.arange(n) / (n - 1) if n > 1 else np.zeros(n)
+        )
+
+    return pd.DataFrame(out, index=frame.index)
+
+
+def _neighbour_signal(frame: pd.DataFrame) -> pd.DataFrame:
+    available = [c for c in AGGREGATED if c in frame.columns]
+    order, transcripts, positions = _ordered(frame)
+    names = [f"nbrsig_n_w{w}" for w in WINDOWS] + [
+        f"nbrsig_{c}_w{w}_{stat}"
+        for c in available for w in WINDOWS for stat in ("mean", "max")
+    ]
+    out = _blank(frame, names)
+    values = {c: frame[c].to_numpy(dtype=np.float64)[order] for c in available}
+
+    for start, stop in _transcript_slices(transcripts):
+        pos = positions[start:stop]
+        n = pos.size
+        rows = order[start:stop]
+        if n < 2:
+            continue  # no neighbours; every aggregate stays 0.0 and the count says so
+
+        block = {c: v[start:stop] for c, v in values.items()}
+        for window in WINDOWS:
+            lo = np.searchsorted(pos, pos - window, side="left")
+            hi = np.searchsorted(pos, pos + window, side="right")
+            counts = (hi - lo - 1).astype(np.float64)
+            out[f"nbrsig_n_w{window}"][rows] = counts
+
+            for column, series in block.items():
+                prefix = np.concatenate([[0.0], np.cumsum(series)])
+                # Leave-one-out: the window sum minus this site's own value.
+                totals = prefix[hi] - prefix[lo] - series
+                means = np.divide(
+                    totals, counts, out=np.zeros(n), where=counts > 0
+                )
+                out[f"nbrsig_{column}_w{window}_mean"][rows] = means
+
+                highest = np.zeros(n)
+                for i in range(n):
+                    left, right = lo[i], hi[i]
+                    if right - left <= 1:
+                        continue
+                    neighbourhood = np.concatenate(
+                        [series[left:i], series[i + 1:right]]
+                    )
+                    highest[i] = neighbourhood.max()
+                out[f"nbrsig_{column}_w{window}_max"][rows] = highest
+
+    return pd.DataFrame(out, index=frame.index)
+
+
+def _transcript_level(frame: pd.DataFrame, sites: pd.DataFrame) -> pd.DataFrame:
+    available = [c for c in AGGREGATED if c in frame.columns]
+    order, transcripts, _ = _ordered(frame)
+    names = ["tx_n_sites", "tx_n_reads_loo_mean"] + [
+        f"tx_{c}_loo_mean" for c in available
+    ]
+    out = _blank(frame, names)
+
+    columns = {c: frame[c].to_numpy(dtype=np.float64)[order] for c in available}
+    columns["__n_reads"] = sites["n_reads"].to_numpy(dtype=np.float64)[order]
+
+    for start, stop in _transcript_slices(transcripts):
+        rows = order[start:stop]
+        n = stop - start
+        out["tx_n_sites"][rows] = float(n)
+        if n < 2:
+            continue
+        for column, series in columns.items():
+            block = series[start:stop]
+            loo = (block.sum() - block) / (n - 1)
+            key = (
+                "tx_n_reads_loo_mean" if column == "__n_reads"
+                else f"tx_{column}_loo_mean"
+            )
+            out[key][rows] = loo
+
+    return pd.DataFrame(out, index=frame.index)
+
+
+@register("features", "quantiles_nbr_struct_v1")
+class NeighbourStructureFeatures(QuantileFeatures):
+    """`quantiles_v1` + where the neighbouring candidate sites are.
+
+    Tests whether candidate *density and spacing* alone carry signal, with no
+    reference to what the neighbours measured. If this wins and
+    `quantiles_nbr_signal_v1` does not, the effect is about genomic context
+    rather than about regional methylation.
+    """
+
+    def finalise(self, frame: pd.DataFrame, sites: pd.DataFrame) -> pd.DataFrame:
+        return pd.concat([frame, _structural(frame).astype(np.float32)], axis=1)
+
+
+@register("features", "quantiles_nbr_signal_v1")
+class NeighbourSignalFeatures(QuantileFeatures):
+    """`quantiles_v1` + what the neighbours measured, leave-one-out.
+
+    The real proxy for message passing: this is roughly what one round of
+    mean/max aggregation over a transcript chain would compute, for the price of
+    a feature set rather than a GPU.
+    """
+
+    def finalise(self, frame: pd.DataFrame, sites: pd.DataFrame) -> pd.DataFrame:
+        return pd.concat([frame, _neighbour_signal(frame).astype(np.float32)], axis=1)
+
+
+@register("features", "quantiles_transcript_v1")
+class TranscriptLevelFeatures(QuantileFeatures):
+    """`quantiles_v1` + a leave-one-out summary of the whole transcript.
+
+    The super-node, not the chain. Positives-per-transcript carries 4.68x the
+    binomial variance, so a transcript-level random effect may be most of what
+    the clustering is - and if so, this cheap set captures it and no graph is
+    needed.
+    """
+
+    def finalise(self, frame: pd.DataFrame, sites: pd.DataFrame) -> pd.DataFrame:
+        extra = _transcript_level(frame, sites).astype(np.float32)
+        return pd.concat([frame, extra], axis=1)

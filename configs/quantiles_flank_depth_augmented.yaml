@@ -1,0 +1,42 @@
+# The two things that have actually worked, combined.
+#
+# quantiles_flank_v1 is the largest established feature gain in the project
+# (+0.0109, 48/50, corrected p = 0.0006). Depth augmentation is the largest
+# measured EFFECT (+0.1066 PR AUC at one read) and costs nothing at full depth
+# (+0.0056, 39/50, corrected p = 0.2605 - not established as better, not worse).
+#
+# They are orthogonal: one adds sequence context, which is depth-independent
+# information; the other changes which depths the training rows come from. This
+# config is the test of whether the two gains stack, and it is the most likely
+# candidate for the shipped model.
+#
+# Scoring is unaffected - the held-out fold is always full depth (0022) - so
+# oof/pr_auc is directly comparable with every other run.
+#
+#   python scripts/evaluate.py --config configs/quantiles_flank_depth_augmented.yaml \
+#          --compare-features quantiles_v1
+#
+# and, to ask the sharper question of whether the flanks add anything ON TOP of
+# depth augmentation, against the run that already exists:
+#
+#   python scripts/evaluate.py --config configs/quantiles_flank_depth_augmented.yaml \
+#          --compare-run psdwqobf
+name: quantiles_flank_depth_augmented
+features: quantiles_flank_v1
+model: lightgbm
+model_params:
+  learning_rate: 0.05
+  num_leaves: 63
+  n_estimators: 600
+  min_child_samples: 40
+  feature_fraction: 0.7
+train_depths: [1, 3, 5, 10, null]
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: >
+  quantiles_flank_v1 trained at five read depths. Identical to
+  configs/quantiles_depth_augmented.yaml except for the eight flank columns, and
+  identical to configs/quantiles_flank.yaml except for train_depths, so it can be
+  paired cleanly against either.
