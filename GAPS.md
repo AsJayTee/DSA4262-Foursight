@@ -243,7 +243,15 @@ regenerated, and the JSON reports behind the current ones are in
   | 600+ vs 304-599, **lift** | -1.03 | 20/47 | 0.1489 | **0.6829** |
   | 600+ vs 84-303, PR AUC | -0.0942 | 13/49 | 0.0000 | **0.1550** |
 
-  **On lift - the metric this entry quotes - it is nowhere near significant.**
+  **On lift - the metric this entry quotes - it is nowhere near significant,
+  and it fails the NAIVE test too (p = 0.09 and p = 0.15).** That matters,
+  because it makes the conclusion independent of one methodological caveat:
+  `paired_comparison` was built to compare two *models* on the same folds, and
+  this uses it to compare two *strata* within one model. The pairing is valid -
+  same model, same fold, so fold difficulty cancels - but the Nadeau & Bengio
+  correction is sized for train/test overlap between models and may be
+  mis-scaled here. The naive column does not depend on it, and the naive column
+  already declines to call the cliff on lift.
 
   The reason is scatter, and it is large. Standard deviation of PR AUC across
   the 50 observations, by band:
