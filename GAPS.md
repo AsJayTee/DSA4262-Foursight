@@ -226,6 +226,67 @@ regenerated, and the JSON reports behind the current ones are in
   positive rate by reweighting, and every one of them therefore emits scores
   calibrated to a rebalanced world rather than the real one. Nothing downstream
   of a score is currently safe to read as a probability.
+- **CORRECTION (2026-09-24): the 600+ "cliff" does not survive a significance
+  test, and the entry below overstates it.** The numbers below are real; the
+  conclusion drawn from them is not supported. Nobody had tested it, because
+  the band lifts were read off a single pooled value per band - but
+  [0018](docs/decisions/0018-per-stratum-vectors-are-logged-for-later.md) logs
+  50 per-band observations per run, and they were sitting in the report unused.
+
+  Each observation is one (repetition, fold), so two bands scored by the *same*
+  model on the *same* fold pair exactly. Testing the cliff on
+  `lightgbm_quantiles`:
+
+  | | mean difference | wins | naive p | corrected p |
+  |---|---:|---:|---:|---:|
+  | 600+ vs 84-303, **lift** | -0.97 | 17/49 | 0.0899 | **0.6366** |
+  | 600+ vs 304-599, **lift** | -1.03 | 20/47 | 0.1489 | **0.6829** |
+  | 600+ vs 84-303, PR AUC | -0.0942 | 13/49 | 0.0000 | **0.1550** |
+
+  **On lift - the metric this entry quotes - it is nowhere near significant.**
+
+  The reason is scatter, and it is large. Standard deviation of PR AUC across
+  the 50 observations, by band:
+
+  | 20-31 | 32-46 | 47-83 | 84-303 | 304-599 | 600+ |
+  |---:|---:|---:|---:|---:|---:|
+  | 0.0305 | 0.0336 | 0.0371 | 0.0447 | **0.1172** | **0.1277** |
+
+  The top two bands carry **three to four times** the scatter of every other
+  band, and the 600+ band's 50 observations range from 0.1390 to 0.6391. The
+  0.094 PR AUC gap that the cliff is built on is **smaller than one standard
+  deviation of the band's own observations.**
+
+  Why they are so noisy: 600+ is 2,837 sites with 129 positives spread over only
+  **192 transcripts** (14.8 sites each, and the top ten transcripts hold 17.4%
+  of the band). Positives cluster strongly by transcript - 4.68x the binomial
+  variance - so the effective number of independent units in that band is far
+  below its site count.
+
+  **"The drop is present in all three models" is not the independent
+  corroboration it looks like.** All three models are scored on the *same*
+  sites in the same folds, so a band-level anomaly driven by which sites happen
+  to fall in the band appears in every model by construction. Agreement across
+  models rules out a model quirk; it does not rule out sampling noise in the
+  band.
+
+  What is *not* claimed here: that the effect is definitely absent. Both point
+  estimates are negative and both win counts are below half (17/49, 20/47), so
+  something may be there. It is simply not resolvable at this band size, and it
+  should not be described as established or as needing a biological
+  explanation.
+
+  **Two places still state the strong version and need revisiting:**
+  [0017](docs/decisions/0017-split-the-top-depth-band.md)'s "What it immediately
+  showed" section, which concluded "a cliff above 600, not a slide from 304"
+  (that specific contrast is corrected p = 0.68), and
+  [docs/wandb-panels.md](docs/wandb-panels.md) panel 8, which calls it an
+  unexplained anomaly. The 600-read split itself is still worth having - more
+  resolution is not the problem.
+
+  Regenerate: the vectors are in `strata_observations` in any standard run's
+  report JSON; pair two bands on `(repetition, fold)` and pass them through
+  `m6a.compare.paired_comparison`.
 - **Performance collapses above 600 reads per site, and it is a cliff rather
   than a slide.** This entry used to say the drop began at 304. Splitting the
   top band at 600 ([0017](docs/decisions/0017-split-the-top-depth-band.md))
@@ -566,6 +627,58 @@ regenerated, and the JSON reports behind the current ones are in
   missing. Every `grid` column sat at abs(r) = 0.86-0.97 against a column the
   model already had; that measurement takes seconds and would have predicted the
   null. It is now part of the screen.
+- **THE CURRENT BEST MODEL: `quantiles_flank_v1` trained at five depths.** The
+  two things that have worked are orthogonal and they stack - on the depth
+  sweep, which is not where the headline test looks.
+
+  | reads per site | 1 | 3 | 10 | 20 | full |
+  |---|---:|---:|---:|---:|---:|
+  | `quantiles_v1` | 0.1527 | 0.2458 | 0.3716 | 0.4277 | 0.4759 |
+  | `quantiles_depth_augmented` | 0.2593 | 0.3434 | 0.4166 | 0.4495 | 0.4844 |
+  | `quantiles_flank_v1` | 0.1633 | 0.2611 | 0.3896 | 0.4395 | 0.4897 |
+  | **`quantiles_flank_depth_augmented`** | **0.2725** | **0.3556** | **0.4294** | **0.4593** | **0.4933** |
+
+  It is the best config in the project at **every** depth, and 0.4933 is the
+  highest pooled PR AUC recorded here.
+
+  **Read the two halves of this differently, because they carry very different
+  weight:**
+
+  - **It is established against both of its parents, and the two ingredients are
+    independent.** Paired at 50 observations:
+
+    | | mean difference | wins | corrected p |
+    |---|---:|---:|---:|
+    | vs `quantiles_v1` | +0.0113 | 48/50 | 0.0030 |
+    | vs `quantiles_depth_augmented` (`--compare-run psdwqobf`, no refit) | **+0.0113** | **48/50** | **0.0030** |
+
+    The flank gain is **+0.0113 whether or not depth augmentation is already
+    present**, and +0.0109 on its own - the same number three times. Sequence
+    context and training depth do not overlap at all.
+  - **At full depth, depth augmentation is still the part that buys nothing
+    measurable.** flank+depth-aug against flank alone is 0.4933 against 0.4897,
+    or +0.0036 - under the ~+0.006 the harness resolves, and never tested
+    directly. That matches
+    [0022](docs/decisions/0022-training-rows-may-come-from-several-depths.md)'s
+    own finding (+0.0056, p = 0.2605). **The reason to carry depth augmentation
+    is the depth sweep, not the headline.**
+  - **At low depth the combination is far ahead, and that has no p-value.** The
+    depth sweep logs one pooled point per depth with no per-fold vector
+    ([0018](docs/decisions/0018-per-stratum-vectors-are-logged-for-later.md)),
+    so +0.1092 at one read over `flank` alone is an effect size and nothing
+    more. It is many times anything fold noise produces here, but it is not a
+    significance test and must not be quoted as one.
+
+  **So the case for shipping this rather than `flank` is: it matches the best
+  config at the depth we are graded on, and is far better at the depth Task 2
+  runs on, at no measured cost.** That is a good trade and it is not the same
+  claim as "it is better".
+
+  Regenerate:
+  ```bash
+  python scripts/evaluate.py --config configs/quantiles_flank_depth_augmented.yaml \
+         --compare-features quantiles_v1
+  ```
 - **UNTESTED BUT THE STRONGEST LEAD MEASURED SO FAR: the within-site correlation
   between pore positions.** `configs/coupling.yaml` /
   `src/m6a/features/coupling.py`, built 2026-09-24, **not yet run** - so nothing

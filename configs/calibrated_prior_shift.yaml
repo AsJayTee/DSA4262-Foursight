@@ -1,0 +1,40 @@
+# The best model, with its scores turned back into probabilities: prior_shift.
+#
+# Every model here overcounts positives (1.76x to 6.10x) and no Task 2 claim of
+# the form "cell line X has N modified sites" is defensible until that is fixed.
+# Calibration does NOT change ranking - per-fold PR AUC is bit-identical - so
+# this is not an accuracy experiment. Read calib/* and threshold/*, not oof/*.
+#
+# Measured on the full training set with quantiles_flank_v1:
+#
+#     none          count_ratio 1.7581x   ECE 0.0356
+#     prior_shift   count_ratio 0.3561x   ECE 0.0289   logit - 3.06   (derived)
+#     platt         count_ratio 1.2584x   ECE 0.0119   0.69*logit - 1.00 (fitted)
+#
+# prior_shift is the falsifiable form of the textbook class-weight explanation
+# (logit(p_w) = logit(p) + log(w), log(21.25) = 3.06). It OVERSHOOTS by a factor
+# of five, which is the evidence that the class weight is not the main cause -
+# the fitted slope is 0.69, so most of the error is over-confidence.
+#
+#   python scripts/evaluate.py --config configs/calibrated_prior_shift.yaml
+name: calibrated_prior_shift
+features: quantiles_flank_v1
+model: calibrated_lightgbm
+model_params:
+  method: prior_shift
+
+  learning_rate: 0.05
+  num_leaves: 63
+  n_estimators: 600
+  min_child_samples: 40
+  feature_fraction: 0.7
+train_depths: [1, 3, 5, 10, null]
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: >
+  Calibration on the current best configuration
+  (quantiles_flank_v1 + depth augmentation). Ranking is unchanged by
+  construction; what should move is calib/count_ratio toward 1.0 and calib/ece
+  downward. platt costs inner_folds extra fits per fold.
