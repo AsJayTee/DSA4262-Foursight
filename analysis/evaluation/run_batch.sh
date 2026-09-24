@@ -50,6 +50,7 @@ groupA|flank_ablation|--config configs/quantiles_flank.yaml --ablate
 groupC|nbr_struct|--config configs/nbr_struct.yaml --compare-features quantiles_v1
 groupC|nbr_signal|--config configs/nbr_signal.yaml --compare-features quantiles_v1
 groupC|transcript|--config configs/transcript.yaml --compare-features quantiles_v1
+groupB|coupling|--config configs/coupling.yaml --compare-features quantiles_v1
 PLAN
 )
 

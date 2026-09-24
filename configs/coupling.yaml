@@ -1,0 +1,53 @@
+# quantiles_v1 + the within-site correlation between pore positions.
+#
+# This is what configs/quantiles_grid.yaml was reaching for and missed.
+#
+# The grid config took per-read contrasts along the position axis and quantiled
+# them across reads. It came back at +0.0032, 29/50, corrected p = 0.4070, and
+# every one of its 21 columns turned out to sit at |r| = 0.86-0.97 against a
+# column the model already had. The reason: the positions are near-INDEPENDENT
+# across reads (measured within-site r = 0.13 for mean current, ~0.00 for dwell
+# and sd), and for independent X and Y the distribution of X - Y is fixed by the
+# two marginals. A quantile of a difference is a marginal summary of a derived
+# variable, not a joint statistic.
+#
+# The correlation itself is the joint statistic, and it is the one second moment
+# the marginals cannot give you. Measured on 30,000 sites, the within-site
+# correlation of mean current across the three positions:
+#
+#     negatives  r = 0.134      positives  r = 0.244      |AUC-0.5| = 0.2183
+#
+# That is stronger than every column in quantiles_v1 (best 0.1716) and its
+# largest correlation with any of them is 0.226 - strong AND new, which is the
+# combination the grid lacked.
+#
+# Physically: the three positions are overlapping 5-mer windows all containing
+# the candidate base, so on a MODIFIED molecule all three readings shift
+# together while on an unmodified one they vary independently. Elevated
+# correlation is a direct signature of "some of these molecules are modified",
+# which is the MIL structure itself.
+#
+# Expect nothing at low depth: a correlation needs several reads and is 0.0
+# below five. See src/m6a/features/coupling.py.
+#
+#   python scripts/evaluate.py --config configs/coupling.yaml \
+#          --compare-features quantiles_v1
+name: lightgbm_coupling
+features: quantiles_coupling_v1
+model: lightgbm
+model_params:
+  learning_rate: 0.05
+  num_leaves: 63
+  n_estimators: 600
+  min_child_samples: 40
+  feature_fraction: 0.7
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: >
+  Within-site correlation structure: how much the three pore positions move
+  together across reads, per measurement, plus cross-measurement coupling at the
+  centre. 15 columns on top of quantiles_v1. Two of them beat every existing
+  column univariately and none is redundant with one. Everything else is
+  configs/quantiles.yaml.
