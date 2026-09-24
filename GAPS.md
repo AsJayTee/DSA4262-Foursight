@@ -498,6 +498,50 @@ regenerated, and the JSON reports behind the current ones are in
   information exists but the tree is evidently already extracting it from the
   marginal columns.
 
+- **The three feature experiments of 2026-09-24, and how far each result can be
+  pushed.** Everything below is the corrected paired test over 50 observations,
+  which is the only one to quote.
+
+  | | difference | wins | corrected p | 95% CI | naive p |
+  |---|---:|---:|---:|---|---:|
+  | `quantiles_flank_v1` | **+0.0109** | **48/50** | **0.0006** | [+0.0049, +0.0169] | 0.0000 |
+  | `quantiles_joint_v1` | +0.0013 | 29/50 | 0.7140 | [-0.0059, +0.0085] | 0.1819 |
+  | `quantiles_grid_v1` | +0.0032 | 29/50 | 0.4070 | [-0.0045, +0.0109] | 0.0035 |
+
+  **Only `flank` is established.** The other two are *not detected*, and the
+  correct reading of each is narrower than it looks:
+
+  - **`joint` is consistent with zero, and an effect above +0.0085 is excluded.**
+    That upper bound is only just above the harness's ~+0.006 detection floor,
+    so if anything is there it is too small to matter here. "Likely a null
+    effect" is a fair summary.
+  - **`grid` is *also* consistent with zero**, and its win count is **29/50 -
+    identical to `joint`**, which is a coin flip. Its point estimate is
+    marginally higher and its *naive* t is much higher (3.07 against 1.35),
+    meaning its positive folds were larger, not more numerous. The two results
+    are statistically very hard to tell apart, and
+    [0005](docs/decisions/0005-paired-comparison-and-its-limits.md) says the win
+    count is the more trustworthy of the two signals when observations are
+    correlated. **Treating `grid` as a near-miss winner and `joint` as a
+    definite null over-reads the gap between them.**
+
+  **The asymmetry that does matter is about the designs, not the p-values.**
+
+  - `grid`'s design was **complete** for what it tested. A length-3 axis has
+    exactly three degrees of freedom - mean, gradient, curvature - and the
+    feature set covered gradient and curvature for every measurement. Any linear
+    `Conv1d(kernel_size=3)` on the position axis is a combination of what was
+    tested. So this null is **informative**: it is evidence against the linear
+    position-axis inductive bias, and it retires that idea cheaply.
+  - `joint`'s design was **flawed**, and the flaw was found later. It whitened
+    each read by the site's own correlation matrix, which is precisely
+    conditioning away the quantity that turned out to carry the signal. So its
+    null says little about the joint-structure hypothesis and a lot about that
+    parameterisation.
+
+  In other words the *weaker-looking* result (`grid`) tells us more than the
+  *more clearly null* one (`joint`), because only one of them tested the thing
+  it claimed to.
 - **A method correction, recorded because it cost a run and will cost another
   one otherwise: a univariate screen predicts MARGINAL signal, not INCREMENTAL
   value.** Before building `quantiles_grid_v1` its columns were screened
@@ -517,6 +561,62 @@ regenerated, and the JSON reports behind the current ones are in
   prior on the paired result. Scoreboard so far: `flank` screened strong and won
   (+0.0109), `grid` screened strong and did not (+0.0032), `joint` was never
   screened and lost (+0.0013). One for two on the positive direction.
+
+  **Screen for redundancy as well as for signal**, which is the part that was
+  missing. Every `grid` column sat at abs(r) = 0.86-0.97 against a column the
+  model already had; that measurement takes seconds and would have predicted the
+  null. It is now part of the screen.
+- **UNTESTED BUT THE STRONGEST LEAD MEASURED SO FAR: the within-site correlation
+  between pore positions.** `configs/coupling.yaml` /
+  `src/m6a/features/coupling.py`, built 2026-09-24, **not yet run** - so nothing
+  here is a model result, and `grid` is the standing reminder that a strong
+  screen can still produce nothing.
+
+  The quantity is `r` between mean current at positions -1, 0 and +1, computed
+  *across the reads at a site*. It is the one second moment the marginals cannot
+  produce: `r` needs `E[XY]`, and quantiles of X and of Y never supply it,
+  because they are computed one column at a time and discard which reading came
+  from which molecule.
+
+  | measured on 30,000-40,000 sites | negatives | positives | abs(AUC - 0.5) |
+  |---|---:|---:|---:|
+  | mean-current correlation across positions | 0.134 | **0.244** | **0.2183** |
+  | leading eigenvector aligned with (1,1,1) | 0.785 | 0.854 | 0.1555 |
+  | dwell / sd equivalents | ~0.00 | ~0.00 | 0.03 / 0.01 |
+
+  For scale, the strongest column in `quantiles_v1` is 0.1716, and the largest
+  correlation any coupling column has with an existing one is **0.34** (0.225
+  for the strongest). Strong *and* not redundant, which is the combination
+  `grid` lacked.
+
+  **Audited for the two confounds that would have explained it away:**
+
+  - **Depth: ruled out.** Median read count is 49 in both classes, and the
+    effect *strengthens* with depth (abs(AUC-0.5) 0.1816 in the 20-30 read band
+    rising to 0.2756 at 91-200), which is the direction a real signal takes as
+    its estimate gets less noisy. An artefact of noisy correlation estimates
+    would go the other way.
+  - **Motif: mostly survives, but unevenly, and this matters.** Positive-weighted
+    within-motif abs(AUC-0.5) is 0.1775 against 0.2101 pooled, so **85% is
+    retained**. But it is not uniform: 0.35 in `GGACC`, 0.32 in `GGACA`, 0.26 in
+    `AGACA` - and **0.0005 in `GAACT`** (252 positives, so not an underpowered
+    cell), 0.019 in `TAACT`, 0.05 in `GAACA`. The `GAAC*` family shows nothing.
+    Those are also the motifs whose *negatives* already sit at a high baseline
+    correlation (~0.20 against ~0.11 for `GGAC*`), so the lift appears where the
+    baseline is low. **Any claim that this is a universal signature of
+    methylation is wrong**; a tree can still use it, because it has the motif
+    one-hot and can learn a motif-conditional rule, but the expected gain is
+    diluted relative to what 0.2183 suggests.
+
+  **Mechanism, supported rather than assumed.** The three positions are
+  overlapping 5-mer windows that all contain the candidate base, so a modified
+  molecule should be perturbed on all three readings at once. If so, the
+  dominant direction of read-to-read variation should point along (1,1,1) more
+  strongly at positive sites - and it does, 0.854 against 0.785. That is a
+  prediction of the story tested separately from the correlation itself, and it
+  passed. It is *not* proof: both classes sit well above the 0.577 a single
+  position would give, so there is baseline all-together structure that is
+  probably sequence- or coverage-driven and nobody has explained.
 - **RESOLVED: the 7-mer's flanking bases were being thrown away, and they are
   worth +0.0109.** This entry used to say only that they were discarded and that
   nobody had measured the cost. They have now been measured, and recovering them
