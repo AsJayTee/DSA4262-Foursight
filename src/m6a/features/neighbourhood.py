@@ -65,6 +65,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from m6a.features.flank import QuantileFlankFeatures
 from m6a.features.quantiles import QuantileFeatures
 from m6a.registry import register
 
@@ -323,3 +324,86 @@ class RobustTranscriptFeatures(QuantileFeatures):
         extra = _transcript_level(frame, sites)
         extra = extra.drop(columns=[c for c in _DENSITY_COLUMNS if c in extra.columns])
         return pd.concat([frame, extra.astype(np.float32)], axis=1)
+
+
+# The cross-site columns that a sparser input file does NOT bias, measured by
+# dropping half the training sites at random and re-extracting (bias in units of
+# each column's own standard deviation):
+#
+#   nbr_rel_position        0.006   nbr_rank_on_transcript  0.007
+#   tx_dwell_0_q95_loo_mean 0.008   tx_sd_0_q95_loo_mean    0.015
+#   tx_mean_0_q95_loo_mean  0.025   tx_mean_m1_q50_loo_mean 0.085
+#   tx_n_reads_loo_mean     <0.01
+#
+# against 0.43-0.93 for every count and 0.69-1.17 for every windowed max. Two
+# rules, both from first principles rather than from the table: a normalised
+# POSITION is preserved under random thinning, and a MEAN is an unbiased
+# estimator at any sample size. A count and a max are neither.
+_ROBUST_STRUCTURAL = ("nbr_rel_position", "nbr_rank_on_transcript")
+
+
+@register("features", "quantiles_crosssite_robust_v1")
+class RobustCrossSiteFeatures(QuantileFeatures):
+    """Every cross-site column that survives a differently-built input file.
+
+    The cross-site family is the largest effect in the project - up to +0.0286,
+    50/50, corrected p = 0.0000 - and most of it **cannot be shipped**, because
+    `scripts/predict.py` runs on an evaluation file whose candidate density
+    nobody here knows. This is the subset that can.
+
+    Two families, kept for different reasons:
+
+    - **Position along the transcript.** The strongest structural column in the
+      screen and the most robust of any cross-site feature (bias 0.006, noise
+      0.262). It is also the one with a mechanism: the positive rate climbs
+      monotonically from 2.54% in the first tenth of a transcript's candidate
+      span to 6.67% in the ninth, then falls to 4.24% in the last - a 2.6x
+      swing, and the shape m6A's known enrichment near the stop codon would
+      produce. Nothing here has the annotation to confirm that reading.
+    - **Transcript-level leave-one-out means.** Unbiased at any sample size,
+      which is the whole reason they are means and not maxes or counts.
+
+    Dropped, with the measurement that condemns each: `nbr_count_*` and
+    `tx_n_sites` and `nbr_n_on_transcript` (bias 0.43-0.93, they scale with
+    density), every `nbrsig_*_max` (bias 0.76+, a max over fewer neighbours is
+    smaller), `nbr_dist_prev`/`_next` (bias ~0.20), and `nbr_dist_nearest`
+    (unbiased at 0.067 but noise 1.488, which buys nothing).
+
+    **This is a robustness claim, not an accuracy claim.** What it costs in
+    PR AUC against the unrestricted `quantiles_transcript_v1` is what
+    `configs/crosssite_robust.yaml` measures. It is still sensitive to a sparser
+    file through *noise*; what it removes is the systematic shift.
+    """
+
+    def finalise(self, frame: pd.DataFrame, sites: pd.DataFrame) -> pd.DataFrame:
+        structural = _structural(frame)[list(_ROBUST_STRUCTURAL)]
+        transcript = _transcript_level(frame, sites)
+        transcript = transcript.drop(
+            columns=[c for c in _DENSITY_COLUMNS if c in transcript.columns]
+        )
+        extra = pd.concat([structural, transcript], axis=1).astype(np.float32)
+        return pd.concat([frame, extra], axis=1)
+
+
+@register("features", "quantiles_flank_crosssite_v1")
+class FlankAndRobustCrossSiteFeatures(QuantileFlankFeatures, RobustCrossSiteFeatures):
+    """Everything that has been established, in one feature set.
+
+    `quantiles_v1`, plus the 7-mer flanking bases (+0.0109, 48/50, corrected
+    p = 0.0006, and the same +0.0113 again with depth augmentation already on),
+    plus the cross-site columns that survive a differently-built input file.
+
+    Paired with `train_depths: [1, 3, 5, 10, null]` in
+    `configs/final_candidate.yaml`, this is the full stack of everything that
+    has independently earned its place, and the only combination of them that
+    can honestly be shipped through `predict.py`.
+
+    Composed by inheritance rather than by delegation, so neither half can
+    drift from the version that was tested on its own. The MRO does the work:
+    `site_features` resolves to `QuantileFlankFeatures`, whose `super()` call
+    then reaches `QuantileFeatures`, while `finalise` resolves past the flank
+    class to `RobustCrossSiteFeatures`. Calling
+    `QuantileFlankFeatures.site_features(self, ...)` explicitly does **not**
+    work - that module uses the zero-argument `super()`, which requires `self`
+    to be an instance of the class the call is written in.
+    """

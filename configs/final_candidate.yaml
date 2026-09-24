@@ -1,0 +1,38 @@
+# Everything that has independently earned its place, in one model.
+#
+#   quantiles_v1        the established feature base (+0.0164 over pooled_v1)
+# + 7-mer flanks        +0.0109 alone, +0.0113 again with depth augmentation on
+# + robust cross-site   the transferable part of the largest effect found
+# + train_depths        no measurable cost at full depth, large gain at low
+#
+# The cross-site columns here are ONLY the ones a differently-built evaluation
+# file does not bias: relative position along the transcript (bias 0.006 sd
+# under a 50% thinning) and transcript-level leave-one-out means (0.008-0.085).
+# Counts and windowed maxima are excluded at 0.43-1.17.
+#
+# Compare against the current best, which is the same thing without cross-site:
+#
+#   python scripts/evaluate.py --config configs/final_candidate.yaml \
+#          --compare-with configs/quantiles_flank_depth_augmented.yaml
+#
+# CAVEAT THAT TRAVELS WITH IT: this is still a finalise feature set, so its
+# columns are computed from whatever sites are in the input file. What is
+# removed is the systematic shift, not the added noise. See docs/decisions/0025.
+name: final_candidate
+features: quantiles_flank_crosssite_v1
+model: lightgbm
+model_params:
+  learning_rate: 0.05
+  num_leaves: 63
+  n_estimators: 600
+  min_child_samples: 40
+  feature_fraction: 0.7
+train_depths: [1, 3, 5, 10, null]
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: >
+  The full stack. Not yet calibrated - depth augmentation roughly doubles the
+  overcount (1.76x -> 3.83x), so a calibrated variant is needed before any Task 2
+  count is quoted from this.
