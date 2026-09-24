@@ -1,7 +1,12 @@
 # 0017. Split the top depth band at 600 reads
 
 - **Date:** 2026-09-21
-- **Status:** Accepted
+- **Status:** Accepted - the split stands; the **conclusion drawn from it in
+  "What it immediately showed" is amended by
+  [0026](0026-a-band-level-claim-needs-the-band-level-vectors.md)**, which tests
+  it against the per-band vectors 0018 now logs and finds it does not survive
+  (600+ vs 304-599 on lift: corrected p = 0.68). The measurements below are
+  accurate; the inference from them is withdrawn.
 - **Affects:** `src/m6a/evaluation.py` (`DEPTH_BAND_EDGES`, `DEPTH_BAND_LABELS`), every `band/*` metric key, `curve/band/*`
 
 ## Context

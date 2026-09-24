@@ -242,11 +242,22 @@ came with different coverage. X is each band's lower edge in reads.
 Lift rather than PR AUC because PR AUC is bounded below by each band's own
 positive rate.
 
-**How to read it.** The 600+ band falls off a cliff — 8.84× against 11.07× for
-304–599, which is the *best* band in the table
-([0017](decisions/0017-split-the-top-depth-band.md)). More evidence should make
-a site easier, not harder. That anomaly is unexplained, it is present in every
-model, and it is 2,837 sites nobody has looked at.
+**How to read it.** The 600+ band reads 8.84× against 11.07× for 304–599
+([0017](decisions/0017-split-the-top-depth-band.md)) — but **that gap is not
+established, and this panel will make it look like it is.**
+
+Tested against the 50 per-band observations
+([0026](decisions/0026-a-band-level-claim-needs-the-band-level-vectors.md)), 600+
+vs 304–599 on lift is corrected p = 0.68, and it fails the naive test too. The
+top two bands carry **three to four times** the scatter of every other band —
+sd 0.128 and 0.117 against 0.031–0.045 — because 600+ is 2,837 sites and 129
+positives on only 192 transcripts. The gap is smaller than one standard
+deviation of the band's own observations.
+
+So read the right-hand end of this panel as noisy, not as an anomaly. And note
+that "it is present in every model" is not corroboration: every model is scored
+on the same sites in the same folds, so a band-level artefact appears in all of
+them by construction.
 
 ### 9. Scatter — accuracy against calibration
 
