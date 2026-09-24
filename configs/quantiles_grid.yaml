@@ -1,0 +1,38 @@
+# quantiles_v1 + the within-read 3x3 measurement grid.
+#
+# The nine numbers per read are three measurements at three ORDERED, adjacent
+# pore positions (-1, 0, +1) - three consecutive states of the same molecule as
+# it ratchets through. Every feature set so far flattens that away and treats
+# the nine columns as interchangeable.
+#
+# This adds per-read contrasts along the position axis (centre-surround and
+# gradient, the only two length-3 convolutions that exist) and takes quantiles
+# of them across reads. The point is the PAIRING: q95(A - B) is not
+# q95(A) - q95(B), and only the first is available from the reads.
+# See src/m6a/features/grid.py for the univariate screen that motivated it.
+#
+# It is also the one joint feature family that survives at depth 1, because the
+# contrast lives inside a read rather than between reads.
+#
+#   python scripts/evaluate.py --config configs/quantiles_grid.yaml \
+#          --compare-features quantiles_v1
+name: lightgbm_quantiles_grid
+features: quantiles_grid_v1
+model: lightgbm
+model_params:
+  learning_rate: 0.05
+  num_leaves: 63
+  n_estimators: 600
+  min_child_samples: 40
+  feature_fraction: 0.7
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: >
+  Tests whether the ordered position axis inside each read carries signal the
+  marginal per-column quantiles cannot express. 21 columns on top of
+  quantiles_v1: centre-surround and gradient contrasts per measurement type,
+  quantiled across reads. If this wins, a CNN read encoder over the position
+  axis is justified; if it loses, that inductive bias is not there to find.
+  Everything else is configs/quantiles.yaml.

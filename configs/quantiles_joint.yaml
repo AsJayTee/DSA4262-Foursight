@@ -1,0 +1,34 @@
+# quantiles_v1 + joint within-read structure.
+#
+# Every feature set here is marginal: the 95th percentile of one measurement and
+# the 95th percentile of another, with no way to say that the SAME molecule was
+# extreme on both. GAPS.md and the literature review both name that as the best
+# remaining lead, and the neural answer to it costs ~30 GPU-hours. This buys the
+# same hypothesis for the price of a feature set - per-read Mahalanobis distance
+# from the site's own read centroid, plus counts of reads jointly extreme on
+# several measurements. See src/m6a/features/joint.py.
+#
+# Identical to configs/quantiles.yaml in every other respect - same model, same
+# parameters, same folds - so the comparison varies exactly one thing:
+#
+#   python scripts/evaluate.py --config configs/quantiles_joint.yaml \
+#          --compare-features quantiles_v1
+name: lightgbm_quantiles_joint
+features: quantiles_joint_v1
+model: lightgbm
+model_params:
+  learning_rate: 0.05
+  num_leaves: 63
+  n_estimators: 600
+  min_child_samples: 40
+  feature_fraction: 0.7
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: >
+  The cheap test of whether joint within-read structure carries signal, before
+  anyone books a GPU for a learned read encoder. Seventeen columns on top of
+  quantiles_v1: quantiles of each read's Mahalanobis distance from its own
+  site's centroid, and the fraction of reads jointly extreme on two or more of
+  the nine measurements. Everything else is configs/quantiles.yaml.

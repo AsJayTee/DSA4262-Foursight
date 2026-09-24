@@ -128,6 +128,59 @@ regenerated, and the JSON reports behind the current ones are in
   wrong about the direction, it was underpowered. Regenerate with
   `evaluate.py --config configs/quantiles.yaml --compare-features pooled_v1 --repeats 10`
   (about 25 minutes on a warm cache; the 5-fold version is 100 seconds).
+- **The canonical five folds can manufacture an effect that is not there, and
+  now there is a measured example of it.** Everything above and
+  [0013](docs/decisions/0013-every-run-is-a-distribution.md) argues the five-fold
+  case one way: it is *underpowered*, so it misses real effects. `quantiles_joint_v1`
+  (2026-09-24) is the same coin's other face, and it is the more dangerous one,
+  because a false positive is a result somebody quotes.
+
+  | `quantiles_joint_v1` vs `quantiles_v1` | mean difference | wins | naive paired p | corrected p |
+  |---|---:|---:|---:|---:|
+  | repetition 0 - the canonical split | **+0.0097** | **5/5** | **0.0278** | 0.0874 |
+  | all 10 repetitions | +0.0013 | 29/50 | 0.1819 | **0.7140** |
+
+  On the canonical split this feature set sweeps every fold, at an effect size
+  (+0.0097) close to the genuinely real +0.0109 that `quantiles_flank_v1`
+  produced on the same day, and at a naive paired p that **clears 0.05**. Run it
+  over fifty observations and it is +0.0013 at 29/50 - a coin flip.
+
+  Two guards had to hold, and both did:
+
+  - The **Nadeau & Bengio correction** refused it on five folds: 0.0278 naive
+    against 0.0874 corrected. Anyone quoting the uncorrected paired test would
+    have published a null as a finding.
+  - The **repetitions** then showed the effect was not merely unproven but
+    approximately zero. The correction alone would have left it as "promising,
+    needs more evidence", which is not what it is.
+
+  This is the strongest argument in the repo for why `standard` runs ten
+  repetitions by default rather than offering it as a flag, and it cost one
+  22-minute run to obtain. **Do not quote a 5-fold result, corrected or not.**
+- **`oof/pr_auc` is a repetition-0 number, so the column everyone sorts the run
+  table on can rank a null above a real result.** This is documented behaviour
+  ([0012 section 3](docs/decisions/0012-repeated-cv-is-one-run-keyed-by-rep-and-fold.md):
+  `fold/*` and the pooled out-of-fold metrics are the canonical split only) and
+  it is still a trap, because
+  [docs/wandb-panels.md](docs/wandb-panels.md) calls `oof/pr_auc` "the headline"
+  and lists it above `rep/pr_auc_mean`.
+
+  Measured on the two runs from 2026-09-24:
+
+  | run | `oof/pr_auc` (5 folds) | `rep/pr_auc_mean` (50) | paired vs `quantiles_v1` |
+  |---|---:|---:|---|
+  | `quantiles_v1` | 0.4759 | 0.4785 | - |
+  | `quantiles_joint_v1` | **0.4851** | 0.4798 | +0.0013, corrected p = 0.71 |
+  | `quantiles_flank_v1` | 0.4897 | 0.4894 | +0.0109, corrected p = 0.0006 |
+
+  Sorted on `oof/pr_auc`, the null arm (0.4851) sits above `mlp_quantiles`
+  (0.4783) and within 0.0007 of `quantiles_depth_augmented` (0.4844), and a
+  reader would reasonably conclude it is the project's second-best feature set.
+  `rep/pr_auc_mean` tracks the paired result exactly - 0.4798 against 0.4785 is
+  the +0.0013 the test reports.
+
+  **Sort on `rep/pr_auc_mean` when comparing, and read `oof/pr_auc` as what it
+  is: one split's number, kept unchanged so historical runs stay comparable.**
 - **The headline number now has two error bars, and they answer different
   questions.** 0.4759 used to be a bare point estimate. Measured
   (`--bootstrap 2000`, resampling the 121,838 sites; and `--repeats 10`,
@@ -378,19 +431,112 @@ regenerated, and the JSON reports behind the current ones are in
   things nobody has done — `train_depths: [1]` (trained at depth 1 only, the
   probe's implicit setting exactly), and running `configs/mil.yaml` against
   `configs/quantiles_depth_augmented.yaml` rather than against the plain one.
-- **Read-level features are computed marginally, one feature at a time.**
-  `mean_0_q95` is the 95th percentile of the `mean_0` column across reads, so
-  the representation cannot express "these particular reads are jointly
-  unusual across several measurements at once". Whether that joint structure
-  carries signal is untested; it is a separate question from depth, and it is
-  the one place a learned read encoder could beat a summary statistic at high
-  depth, where the probe above currently loses.
-- **Sequence information is barely used.** Only the central 5-mer is encoded,
-  as an 18-way one-hot. The flanking bases of the 7-mer are discarded. The
-  motif contributes +0.0123 PR AUC over signal-only features (5/5 folds, naive
-  paired p = 0.0433 - which carries the same correction problem as every other
-  five-fold p-value here, see Evaluation), and 0.1537 on its own. Both from
-  `evaluate.py --config configs/quantiles.yaml --ablate`.
+- **TESTED, AND IT DOES NOT PAY: joint within-read structure, hand-crafted, is
+  worth +0.0013 and is not distinguishable from noise.** This entry used to say
+  the representation is marginal - `mean_0_q95` is the 95th percentile of one
+  column and `sd_0_q95` of another, so nothing can express that *the same
+  molecule* was extreme on both - and that whether that structure carries signal
+  was untested. It has now been tested.
+
+  `quantiles_joint_v1`
+  ([run jqoq58tn](https://wandb.ai/dsa4262-team/dsa4262-project/runs/jqoq58tn))
+  adds 17 columns to `quantiles_v1`: quantiles of each read's Mahalanobis
+  distance from its own site's read centroid (correlation matrix shrunk 0.1
+  toward the identity, so it degrades to the independent reading rather than to
+  a singular matrix), and the fraction of reads jointly extreme on two, three
+  and four of the nine measurements, plus one-sided and centre-position
+  variants.
+
+  Paired over 50 observations: **+0.0013, 29/50 wins, corrected p = 0.7140**,
+  95% CI [-0.0059, +0.0085]. Below the detection threshold and centred on zero.
+  **No stratum rescues it** - by read-depth band the differences are +0.0047,
+  -0.0039, +0.0036, -0.0005, -0.0059, -0.0092, none of them near significance,
+  so it is not the case that joint structure helps where reads are plentiful and
+  is diluted elsewhere.
+
+  ```bash
+  python scripts/evaluate.py --config configs/quantiles_joint.yaml \
+         --compare-features quantiles_v1
+  ```
+
+  **What this licenses, and what it does not.** This is the cheap de-risking
+  probe for B1/B2, and it came back negative, so the honest reading is that a
+  learned per-read encoder is less likely to pay than the literature review
+  argued. It is **not proof** that joint structure is absent: a hand-crafted
+  Mahalanobis distance is one parameterisation of "jointly unusual", and a
+  learned encoder could find a coupling this does not express. What it removes
+  is the cheap positive evidence that would have justified ~30 GPU-hours. B1
+  should not be booked on the strength of the joint-structure argument alone.
+
+  One implementation caveat worth carrying if anyone revisits it: the distance
+  is measured against **the site's own** centroid and covariance, so at a site
+  where a minority of reads are genuinely modified, those reads inflate the
+  covariance in exactly the direction that would have made them look unusual.
+  The signal is attenuated by construction. A global (cross-site) whitening
+  would not have that problem and does not fit `site_features(site)`, which sees
+  one site at a time.
+- **RESOLVED: the 7-mer's flanking bases were being thrown away, and they are
+  worth +0.0109.** This entry used to say only that they were discarded and that
+  nobody had measured the cost. They have now been measured, and recovering them
+  is the largest established feature-set gain in the project.
+
+  `motif_onehot` encodes `kmer[1:6]`, so the outer two bases of the 7-mer were
+  parsed out of the file and dropped at extraction. `quantiles_flank_v1`
+  ([run 0bw7mvz8](https://wandb.ai/dsa4262-team/dsa4262-project/runs/0bw7mvz8))
+  adds them as 4 + 4 indicators and nothing else:
+
+  | | `quantiles_v1` | `quantiles_flank_v1` |
+  |---|---:|---:|
+  | `oof/pr_auc` | 0.4759 | **0.4897** |
+  | `oof/roc_auc` | 0.9169 | 0.9199 |
+  | `rep/pr_auc_mean` over 50 | 0.4785 | 0.4894 |
+  | `calib/count_ratio` | 1.80x | 1.76x |
+
+  Paired over 50 observations: **+0.0109, 48/50 wins, corrected p = 0.0006**.
+  Comfortably above the detection threshold, and at the top of the +0.003-0.009
+  prior it was queued under. Regenerate:
+
+  ```bash
+  python scripts/evaluate.py --config configs/quantiles_flank.yaml \
+         --compare-features quantiles_v1
+  ```
+
+  **Why 4 + 4 and not a 288-way 7-mer one-hot.** All 288 combinations occur
+  (18 motifs x 4 x 4, every cell populated), but 5,475 positives spread over 288
+  categories leaves the thin ones fitting noise. The effect is also largely
+  *additive* across motifs, which two 4-way indicators capture and 288 fragment:
+  measured before the run, the right flank moves the positive rate from 1.98%
+  (A) to 6.88% (G) overall, and it survives conditioning on the motif - within
+  `GGACT` the rate is 14.3% under a right-flank A against 27.8% under a G, and
+  within `AGACT` 2.7% against 11.6%, the same direction in nearly every motif. A
+  motif-only rate table scores 0.15474 mean logloss against 0.15010 for one
+  keyed on the full 7-mer.
+
+  **What is left of the original entry.** The motif still contributes +0.0123
+  PR AUC over signal-only features (5/5 folds, naive paired p = 0.0433 - which
+  carries the same correction problem as every other five-fold p-value here, see
+  Evaluation), and 0.1537 on its own, from
+  `evaluate.py --config configs/quantiles.yaml --ablate`. **That 0.1537 floor is
+  now stale as a reference point**: it is an 18-way motif-only classifier, and
+  the sequence-only model that would match the new feature set has flanks in it
+  and has not been run. Anyone quoting "at one read the model is doing nothing
+  but reading the sequence pattern" should re-run `--ablate` on
+  `configs/quantiles_flank.yaml` first.
+
+  Two things this opens rather than closes:
+
+  - **It is orthogonal to depth augmentation and nobody has combined them.**
+    Sequence context is depth-independent information, and the gain does show up
+    at every depth (0.1633 against 0.1527 at one read, 0.2611 against 0.2458 at
+    three - effect sizes only, since the depth sweep has no per-fold vector
+    underneath it, see
+    [0018](docs/decisions/0018-per-stratum-vectors-are-logged-for-later.md)).
+    `quantiles_flank_v1` with `train_depths: [1, 3, 5, 10, null]` is one config
+    file and would say whether the two gains stack.
+  - **0.4897 is the highest pooled number in the project, and that is not the
+    same as being the best model.** `quantiles_depth_augmented` sits at 0.4844
+    and the two have never been paired. Comparing them is
+    `--compare-run psdwqobf`, which refits nothing.
 - **The experiment queue, ranked by what this harness can actually measure.**
   Derived from [docs/literature-review.md](docs/literature-review.md) and a
   follow-up exchange with it, then filtered through the detection threshold
@@ -402,20 +548,50 @@ regenerated, and the JSON reports behind the current ones are in
   Cheap first, because two of these are feature sets testable in ~15 minutes
   with full statistical power, and one of them de-risks a ~26-hour GPU job:
 
-  | # | experiment | prior | cost | resolvable? |
-  |---|---|---:|---|---|
-  | A1 | recover the 7-mer flanking bases (26 sequence columns, not 18) | +0.003–0.009 | ~15 min | borderline |
-  | A2 | joint within-read features (per-read Mahalanobis from the site's own centroid) | unknown | ~15 min | — |
-  | A3 | cross-site features (candidate density, distance to nearest site) | unknown | needs 0025 | — |
-  | B1 | the existing attention-MIL + 7-mer conditioning + mean/std branch + log N | +0.009 | ~26 h GPU | borderline |
-  | B2 | contextual Deep Set (bag-context interaction layer) | +0.015 | GPU | yes |
-  | C1 | Platt calibration | 0 on PR AUC | ~1 h | n/a |
+  | # | experiment | prior | cost | resolvable? | outcome |
+  |---|---|---:|---|---|---|
+  | A1 | recover the 7-mer flanking bases (26 sequence columns, not 18) | +0.003–0.009 | ~15 min | borderline | **WON: +0.0109, 48/50, corrected p = 0.0006** |
+  | A2 | joint within-read features (per-read Mahalanobis from the site's own centroid) | unknown | ~15 min | — | **NULL: +0.0013, 29/50, corrected p = 0.7140** |
+  | A3 | cross-site features (candidate density, distance to nearest site) | unknown | needs 0025 | — | not started |
+  | B1 | the existing attention-MIL + 7-mer conditioning + mean/std branch + log N | +0.009 | ~26 h GPU | borderline | **weakened by A2** |
+  | B2 | contextual Deep Set (bag-context interaction layer) | +0.015 | GPU | yes | gated on B1 |
+  | C1 | Platt calibration | 0 on PR AUC | ~1 h | n/a | not started |
 
-  **A2 is the one to run first with A1.** Both the literature review and the
-  entry above identify marginal-vs-joint read features as the best remaining
-  lead, and the neural answer costs ~30 GPU-hours. A hand-crafted joint feature
-  tests the same hypothesis for fifteen minutes: if it moves nothing, the
-  expensive version probably chases noise.
+  **A2 was run first with A1, and it did its job.** Both the literature review
+  and the entry above identified marginal-vs-joint read features as the best
+  remaining lead, and the neural answer costs ~30 GPU-hours. The hand-crafted
+  version tested the same hypothesis for half an hour and came back at
+  +0.0013 - so the cheap positive evidence that would have justified the GPU job
+  is not there. That is the probe working as designed, not a wasted run.
+
+  **The obvious next cheap experiment is A1 x depth augmentation**, which is one
+  config file and no new code: `features: quantiles_flank_v1` with
+  `train_depths: [1, 3, 5, 10, null]`. Sequence context and training depth are
+  orthogonal, both gains are independently measured (+0.0109 established,
+  +0.0056 not), and the `quantiles_flank_v1` cache is already warm at all eleven
+  depths, so it costs fits only.
+
+  **The ~15 min costs in this table are wrong, and the correction is worth
+  keeping.** Measured on a warm cache, a laptop, 8 threads: a
+  `--compare-features` run at the default `standard` profile is **~22 minutes**,
+  because [0008](docs/decisions/0008-comparisons-report-both-arms-and-strata.md)
+  evaluates *both* arms in full at 50 observations each - so it is 100 model
+  fits, two depth sweeps and two sets of figures, not one. A new feature set
+  also pays a **cold-cache extraction** first, over all eleven sweep depths in
+  one streaming pass: 8.9 min for `quantiles_flank_v1` and 22.4 min for
+  `quantiles_joint_v1`, whose per-site 9x9 solve is real arithmetic rather than
+  parse time. Budget **30-45 minutes per cheap experiment**, not fifteen.
+
+  **The ~15 min costs in this table are wrong, and the correction is worth
+  keeping.** Measured on a warm cache, a laptop, 8 threads: a
+  `--compare-features` run at the default `standard` profile is **~22 minutes**,
+  because [0008](docs/decisions/0008-comparisons-report-both-arms-and-strata.md)
+  evaluates *both* arms in full at 50 observations each - so it is 100 model
+  fits, two depth sweeps and two sets of figures, not one. A new feature set
+  also pays a **cold-cache extraction** first, over all eleven sweep depths in
+  one streaming pass: 8.9 min for `quantiles_flank_v1` and 22.4 min for
+  `quantiles_joint_v1`, whose per-site 9x9 solve is real arithmetic rather than
+  parse time. Budget **30-45 minutes per cheap experiment**, not fifteen.
 
   **Not being built**: transcript GNN (+0.004), deeper residual read encoder
   (+0.002), Perceiver (~0). All below the detection threshold. A3 is the cheap
@@ -736,6 +912,26 @@ catalogued, and one blocker is much larger than expected.
 
 ## Infrastructure
 
+- **A lower-profile run silently overwrites a recorded higher-profile report of
+  the same name.** Found on 2026-09-24 by doing it.
+  `evaluate.py --config configs/quantiles.yaml --profile quick` rewrote
+  `analysis/evaluation/reports/lightgbm_quantiles.json`, replacing a `standard`
+  report carrying 50 observations with a `quick` one carrying 5 - **9,686 lines
+  deleted, 98 written**, including the whole `repeated_cv` block. It was
+  recovered with `git checkout` only because that file happens to be tracked.
+
+  [0010 section 2](docs/decisions/0010-the-report-is-a-module-not-a-script.md)
+  anticipated exactly this shape of failure for *subset* runs and guards it: a
+  run over a limited number of sites writes `<name>__limit5000.json` and can
+  never clobber `<name>.json`. There is no equivalent guard on the **profile**,
+  even though a `quick` report is a strictly poorer object than a `standard`
+  one and the filename does not record which it is. The failure is silent: the
+  file still parses, still carries the right config name, and still has a
+  plausible `pooled.pr_auc` - it has simply lost the distribution underneath it.
+
+  It bites hardest in the case the profiles exist to prevent, which is someone
+  regenerating a number to check it and destroying the richer record in the act
+  of verifying it.
 - **`manifest.json` does not exist in the R2 bucket.** Downloads currently fall
   back to comparing file sizes against the remote object, which will not catch
   a corrupted file whose length happens to match.

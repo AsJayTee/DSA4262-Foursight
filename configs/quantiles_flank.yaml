@@ -1,0 +1,31 @@
+# quantiles_v1 + the two flanking bases of the 7-mer.
+#
+# `Site.kmer` is seven characters and the motif one-hot uses only the central
+# five, so the outer two bases are read from the file and thrown away. The 7-mer
+# is the union of the three overlapping 5-mers that produced our -1/0/+1
+# measurements, so those bases are part of the sequence context that shaped the
+# signal - see src/m6a/features/flank.py for the measurements that motivate it.
+#
+# Identical to configs/quantiles.yaml in every other respect - same model, same
+# parameters, same folds - so the comparison varies exactly one thing:
+#
+#   python scripts/evaluate.py --config configs/quantiles_flank.yaml \
+#          --compare-features quantiles_v1
+name: lightgbm_quantiles_flank
+features: quantiles_flank_v1
+model: lightgbm
+model_params:
+  learning_rate: 0.05
+  num_leaves: 63
+  n_estimators: 600
+  min_child_samples: 40
+  feature_fraction: 0.7
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: >
+  Recovers the 7-mer's flanking bases as 4 + 4 indicators rather than a 288-way
+  7-mer one-hot: all 288 combinations occur, but 5,475 positives spread over
+  them leaves the thin cells fitting noise, and the flank effect is largely
+  additive across motifs. Everything else is configs/quantiles.yaml.
