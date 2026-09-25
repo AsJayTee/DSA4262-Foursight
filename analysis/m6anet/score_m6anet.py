@@ -71,6 +71,12 @@ def main() -> None:
                         help="one of our report JSONs, to pair against fold by fold")
     parser.add_argument("--seed", type=int, default=4262)
     parser.add_argument("--n-folds", type=int, default=5)
+    parser.add_argument("--wandb-name", default=None,
+                        help="log the result to W&B under this run name. Ronin instances are "
+                             "terminated with nothing pulled off them (docs/decisions/0007), "
+                             "and m6Anet writes CSVs that know nothing about W&B - so without "
+                             "this the benchmark dies with the machine.")
+    parser.add_argument("--no-wandb", action="store_true")
     args = parser.parse_args()
 
     predictions, label = load_predictions(args.pretrained, args.cv_dir)
@@ -140,6 +146,38 @@ def main() -> None:
         print("    NOTE five folds is five correlated observations. Our own runs use")
         print("    fifty; this is the strongest pairing available against an external")
         print("    tool and it is underpowered by comparison (docs/decisions/0013).")
+
+    if args.wandb_name and not args.no_wandb:
+        from m6a import tracking
+
+        tracker = tracking.start(
+            args.wandb_name,
+            job_type="benchmark",
+            tags=["m6anet", "benchmark"],
+            notes=(
+                "m6Anet, " + label + ". Scored on our labels with m6a.evaluation, "
+                "so these numbers are computed by the same code as every other run "
+                "in this project. NOT one of our models."
+            ),
+            config={
+                "external_tool": "m6anet==2.1.0",
+                "m6anet_variant": label,
+                "split_seed": args.seed,
+                "split_n_folds": args.n_folds,
+                "split_group_by": "gene_id",
+                "n_sites_scored": int(len(joined)),
+            },
+        )
+        flat = {f"oof/{k}": v for k, v in overall.items() if isinstance(v, float)}
+        flat.update({f"calib/{k}": v for k, v in calibration.items() if isinstance(v, float)})
+        flat.update({f"fold/{i}/pr_auc": v for i, v in enumerate(per_fold)})
+        flat["fold/pr_auc_mean"] = float(np.mean(per_fold))
+        flat["fold/pr_auc_sd"] = float(np.std(per_fold, ddof=1))
+        tracker.log(flat)
+        tracker.summary(flat)
+        tracker.finish()
+        print()
+        print(f"  logged to W&B as '{args.wandb_name}' - this is what survives the instance.")
 
     if args.pretrained is not None:
         print()
