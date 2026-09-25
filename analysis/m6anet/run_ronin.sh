@@ -130,6 +130,10 @@ all)
     $PY analysis/m6anet/score_m6anet.py --pretrained "$OUT/data.site_proba.csv" \
         --compare analysis/evaluation/reports/final_candidate.json \
         --wandb-name m6anet_pretrained_hct116
+    # Move it aside so the final `score` does not log a SECOND identical run.
+    # It did on 2026-09-25 - two rows both called m6anet_pretrained_hct116,
+    # which breaks resolve_run by name (0020) for no benefit at all.
+    mv "$OUT/data.site_proba.csv" "$OUT/data.site_proba.scored.csv"
     # ~473 MB that nothing reads, and the retrain is about to write five more.
     rm -f "$OUT/data.indiv_proba.csv"
     bash "$0" probe
