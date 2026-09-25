@@ -790,6 +790,27 @@ regenerated, and the JSON reports behind the current ones are in
   above quoted beside it.** The cross-validated gains are honest about this
   dataset; the table is what they are worth on a different one.
 
+- **THE CURRENT BEST MODEL IS `configs/everything.yaml`, at 0.5408.** Coupling
+  stacks on top of the full stack: **+0.0122 over `final_candidate`, 50/50 wins,
+  corrected p = 0.0002** ([k87vdxlr](https://wandb.ai/dsa4262-team/dsa4262-project/runs/k87vdxlr)).
+
+  | | PR AUC | at 1 read | at 3 reads |
+  |---|---:|---:|---:|
+  | `quantiles_v1`, where this started | 0.4759 | 0.1527 | 0.2458 |
+  | **`everything`** | **0.5408** | **0.3121** | **0.3910** |
+
+  **+0.0649 in total, and the one-read score has more than doubled.**
+
+  The coupling columns were worth +0.0104 alone and +0.0122 on top of everything
+  else - **more, not less**. Unlike the flanks, which lost about half their solo
+  value once the cross-site columns were present, the within-read correlation is
+  genuinely orthogonal to sequence and to transcript context. That is what you
+  would expect if it is measuring a different physical thing, and it is the one
+  piece of evidence that the three families are not three views of one signal.
+
+  It inherits every caveat of its parts: the input-density exposure from the
+  cross-site columns (see above), and a 3.19x overcount until calibrated.
+
 - **THE STACK, and it does stack.** Everything independently established,
   combined, each `--compare-with configs/quantiles_flank_depth_augmented.yaml`
   at 50 observations:
@@ -1416,9 +1437,60 @@ catalogued, and one blocker is much larger than expected.
 
 ## Benchmarking against m6Anet
 
-- **m6Anet has never been installed or run.** Two known obstacles are recorded
-  in [analysis/m6anet/README.md](analysis/m6anet/README.md); neither has been
-  resolved.
+- **DONE, both ways, 2026-09-25. We beat it - and the honest framing is not the
+  flattering one.** m6Anet 2.1.0 installed and run on a Ronin c5ad-class box
+  (64 vCPU, ~2 h end to end). Scored on all our sites with `m6a.evaluation`, so
+  the numbers come from the same code as every other row here.
+
+  | | pooled PR AUC | per-fold mean | overcount |
+  |---|---:|---:|---:|
+  | m6Anet **retrained on our folds** ([8iwst4yg](https://wandb.ai/dsa4262-team/dsa4262-project/runs/8iwst4yg)) | 0.4879 | 0.4906 | 4.70x |
+  | m6Anet **pretrained** `HCT116_RNA002` ([ndowsw4l](https://wandb.ai/dsa4262-team/dsa4262-project/runs/ndowsw4l)) | 0.5033 | 0.5055 | 5.22x |
+  | our `final_candidate` ([aysxkx8h](https://wandb.ai/dsa4262-team/dsa4262-project/runs/aysxkx8h)) | 0.5293 | 0.5311 | 3.27x |
+  | our `everything` ([k87vdxlr](https://wandb.ai/dsa4262-team/dsa4262-project/runs/k87vdxlr)) | **0.5408** | - | 3.19x |
+
+  Paired against `final_candidate` over the five folds:
+
+  | arm | mean difference | wins | corrected p |
+  |---|---:|---:|---:|
+  | vs retrained (**the fair one**) | **+0.0404** | 5/5 | **0.0051** |
+  | vs pretrained | +0.0256 | 5/5 | 0.0420 |
+
+  **Do not write "our LightGBM beats a Nature Methods network".** Retrained on
+  our folds m6Anet scores 0.4879, which is *better than our own starting point*
+  (0.4759) and better than our sequence and depth work combined (0.4933). We
+  only pass it with the cross-site features. The correct sentence is that
+  m6Anet is a strong model and **what beat it was describing the data better,
+  not a better learner.**
+
+  **The pretrained model scores HIGHER than the retrained one** (0.5033 against
+  0.4879), which is the signature of having seen HCT116 in training - our
+  training set is SG-NEx HCT116 `replicate3_run1`. m6anet documents the training
+  data for its other two shipped models and not for this one, so that remains an
+  inference from the naming convention plus the paper's HEK293T benchmark, not a
+  confirmed fact. It does mean the pretrained comparison is biased in m6Anet's
+  favour, which is why it is the weaker of the two results and the retrained one
+  is the headline.
+
+  Two caveats that travel with both. **Five folds is five correlated
+  observations** - our internal comparisons use fifty
+  ([0013](docs/decisions/0013-every-run-is-a-distribution.md)) - so corrected
+  p = 0.042 on the pretrained arm only just clears the bar. And **25 sites of
+  121,838 went unscored** in the retrained arm, dropped by m6Anet's own
+  `min_reads=20` filter, so the two arms are not scored on byte-identical site
+  sets. 0.02%, no material effect.
+
+  Reproduce: `bash analysis/m6anet/run_ronin.sh all`. Both traps recorded in
+  [analysis/m6anet/README.md](analysis/m6anet/README.md) were real and **neither
+  was the actual blocker** - see the module docstrings for what was.
+
+- **Its architecture is now verified from source rather than from the
+  literature review.** `m6anet/model/configs/model_configs/m6anet.toml`:
+  `KmerMultipleEmbedding` then `Linear input_channel = 15` (9 signal + 6
+  sequence embedding), then `SigmoidProdPooling` with `n_reads_per_site = 20`.
+  That is the noisy-OR pooling and the fixed-20-read protocol that
+  [docs/literature-review.md](docs/literature-review.md) asserted on an
+  unverified citation. The claim was right.
 - No automated comparison against the simple baseline and random classifier,
   though the report requires both. A motif-only classifier (PR AUC 0.1537) is
   a third reference point worth including — it is stronger than random and
