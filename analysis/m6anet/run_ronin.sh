@@ -38,7 +38,9 @@ case "$step" in
 
 setup)
     command -v uv >/dev/null 2>&1 || pip install --quiet uv
-    uv venv --python 3.8 "$VENV"
+    # Idempotent: re-running setup after a partial failure must not stop on
+    # "a virtual environment already exists".
+    [ -x "$VENV/bin/python" ] || uv venv --python 3.8 "$VENV"
     # On Linux the torch==1.6.0 pin usually resolves. If it does not, the
     # --no-deps route below is the one verified to work (torch 2.4.1 is fine;
     # the pin is conservative, not load-bearing).
