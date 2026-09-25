@@ -8,13 +8,13 @@ reimplementing anything, so the numbers are computed by the same code that
 produced every number in GAPS.md.
 
     # the pretrained model, one file over all sites
-    python analysis/m6anet/score_m6anet.py --pretrained data0/m6anet_out/data.site_proba.csv
+    python analysis/m6anet/score_m6anet.py --pretrained data/m6anet/pretrained_out/data.site_proba.csv
 
     # retrained on our folds, five files
-    python analysis/m6anet/score_m6anet.py --cv-dir data0/m6anet_cv
+    python analysis/m6anet/score_m6anet.py --cv-dir data/m6anet/cv
 
     # and pair it fold-by-fold against one of our runs
-    python analysis/m6anet/score_m6anet.py --cv-dir data0/m6anet_cv \\
+    python analysis/m6anet/score_m6anet.py --cv-dir data/m6anet/cv \\
            --compare analysis/evaluation/reports/final_candidate.json
 
 **On comparing against the pretrained model.** It is very likely trained on
@@ -37,7 +37,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
-from m6a.data import assign_folds, load_labels  # noqa: E402
+from m6a.data import assign_folds, load_labels, resolve_data_dir  # noqa: E402
 from m6a.evaluation import calibration_summary, metrics  # noqa: E402
 
 KEY = ["transcript_id", "transcript_position"]
@@ -66,7 +66,8 @@ def main() -> None:
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--pretrained", type=Path, help="data.site_proba.csv from the shipped model")
     group.add_argument("--cv-dir", type=Path, help="directory holding fold*_test/out/")
-    parser.add_argument("--labels", default="data0/data.info.labelled")
+    parser.add_argument("--labels", default=None,
+                        help="default: $M6A_DATA_DIR/data.info.labelled")
     parser.add_argument("--compare", type=Path, default=None,
                         help="one of our report JSONs, to pair against fold by fold")
     parser.add_argument("--seed", type=int, default=4262)
@@ -78,6 +79,8 @@ def main() -> None:
                              "this the benchmark dies with the machine.")
     parser.add_argument("--no-wandb", action="store_true")
     args = parser.parse_args()
+    if args.labels is None:
+        args.labels = resolve_data_dir() / "data.info.labelled"
 
     predictions, label = load_predictions(args.pretrained, args.cv_dir)
     labels = load_labels(args.labels)

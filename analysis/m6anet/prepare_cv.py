@@ -44,7 +44,7 @@ every level, so nothing leaks between train, val and test.
 
 Usage:
 
-    python analysis/m6anet/prepare_cv.py --out data0/m6anet_cv
+    python analysis/m6anet/prepare_cv.py --out data/m6anet/cv
 """
 
 from __future__ import annotations
@@ -59,7 +59,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
-from m6a.data import assign_folds, load_labels  # noqa: E402
+from m6a.data import assign_folds, load_labels, resolve_data_dir  # noqa: E402
 
 VAL_FRACTION = 0.10
 VAL_SEED = 4262  # a different draw from the split, but deterministic
@@ -67,13 +67,16 @@ VAL_SEED = 4262  # a different draw from the split, but deterministic
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input-dir", default="data0/m6anet_input",
+    parser.add_argument("--input-dir", default="data/m6anet/input",
                         help="directory holding data.json and data.info from make_m6anet_index.py")
-    parser.add_argument("--labels", default="data0/data.info.labelled")
+    parser.add_argument("--labels", default=None,
+                        help="default: $M6A_DATA_DIR/data.info.labelled")
     parser.add_argument("--out", required=True, help="directory to write the per-fold layout into")
     parser.add_argument("--n-folds", type=int, default=5)
     parser.add_argument("--seed", type=int, default=4262, help="DO NOT CHANGE - see AGENTS.md section 3")
     args = parser.parse_args()
+    if args.labels is None:
+        args.labels = resolve_data_dir() / "data.info.labelled"
 
     input_dir = Path(args.input_dir).resolve()
     out_dir = Path(args.out).resolve()

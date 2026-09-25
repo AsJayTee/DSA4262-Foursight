@@ -18,8 +18,11 @@ cd "$ROOT"
 
 VENV=analysis/m6anet/.venv
 M6ANET=$VENV/bin/m6anet
-INPUT=data0/m6anet_input
-CVDIR=data0/m6anet_cv
+# Everything generated lives under data/, which .gitignore already blocks.
+WORK=${M6A_WORK:-data/m6anet}
+INPUT=$WORK/input
+CVDIR=$WORK/cv
+OUT=$WORK/pretrained_out
 PY=${PY:-python}
 
 # Data loading dominates: m6Anet opens data.json, seeks and parses JSON once per
@@ -54,9 +57,9 @@ convert)
     ;;
 
 pretrained)
-    "$M6ANET" inference --input_dir "$INPUT" --out_dir data0/m6anet_out \
+    "$M6ANET" inference --input_dir "$INPUT" --out_dir "$OUT" \
         --pretrained_model HCT116_RNA002 --n_processes "$NPROC"
-    echo ">> PULL data0/m6anet_out/data.site_proba.csv OFF THIS INSTANCE."
+    echo ">> PULL "$OUT"/data.site_proba.csv OFF THIS INSTANCE."
     ;;
 
 probe)
@@ -93,8 +96,8 @@ retrain)
     ;;
 
 score)
-    if [ -f data0/m6anet_out/data.site_proba.csv ]; then
-        $PY analysis/m6anet/score_m6anet.py --pretrained data0/m6anet_out/data.site_proba.csv
+    if [ -f "$OUT"/data.site_proba.csv ]; then
+        $PY analysis/m6anet/score_m6anet.py --pretrained "$OUT"/data.site_proba.csv
         echo ""
     fi
     if [ -d "$CVDIR" ]; then

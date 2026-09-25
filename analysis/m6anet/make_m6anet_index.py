@@ -38,7 +38,7 @@ the first line, so the output is opened with `newline=""`.
 
 Usage:
 
-    python analysis/m6anet/make_m6anet_index.py --out data0/m6anet_input
+    python analysis/m6anet/make_m6anet_index.py --out data/m6anet/input
     python analysis/m6anet/make_m6anet_index.py --out /tmp/small --limit 200
 """
 
@@ -47,8 +47,13 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
+import sys
 import time
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
+
+from m6a.data import resolve_data_dir  # noqa: E402
 
 N_FEATURES = 9
 
@@ -121,11 +126,13 @@ def build(source: Path, out_dir: Path, limit: int | None = None) -> tuple[int, i
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source", default="data0/dataset0.json.gz")
+    parser.add_argument("--source", default=None,
+                        help="default: $M6A_DATA_DIR/dataset0.json.gz (data/raw if unset)")
     parser.add_argument("--out", required=True, help="directory to write data.json and data.info into")
     parser.add_argument("--limit", type=int, default=None, help="first N sites only, for a smoke test")
     args = parser.parse_args()
-    build(Path(args.source), Path(args.out), args.limit)
+    source = Path(args.source) if args.source else resolve_data_dir() / "dataset0.json.gz"
+    build(source, Path(args.out), args.limit)
 
 
 if __name__ == "__main__":
