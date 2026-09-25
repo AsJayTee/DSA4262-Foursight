@@ -23,7 +23,11 @@ WORK=${M6A_WORK:-data/m6anet}
 INPUT=$WORK/input
 CVDIR=$WORK/cv
 OUT=$WORK/pretrained_out
-PY=${PY:-python}
+# The PROJECT venv, not the m6anet one and not the system python. The helper
+# scripts import m6a for the split, the labels and the metrics, so they must run
+# where the package is installed - and Ubuntu 26.04 ships Python 3.14, which our
+# dependency stack has no wheels for.
+PY=${PY:-.venv/bin/python}
 
 # Data loading dominates: m6Anet opens data.json, seeks and parses JSON once per
 # site per epoch. That is CPU and IO, not matrix multiply, so processes matter
@@ -103,14 +107,36 @@ retrain)
     ;;
 
 score)
-    if [ -f "$OUT"/data.site_proba.csv ]; then
-        $PY analysis/m6anet/score_m6anet.py --pretrained "$OUT"/data.site_proba.csv
+    if [ -f "$OUT/data.site_proba.csv" ]; then
+        $PY analysis/m6anet/score_m6anet.py --pretrained "$OUT/data.site_proba.csv" \
+            --compare analysis/evaluation/reports/final_candidate.json \
+            --wandb-name m6anet_pretrained_hct116
         echo ""
     fi
-    if [ -d "$CVDIR" ]; then
+    if compgen -G "$CVDIR/fold*_test/out/data.site_proba.csv" > /dev/null; then
         $PY analysis/m6anet/score_m6anet.py --cv-dir "$CVDIR" \
-            --compare analysis/evaluation/reports/final_candidate.json
+            --compare analysis/evaluation/reports/final_candidate.json \
+            --wandb-name m6anet_retrained_ourfolds
     fi
+    ;;
+
+all)
+    # Everything, unattended. Ordered so the CHEAP answer is scored and pushed
+    # to W&B before the multi-hour retrain starts - a failure late in the
+    # sequence then still leaves half the benchmark safely recorded, which is
+    # the whole point of docs/decisions/0007 on a disposable instance.
+    bash "$0" convert
+    bash "$0" pretrained
+    $PY analysis/m6anet/score_m6anet.py --pretrained "$OUT/data.site_proba.csv" \
+        --compare analysis/evaluation/reports/final_candidate.json \
+        --wandb-name m6anet_pretrained_hct116
+    # ~473 MB that nothing reads, and the retrain is about to write five more.
+    rm -f "$OUT/data.indiv_proba.csv"
+    bash "$0" probe
+    bash "$0" retrain
+    bash "$0" score
+    echo ""
+    echo ">> DONE. Everything is in W&B. Nothing needs pulling off this instance."
     ;;
 
 *)
