@@ -65,6 +65,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from m6a.features.coupling import QuantileCouplingFeatures
 from m6a.features.flank import QuantileFlankFeatures
 from m6a.features.quantiles import QuantileFeatures
 from m6a.registry import register
@@ -407,3 +408,30 @@ class FlankAndRobustCrossSiteFeatures(QuantileFlankFeatures, RobustCrossSiteFeat
     work - that module uses the zero-argument `super()`, which requires `self`
     to be an instance of the class the call is written in.
     """
+
+
+@register("features", "quantiles_all_v1")
+class EverythingFeatures(
+    QuantileCouplingFeatures, QuantileFlankFeatures, RobustCrossSiteFeatures
+):
+    """Every feature family that has independently cleared the bar.
+
+    | family | alone, vs `quantiles_v1` | |
+    |---|---:|---|
+    | 7-mer flanks | +0.0109, 48/50 | p = 0.0006 |
+    | within-site position coupling | +0.0104, 47/50 | p = 0.0100 |
+    | robust cross-site | +0.0271 over flank+depth | p = 0.0000 |
+
+    Composed by inheritance so no half can drift from the version tested on its
+    own. The MRO chains the three `site_features` implementations - coupling
+    calls flank calls quantiles - and `finalise` resolves past both to
+    `RobustCrossSiteFeatures`.
+
+    **Whether they stack is the open question.** The flanks already lost about
+    half their solo value once the cross-site columns were present (+0.0109
+    alone, ~+0.006 on top), so sequence and transcript context overlap. Coupling
+    is a within-read quantity and has no obvious overlap with either, but that
+    is an argument, not a measurement.
+    """
+
+

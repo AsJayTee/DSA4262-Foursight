@@ -1,0 +1,36 @@
+# Every feature family that has independently cleared the bar, in one model.
+#
+#   quantiles_v1        the base
+# + 7-mer flanks        +0.0109 alone, 48/50, p = 0.0006
+# + position coupling   +0.0104 alone, 47/50, p = 0.0100
+# + robust cross-site   +0.0271 over flank+depth, 50/50, p = 0.0000
+# + train_depths        no measurable cost at full depth, large gain at low
+#
+# Whether they STACK is the question. The flanks already lost about half their
+# solo value once cross-site was present, so sequence and transcript context
+# overlap. Coupling is a within-read quantity with no obvious overlap with
+# either - but that is an argument, not a measurement.
+#
+#   python scripts/evaluate.py --config configs/everything.yaml \
+#          --compare-with configs/final_candidate.yaml
+#
+# Expect nothing from coupling at low depth: a correlation needs several reads,
+# and on its own it was slightly WORSE at one read (0.1485 vs 0.1527).
+name: everything
+features: quantiles_all_v1
+model: lightgbm
+model_params:
+  learning_rate: 0.05
+  num_leaves: 63
+  n_estimators: 600
+  min_child_samples: 40
+  feature_fraction: 0.7
+train_depths: [1, 3, 5, 10, null]
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: >
+  The full stack including coupling. Compared against final_candidate, which is
+  the same thing without the coupling columns, so the difference is attributable
+  to them alone.

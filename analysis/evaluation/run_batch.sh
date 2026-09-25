@@ -70,13 +70,14 @@ done|nbr_struct|--config configs/nbr_struct.yaml --compare-features quantiles_v1
 done|nbr_signal|--config configs/nbr_signal.yaml --compare-features quantiles_v1
 done|transcript|--config configs/transcript.yaml --compare-features quantiles_v1
 done|transcript_robust|--config configs/transcript_robust.yaml --compare-with configs/transcript.yaml
-groupF|crosssite_robust|--config configs/crosssite_robust.yaml --compare-with configs/quantiles_flank_depth_augmented.yaml
-groupF|final_candidate|--config configs/final_candidate.yaml --compare-with configs/quantiles_flank_depth_augmented.yaml
-groupB|coupling|--config configs/coupling.yaml --compare-features quantiles_v1
-groupD|calib_prior_shift|--config configs/calibrated_prior_shift.yaml
-groupD|calib_platt|--config configs/calibrated_platt.yaml
-groupE|best_ablation|--config configs/quantiles_flank_depth_augmented.yaml --ablate
-groupE|budget_450|--config configs/best_shorter.yaml --compare-with configs/quantiles_flank_depth_augmented.yaml
+groupG|everything|--config configs/everything.yaml --compare-with configs/final_candidate.yaml
+done|crosssite_robust|--config configs/crosssite_robust.yaml --compare-with configs/quantiles_flank_depth_augmented.yaml
+done|final_candidate|--config configs/final_candidate.yaml --compare-with configs/quantiles_flank_depth_augmented.yaml
+done|coupling|--config configs/coupling.yaml --compare-features quantiles_v1
+done|calib_prior_shift|--config configs/calibrated_prior_shift.yaml
+done|calib_platt|--config configs/calibrated_platt.yaml
+done|best_ablation|--config configs/quantiles_flank_depth_augmented.yaml --ablate
+done|budget_450|--config configs/best_shorter.yaml --compare-with configs/quantiles_flank_depth_augmented.yaml
 PLAN
 )
 
