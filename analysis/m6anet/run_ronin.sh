@@ -43,11 +43,16 @@ setup)
     # --no-deps route below is the one verified to work (torch 2.4.1 is fine;
     # the pin is conservative, not load-bearing).
     uv pip install --python "$VENV" "m6anet==2.1.0" || {
-        echo ">> torch 1.6 unavailable here, falling back to the verified route"
+        echo ">> torch 1.6 has no wheel here, falling back to a modern torch."
+        echo ">> The pin is conservative, not load-bearing: verified on torch 2.4.1."
         uv pip install --python "$VENV" --no-deps "m6anet==2.1.0"
-        uv pip install --python "$VENV" torch "numpy<1.25" pandas scikit-learn \
-            toml tqdm setuptools ujson
+        uv pip install --python "$VENV" torch "numpy<1.25" pandas scikit-learn toml tqdm
     }
+    # Always, whichever branch ran. m6anet imports pkg_resources and ujson and
+    # declares neither, and a uv venv does not seed setuptools the way
+    # virtualenv does - so on Linux, where the torch 1.6 pin DOES resolve and
+    # the fallback never fires, the install "succeeds" and then dies at import.
+    uv pip install --python "$VENV" -q setuptools ujson
     "$VENV/bin/python" -c "import m6anet, torch; print('m6anet OK, torch', torch.__version__)"
     ;;
 
