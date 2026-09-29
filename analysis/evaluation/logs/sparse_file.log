@@ -1,0 +1,31 @@
+             normal file: 0% of sites have no other site on their transcript
+     random 10% of sites: 10% of sites have no other site on their transcript
+      random 5% of sites: 26% of sites have no other site on their transcript
+      random 1% of sites: 72% of sites have no other site on their transcript
+        every site alone: 100% of sites have no other site on their transcript
+views built in 22s
+
+  fold 0 everything: 35s
+  fold 0 everything minus cross-site: 36s
+  fold 1 everything: 40s
+  fold 1 everything minus cross-site: 50s
+  fold 2 everything: 47s
+  fold 2 everything minus cross-site: 44s
+  fold 3 everything: 49s
+  fold 3 everything minus cross-site: 42s
+  fold 4 everything: 46s
+  fold 4 everything minus cross-site: 41s
+
+               scored on                    everything   everything minus cross-site
+             normal file  PR 0.5408 ROC 0.9347      PR 0.5013 ROC 0.9320    
+     random 10% of sites  PR 0.4557 ROC 0.9090      PR 0.5013 ROC 0.9320    
+      random 5% of sites  PR 0.4383 ROC 0.9044      PR 0.5013 ROC 0.9320    
+      random 1% of sites  PR 0.4439 ROC 0.9061      PR 0.5013 ROC 0.9320    
+        every site alone  PR 0.4478 ROC 0.9099      PR 0.5013 ROC 0.9320    
+
+Per fold, everything minus the fallback (positive = keeping cross-site helps):
+             normal file  +0.0389  wins 5/5  [+0.0539, +0.0266, +0.0391, +0.0406, +0.0342]
+     random 10% of sites  -0.0467  wins 0/5  [-0.0389, -0.0581, -0.0259, -0.0602, -0.0502]
+      random 5% of sites  -0.0644  wins 0/5  [-0.0583, -0.0715, -0.0575, -0.0586, -0.0761]
+      random 1% of sites  -0.0567  wins 0/5  [-0.0532, -0.0631, -0.0474, -0.0703, -0.0498]
+        every site alone  -0.0516  wins 0/5  [-0.0472, -0.0640, -0.0401, -0.0677, -0.0390]

@@ -1,0 +1,146 @@
+[pos_attn_ae] data loaded (16s)
+[pos_attn_ae fold 0] 121,838 sites: encoder 43,448 (+4,391 val), probe 49,685, held out 24,314  (0s)
+  25,671 parameters; reads standardised (2s)
+    epoch 1: loss 0.621672393118634, minutes 0.78
+    epoch 2: loss 0.3059222475570791, minutes 1.6
+    epoch 3: loss 0.2413295790553093, minutes 2.42
+    epoch 4: loss 0.20783648070167093, minutes 3.35
+    epoch 5: loss 0.17807559379759957, minutes 4.34
+    epoch 6: loss 0.16626532866674312, minutes 5.31
+    epoch 7: loss 0.15994586734210745, minutes 6.38
+    epoch 8: loss 0.15620227771646836, minutes 7.44
+    epoch 9: loss 0.15329772102482178, minutes 8.45
+    epoch 10: loss 0.15141731079886941, minutes 9.42
+    epoch 11: loss 0.14954629435258754, minutes 10.42
+    epoch 12: loss 0.1482244842192706, minutes 11.37
+    epoch 13: loss 0.14686301631086013, minutes 12.32
+    epoch 14: loss 0.14547702152939404, minutes 13.23
+    epoch 15: loss 0.14441761453362073, minutes 14.18
+    epoch 16: loss 0.14329823895412333, minutes 15.13
+    epoch 17: loss 0.14202995466835358, minutes 16.12
+    epoch 18: loss 0.14086965585456174, minutes 17.09
+    epoch 19: loss 0.13958498844329048, minutes 18.07
+    epoch 20: loss 0.13849832301630693, minutes 19.08
+    epoch 21: loss 0.13729787688044942, minutes 20.03
+    epoch 22: loss 0.1362429654773544, minutes 20.98
+    epoch 23: loss 0.13492919850875348, minutes 21.99
+    epoch 24: loss 0.13385660674642114, minutes 23.01
+    epoch 25: loss 0.13277112249942385, minutes 23.95
+    epoch 26: loss 0.13209413184839136, minutes 24.94
+    epoch 27: loss 0.13127568499608475, minutes 25.01
+  trained (1504s); embedding
+  saved 26-dim vectors -> /mnt/sdd/DSA4262/.cache/representation/pos_attn_ae/fold0.npz (27.91 min)
+[pos_attn_ae fold 1] 121,838 sites: encoder 44,036 (+3,728 val), probe 48,151, held out 25,923  (0s)
+  25,671 parameters; reads standardised (4s)
+    epoch 1: loss 0.5953820618246332, minutes 1.01
+    epoch 2: loss 0.3044429479995904, minutes 2.01
+    epoch 3: loss 0.238814927680644, minutes 3.05
+    epoch 4: loss 0.18473726709109511, minutes 4.08
+    epoch 5: loss 0.1681901497303406, minutes 5.09
+    epoch 6: loss 0.16198529509795195, minutes 6.09
+    epoch 7: loss 0.15744195275568548, minutes 7.09
+    epoch 8: loss 0.15429808948770424, minutes 8.1
+    epoch 9: loss 0.15144409842229303, minutes 9.11
+    epoch 10: loss 0.1484984799444331, minutes 10.12
+    epoch 11: loss 0.14669682197488113, minutes 11.11
+    epoch 12: loss 0.14518383502787938, minutes 12.09
+    epoch 13: loss 0.1433444604105343, minutes 13.14
+    epoch 14: loss 0.142540019371606, minutes 14.13
+    epoch 15: loss 0.14132493338143895, minutes 15.1
+    epoch 16: loss 0.14049779283518046, minutes 16.1
+    epoch 17: loss 0.1393920849857992, minutes 17.12
+    epoch 18: loss 0.13836026234778365, minutes 18.11
+    epoch 19: loss 0.13749225084492236, minutes 19.15
+    epoch 20: loss 0.13668964148601356, minutes 20.13
+    epoch 21: loss 0.13617117117250585, minutes 21.19
+    epoch 22: loss 0.13492893113221735, minutes 22.27
+    epoch 23: loss 0.13404903814971791, minutes 23.38
+    epoch 24: loss 0.1333841905428495, minutes 24.48
+    epoch 25: loss 0.13220239301890502, minutes 25.01
+  trained (1504s); embedding
+  saved 26-dim vectors -> /mnt/sdd/DSA4262/.cache/representation/pos_attn_ae/fold1.npz (28.01 min)
+[pos_attn_ae fold 2] 121,838 sites: encoder 44,002 (+4,528 val), probe 49,914, held out 23,394  (0s)
+  25,671 parameters; reads standardised (4s)
+    epoch 1: loss 0.6038147820982822, minutes 0.96
+    epoch 2: loss 0.31262708403343376, minutes 1.92
+    epoch 3: loss 0.251267496236535, minutes 2.95
+    epoch 4: loss 0.20866773970598398, minutes 3.96
+    epoch 5: loss 0.16919568579557331, minutes 4.92
+    epoch 6: loss 0.15929024813826695, minutes 5.89
+    epoch 7: loss 0.15422383383956068, minutes 6.93
+    epoch 8: loss 0.15083545203818832, minutes 7.92
+    epoch 9: loss 0.14828261377853016, minutes 8.92
+    epoch 10: loss 0.14627689400384591, minutes 9.93
+    epoch 11: loss 0.14453286954829858, minutes 10.95
+    epoch 12: loss 0.142995833830778, minutes 11.96
+    epoch 13: loss 0.14168478375257448, minutes 12.98
+    epoch 14: loss 0.14078791916023853, minutes 13.95
+    epoch 15: loss 0.1398051440889059, minutes 14.92
+    epoch 16: loss 0.13874919755860818, minutes 15.9
+    epoch 17: loss 0.13786623046495194, minutes 16.87
+    epoch 18: loss 0.13664405992211298, minutes 17.88
+    epoch 19: loss 0.1354413287237633, minutes 18.92
+    epoch 20: loss 0.13416654235401818, minutes 19.81
+    epoch 21: loss 0.13345274151584438, minutes 20.83
+    epoch 22: loss 0.13212483809437864, minutes 21.76
+    epoch 23: loss 0.1310813222080469, minutes 22.84
+    epoch 24: loss 0.13062693772101125, minutes 23.92
+    epoch 25: loss 0.12995419196437957, minutes 24.93
+    epoch 26: loss 0.12876410516245024, minutes 25.0
+  trained (1504s); embedding
+  saved 26-dim vectors -> /mnt/sdd/DSA4262/.cache/representation/pos_attn_ae/fold2.npz (27.8 min)
+[pos_attn_ae fold 3] 121,838 sites: encoder 43,333 (+4,119 val), probe 50,267, held out 24,119  (0s)
+  25,671 parameters; reads standardised (3s)
+    epoch 1: loss 0.6025223125429714, minutes 1.09
+    epoch 2: loss 0.31450004998375386, minutes 2.11
+    epoch 3: loss 0.2370924883905579, minutes 3.11
+    epoch 4: loss 0.1796473724877133, minutes 4.13
+    epoch 5: loss 0.16660700457937577, minutes 5.05
+    epoch 6: loss 0.16071934235446594, minutes 6.09
+    epoch 7: loss 0.1561401689753813, minutes 7.15
+    epoch 8: loss 0.15280298345229204, minutes 8.11
+    epoch 9: loss 0.15011364081326653, minutes 9.04
+    epoch 10: loss 0.1483302247874877, minutes 10.02
+    epoch 11: loss 0.14638146205860025, minutes 11.01
+    epoch 12: loss 0.14509560702478183, minutes 12.03
+    epoch 13: loss 0.14384787082672118, minutes 13.04
+    epoch 14: loss 0.14205783254960003, minutes 14.09
+    epoch 15: loss 0.14108387135407505, minutes 15.09
+    epoch 16: loss 0.1401294765226981, minutes 16.05
+    epoch 17: loss 0.1384176304235178, minutes 16.94
+    epoch 18: loss 0.13729009391630398, minutes 17.96
+    epoch 19: loss 0.13603477977654513, minutes 19.0
+    epoch 20: loss 0.13519545127363766, minutes 20.0
+    epoch 21: loss 0.1344696498969022, minutes 20.98
+    epoch 22: loss 0.1336525905658217, minutes 22.0
+    epoch 23: loss 0.13280747550375321, minutes 22.92
+    epoch 24: loss 0.13230507514056036, minutes 23.89
+    epoch 25: loss 0.1318881642730797, minutes 24.96
+    epoch 26: loss 0.1328046087707792, minutes 25.0
+  trained (1503s); embedding
+  saved 26-dim vectors -> /mnt/sdd/DSA4262/.cache/representation/pos_attn_ae/fold3.npz (27.76 min)
+[pos_attn_ae fold 4] 121,838 sites: encoder 44,305 (+4,170 val), probe 49,275, held out 24,088  (0s)
+  25,671 parameters; reads standardised (4s)
+    epoch 1: loss 0.6100067607630258, minutes 0.96
+    epoch 2: loss 0.34605172619052316, minutes 1.84
+    epoch 3: loss 0.25382044346168126, minutes 2.78
+    epoch 4: loss 0.20530611139604416, minutes 3.72
+    epoch 5: loss 0.17261783787231336, minutes 4.63
+    epoch 6: loss 0.16262278157746654, minutes 5.57
+    epoch 7: loss 0.15691148532533097, minutes 6.54
+    epoch 8: loss 0.152984203449611, minutes 7.55
+    epoch 9: loss 0.1504532351404771, minutes 8.51
+    epoch 10: loss 0.1479719830998059, minutes 9.5
+    epoch 11: loss 0.14597096670975632, minutes 10.49
+    epoch 12: loss 0.14500352509062867, minutes 11.41
+    epoch 13: loss 0.14379816810632573, minutes 12.51
+    epoch 14: loss 0.1423818302908163, minutes 13.57
+    epoch 15: loss 0.1419909099737803, minutes 15.26
+    epoch 16: loss 0.14094937986683573, minutes 17.84
+    epoch 17: loss 0.13985261047023467, minutes 20.46
+    epoch 18: loss 0.1393042841348155, minutes 22.01
+    epoch 19: loss 0.13824317338822903, minutes 23.06
+    epoch 20: loss 0.13751305067381323, minutes 25.01
+  trained (1505s); embedding
+  saved 26-dim vectors -> /mnt/sdd/DSA4262/.cache/representation/pos_attn_ae/fold4.npz (29.29 min)
+[pos_attn_ae] logistic 0.2265  knn 0.2423  mlp 0.2728  lgbm 0.2643  rotated 0.2499  +hand lgbm 0.5387  (337s)

@@ -783,12 +783,74 @@ regenerated, and the JSON reports behind the current ones are in
   a shallow one. The same trick applies to candidate density - fit on features
   computed at several thinning levels, and the model stops depending on ours.
   It would need a config key like `train_densities` and a change to
-  `crossval`, so it needs a decision record, and it is the single highest-value
-  unbuilt thing in this file.
+  `crossval`, so it needs a decision record. **Screened and rejected - see
+  below.**
 
   **Until then, a cross-site model may go in `models/final/` only with the table
   above quoted beside it.** The cross-validated gains are honest about this
   dataset; the table is what they are worth on a different one.
+
+  **SCREENED 2026-09-26, AND THE FIX IS NOT WORTH BUILDING - because the table
+  above simulates the wrong perturbation.** Our file is SG-NEx Hct116 filtered
+  to >= 20 reads per site, so a file from another run is thinned by
+  **coverage**: sites whose reads fall under the floor drop out, and
+  low-expression transcripts go first. Random thinning is not that. Simulated
+  both ways on `quantiles_all_v1` (keep site j when n_j x f >= 20; the per-site
+  columns are held at full depth; one canonical split, five folds,
+  full-depth training rows, so this is a screen and not a result to quote as
+  final):
+
+  | evaluation file | sites kept | cost, no augmentation |
+  |---|---:|---:|
+  | random 75% / 50% / 25% | 100% | -0.0086 / -0.0162 / -0.0375 |
+  | **coverage x0.75 / x0.5 / x0.25** | 86% / 61% / 27% | **-0.0017 / -0.0009 / -0.0028** |
+
+  **Under realistic thinning the robust cross-site columns barely move**, which
+  is what 0025's design predicted: they are positions and means, and the sites
+  that drop out are the low-coverage ones, not a random sample. The random
+  table reproduces the earlier one to within 0.003, so the method matches.
+
+  Augmenting training with thinned copies, paired per fold against no
+  augmentation:
+
+  | trained on | full file | random 25% | coverage x0.5 | coverage x0.25 |
+  |---|---:|---:|---:|---:|
+  | + random 75/50/25 | **-0.0093 (0/5)** | +0.0146 (5/5) | -0.0117 (0/5) | -0.0145 (1/5) |
+  | + coverage 75/50/25 | **-0.0052 (0/5)** | +0.0028 (3/5) | -0.0030 (1/5) | -0.0043 (0/5) |
+
+  **Both augmentations lose at full density on every fold**, and both lose on
+  the coverage-thinned files they exist to protect against. Random
+  augmentation wins only on a quarter-density *random* file, which is the one
+  perturbation a real evaluation file is least likely to be. So the insurance
+  costs about 0.005-0.009 on the file we most expect and buys nothing on the
+  one we next most expect. **Not built.**
+
+  **BUT ON A SPARSE FILE THE BEST MODEL FALLS BELOW ITS OWN FALLBACK.**
+  Measured 2026-09-26 (`analysis/evaluation/scratch/sparse_file.py`,
+  `configs/everything.yaml` exactly, canonical split, 5 folds). Scored on a
+  file where sites are mostly alone on their transcript - which is what
+  `data/sample/` is (778 of 1,000 sites alone):
+
+  | scored on | `everything` | same minus the 7 cross-site columns |
+  |---|---:|---:|
+  | normal file | **0.5408** | 0.5013 |
+  | random 10% of sites | 0.4557 | 0.5013 |
+  | random 1% of sites | 0.4439 | 0.5013 |
+  | every site alone | **0.4478** | 0.5013 |
+
+  Per fold, keeping the cross-site columns costs -0.047 to -0.064 on every
+  sparse file, **0/5 wins every time**. With the columns zeroed the model is
+  not merely missing information - it reads the zeros as a real (and rare)
+  value and scores worse than a model that never had them. 0.4478 is below
+  m6Anet retrained on our folds (0.4879). Nothing in the harness could see
+  this, because cross-validation always scores the full file. Not yet fixed;
+  the options are in [docs/test-data-assumptions.md](docs/test-data-assumptions.md).
+
+  What this does not cover: a *denser* file (a deeper run, or a lower
+  read floor - SG-NEx's processed data goes down to depth 1, which is the Task
+  2 problem and a different one), and thinning that combines coverage with a
+  different expression profile (another cell line). Regenerate:
+  `python analysis/evaluation/scratch/density_screen.py` (~7 min).
 
 - **THE CURRENT BEST MODEL IS `configs/everything.yaml`, at 0.5408.** Coupling
   stacks on top of the full stack: **+0.0122 over `final_candidate`, 50/50 wins,
@@ -811,6 +873,65 @@ regenerated, and the JSON reports behind the current ones are in
   It inherits every caveat of its parts: the input-density exposure from the
   cross-site columns (see above), and a 3.19x overcount until calibrated.
 
+- **ESTABLISHED 2026-09-27: a small network over the RAW READS adds +0.028 to
+  the best model, and it is not stacking.** 50 paired observations (10
+  repetitions x 5 folds, the harness's split seeds), every training label used
+  on both sides, network scores cross-fitted inside each training fold.
+  `analysis/representation/` (PLAN.md, results/r2.md; run on Ronin c5ad.16xlarge,
+  7.2 h):
+
+  | arm (depth-augmented, as `everything.yaml`) | PR AUC | vs `everything` | wins | corrected p |
+  |---|---:|---:|---:|---:|
+  | `everything` (reproduces 0.5408) | 0.5408 | - | - | - |
+  | + `deepset` score | 0.5685 | +0.0276 | 50/50 | 0.0000 |
+  | + `deepset` + `kmer_norm` | 0.5737 | +0.0329 | 50/50 | 0.0000 |
+  | at 3 reads: + `deepset` | 0.4089 vs 0.3900 | +0.0189 | 50/50 | 0.0000 |
+
+  The stacking control - the same procedure with a network over the hand
+  features - is +0.0047, 36/50, p = 0.19. Four different networks (deepset,
+  attention-MIL, a 2x-wide deepset, a bottleneck autoencoder with a prediction
+  head) are statistically identical to each other (all within 0.002, p > 0.5):
+  they learn the same one-dimensional score. Every reconstruction-only
+  encoder (autoencoder, LSTM and attention over pore positions, masked
+  attention across reads, contrastive) adds nothing. `kmer_norm` (reads
+  standardised against their 7-mer's average read; no network) is +0.013 alone
+  but only +0.0052, 40/50, p = 0.11 on top of `deepset`. **Not in the pipeline
+  yet:** shipping needs cross-fitting in `train.py` and a numpy forward pass in
+  the feature extractor, because `predict.py` may not import torch.
+
+  **Round 3 (2026-09-28): bigger networks do not beat it.** A diagnostic
+  suggested underfitting (networks fit their own training sites no better than
+  unseen ones). Mostly an artefact: the early-stopping validation slice was 10%
+  of half the training genes (~185 positives), so training stopped on noise;
+  at 20%, the same `deepset` trains ~2x longer and reaches 0.66 AP on its own
+  training sites. Then, per fold against `deepset` (held-out AP of the network
+  alone, canonical split; `analysis/representation/results/diagnose2.md`):
+  residual `deepset` (443k parameters) +0.006, 3/5; residual attention-MIL
+  -0.007, 3/5; supervised Set Transformer -0.006, 1/5; `deepset` with an
+  AdamW/cosine recipe +0.008, 3/5 (all corrected p > 0.5). A pass rule fixed in
+  advance (>= +0.005 and >= 4/5, `results/r3_gate.md`) passed none, so no
+  50-observation confirmation was run. With round 2's four converging
+  architectures, the ceiling looks like information, not network capacity.
+- **QUICK RUN ONLY, NOT QUOTABLE: the other 24 within-site correlations add
+  nothing visible on top of `everything`.** `coupling.py` carries 12 of the 36
+  pairwise correlations of the nine read measurements;
+  `configs/everything_moments.yaml` (`src/m6a/features/moments.py`) adds the
+  other 24. They screened strong and non-redundant (four at abs(AUC-0.5)
+  0.08-0.14, at most abs(r) = 0.37 against any existing column;
+  `analysis/evaluation/scratch/second_moment_screen.py`). On one repetition of
+  five folds: **+0.0010, 3/5 wins, corrected p = 0.87**, 95% CI
+  [-0.0148, +0.0167]. The `everything` arm reproduced 0.5408 exactly.
+
+  This is the cheap test of the premise behind attention-MIL with pairwise
+  products (a network that pools read products can at best rediscover these
+  correlations and hand them to an MLP head, and an MLP head tied LightGBM). A
+  point estimate of +0.001 makes an effect above the ~+0.006 the harness
+  resolves unlikely, though five folds cannot exclude one. The 50-observation
+  run that would settle it is ~2 h:
+  `python scripts/evaluate.py --config configs/everything_moments.yaml --compare-run k87vdxlr`
+  (not yet run). The same screen found strong *marginal* signal in log-scale
+  variances (`var(log sd_0)` at 0.2538, r = 0.71 with `sd_0_std`), which is a
+  different, untested idea.
 - **THE STACK, and it does stack.** Everything independently established,
   combined, each `--compare-with configs/quantiles_flank_depth_augmented.yaml`
   at 50 observations:
@@ -1506,6 +1627,19 @@ catalogued, and one blocker is much larger than expected.
 
 ## Infrastructure
 
+- **LightGBM needs the system library `libgomp1`, and a fresh Ubuntu image may
+  not have it - which puts the graded `predict.py` at risk.** Found 2026-09-27 on
+  a fresh Ronin c5ad.16xlarge (Ubuntu, kernel 7.0.0-aws): `import lightgbm`
+  failed with `OSError: libgomp.so.1: cannot open shared object file`, so the
+  registry silently dropped the `lightgbm` and `calibrated` models and
+  `registry.get("models", "lightgbm")` raised. It *appeared* to work in any
+  process that imported torch first, because torch bundles its own libgomp -
+  so a test run inside a torch-using script does not catch it. Fixed on that
+  box with `sudo apt-get install -y libgomp1`. `setup_remote.sh` does not
+  install it, and the README does not tell evaluators to. Evaluators run
+  `predict.py` "on an AWS Ubuntu machine" from a clean clone, and the shipped
+  model is LightGBM. Unverified whether the course's image has it; if it does
+  not, prediction fails on every evaluator's machine.
 - **A lower-profile run silently overwrites a recorded higher-profile report of
   the same name.** Found on 2026-09-24 by doing it.
   `evaluate.py --config configs/quantiles.yaml --profile quick` rewrote

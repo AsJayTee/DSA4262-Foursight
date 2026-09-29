@@ -1,0 +1,124 @@
+
+$ learn.py --model pos_lstm_ae
+[pos_lstm_ae] data loaded (21s)
+[pos_lstm_ae fold 0] 121,838 sites: encoder 43,448 (+4,391 val), probe 49,685, held out 24,314  (0s)
+  14,951 parameters; reads standardised (3s)
+    epoch 1: loss 0.7202779780415928, minutes 0.18
+    epoch 2: loss 0.33817062903853023, minutes 0.37
+    epoch 3: loss 0.23342588964630576, minutes 0.55
+    epoch 4: loss 0.18091848019291373, minutes 0.74
+    epoch 5: loss 0.1679419722627191, minutes 0.93
+    epoch 6: loss 0.161390300358043, minutes 1.11
+    epoch 7: loss 0.15660570220035666, minutes 1.3
+    epoch 8: loss 0.15309746388126821, minutes 1.49
+    epoch 9: loss 0.15056826200555354, minutes 1.69
+    epoch 10: loss 0.14856129244846455, minutes 1.97
+    epoch 11: loss 0.14695710311917698, minutes 2.32
+    epoch 12: loss 0.1459022762144313, minutes 2.92
+    epoch 13: loss 0.14460386800415376, minutes 3.55
+    epoch 14: loss 0.14377527333357754, minutes 4.18
+    epoch 15: loss 0.14308027037802865, minutes 4.8
+    epoch 16: loss 0.14226788720663855, minutes 5.42
+    epoch 17: loss 0.14167385118849138, minutes 6.04
+    epoch 18: loss 0.14090963812435375, minutes 6.67
+    epoch 19: loss 0.14039271929684807, minutes 7.28
+    epoch 20: loss 0.13986962858368368, minutes 7.9
+    epoch 21: loss 0.13914904743433, minutes 8.0
+  trained (485s); embedding
+  saved 26-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\pos_lstm_ae\fold0.npz (8.84 min)
+[pos_lstm_ae fold 1] 121,838 sites: encoder 44,036 (+3,728 val), probe 48,151, held out 25,923  (0s)
+  14,951 parameters; reads standardised (3s)
+    epoch 1: loss 0.6946985919696058, minutes 0.2
+    epoch 2: loss 0.36489738308625413, minutes 0.39
+    epoch 3: loss 0.2532839590758947, minutes 0.57
+    epoch 4: loss 0.1870641650664324, minutes 0.76
+    epoch 5: loss 0.1668151845304952, minutes 0.98
+    epoch 6: loss 0.15934161161411706, minutes 1.25
+    epoch 7: loss 0.15519309078337828, minutes 1.51
+    epoch 8: loss 0.15261136365763714, minutes 1.66
+    epoch 9: loss 0.15002930560553004, minutes 1.86
+    epoch 10: loss 0.14777547965159996, minutes 2.12
+    epoch 11: loss 0.145925193077567, minutes 2.47
+    epoch 12: loss 0.144496453893667, minutes 3.04
+    epoch 13: loss 0.14256647349782073, minutes 3.62
+    epoch 14: loss 0.14168905918997837, minutes 4.2
+    epoch 15: loss 0.14036815023491148, minutes 4.78
+    epoch 16: loss 0.14014517821673023, minutes 5.37
+    epoch 17: loss 0.13938017482357906, minutes 6.02
+    epoch 18: loss 0.13820813053605185, minutes 6.79
+    epoch 19: loss 0.13784031914493253, minutes 7.52
+    epoch 20: loss 0.13698872246525504, minutes 8.0
+  trained (483s); embedding
+  saved 26-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\pos_lstm_ae\fold1.npz (9.04 min)
+[pos_lstm_ae fold 2] 121,838 sites: encoder 44,002 (+4,528 val), probe 49,914, held out 23,394  (0s)
+  14,951 parameters; reads standardised (3s)
+    epoch 1: loss 0.6965929923015971, minutes 0.24
+    epoch 2: loss 0.3328017944166827, minutes 0.45
+    epoch 3: loss 0.24085145538976027, minutes 0.69
+    epoch 4: loss 0.18149321959462278, minutes 0.91
+    epoch 5: loss 0.16310592394235524, minutes 1.08
+    epoch 6: loss 0.15584222807787185, minutes 1.26
+    epoch 7: loss 0.15132782998126607, minutes 1.43
+    epoch 8: loss 0.14831003191512684, minutes 1.6
+    epoch 9: loss 0.14648304498472878, minutes 1.79
+    epoch 10: loss 0.14439969735090122, minutes 2.1
+    epoch 11: loss 0.14330603953364285, minutes 2.5
+    epoch 12: loss 0.1419556714421095, minutes 3.17
+    epoch 13: loss 0.14101501640885375, minutes 3.83
+    epoch 14: loss 0.14046680199545483, minutes 4.5
+    epoch 15: loss 0.13968332345749057, minutes 5.18
+    epoch 16: loss 0.13912586928453557, minutes 5.85
+    epoch 17: loss 0.1386534906923771, minutes 6.52
+    epoch 18: loss 0.13799131860913233, minutes 7.2
+    epoch 19: loss 0.13741600140929222, minutes 7.87
+    epoch 20: loss 0.13692954310349056, minutes 8.0
+  trained (483s); embedding
+  saved 26-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\pos_lstm_ae\fold2.npz (8.85 min)
+[pos_lstm_ae fold 3] 121,838 sites: encoder 43,333 (+4,119 val), probe 50,267, held out 24,119  (0s)
+  14,951 parameters; reads standardised (4s)
+    epoch 1: loss 0.6776493998134837, minutes 0.2
+    epoch 2: loss 0.3706217346822514, minutes 0.4
+    epoch 3: loss 0.25147562736974044, minutes 0.6
+    epoch 4: loss 0.18430299969280467, minutes 0.8
+    epoch 5: loss 0.16515119689352373, minutes 0.99
+    epoch 6: loss 0.1585116529289414, minutes 1.19
+    epoch 7: loss 0.15413731669678407, minutes 1.4
+    epoch 8: loss 0.15136697651708828, minutes 1.59
+    epoch 9: loss 0.1493101667831926, minutes 1.8
+    epoch 10: loss 0.14771216800984213, minutes 2.08
+    epoch 11: loss 0.14638213787008733, minutes 2.43
+    epoch 12: loss 0.14525635952458663, minutes 3.04
+    epoch 13: loss 0.14408310309929007, minutes 3.7
+    epoch 14: loss 0.1426722212749369, minutes 4.37
+    epoch 15: loss 0.14185463584521238, minutes 5.03
+    epoch 16: loss 0.14124413974144878, minutes 5.69
+    epoch 17: loss 0.14015326429815853, minutes 6.35
+    epoch 18: loss 0.1394085068913067, minutes 7.01
+    epoch 19: loss 0.1388621036620701, minutes 7.67
+    epoch 20: loss 0.13833236179891087, minutes 8.0
+  trained (484s); embedding
+  saved 26-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\pos_lstm_ae\fold3.npz (8.86 min)
+[pos_lstm_ae fold 4] 121,838 sites: encoder 44,305 (+4,170 val), probe 49,275, held out 24,088  (0s)
+  14,951 parameters; reads standardised (3s)
+    epoch 1: loss 0.7120122071997873, minutes 0.21
+    epoch 2: loss 0.34792784627141626, minutes 0.41
+    epoch 3: loss 0.22261723499188477, minutes 0.61
+    epoch 4: loss 0.17220001984601732, minutes 0.82
+    epoch 5: loss 0.16144113396776133, minutes 1.01
+    epoch 6: loss 0.15616848362588334, minutes 1.22
+    epoch 7: loss 0.1525496836195047, minutes 1.42
+    epoch 8: loss 0.14985828932331896, minutes 1.62
+    epoch 9: loss 0.14768786214548965, minutes 1.85
+    epoch 10: loss 0.14541560548475418, minutes 2.14
+    epoch 11: loss 0.14352131455109038, minutes 2.58
+    epoch 12: loss 0.14233496519683422, minutes 3.26
+    epoch 13: loss 0.14092902034178548, minutes 3.93
+    epoch 14: loss 0.13959362794613017, minutes 4.62
+    epoch 15: loss 0.13926287466424636, minutes 5.3
+    epoch 16: loss 0.13835070367859698, minutes 5.97
+    epoch 17: loss 0.13741157546468163, minutes 6.64
+    epoch 18: loss 0.13704432958158955, minutes 7.32
+    epoch 19: loss 0.13624493529399237, minutes 7.99
+    epoch 20: loss 0.13391943648457527, minutes 8.0
+  trained (483s); embedding
+  saved 26-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\pos_lstm_ae\fold4.npz (8.95 min)

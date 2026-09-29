@@ -1,0 +1,3 @@
+
+$ probe.py --models mlp_hand
+[mlp_hand] logistic 0.4682  knn 0.4536  mlp 0.4648  lgbm 0.4519  rotated 0.4373  +hand lgbm 0.5443  (167s)

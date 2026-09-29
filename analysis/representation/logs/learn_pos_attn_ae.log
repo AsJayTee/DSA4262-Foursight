@@ -1,0 +1,70 @@
+
+$ learn.py --model pos_attn_ae
+[pos_attn_ae] data loaded (24s)
+[pos_attn_ae fold 0] 121,838 sites: encoder 43,448 (+4,391 val), probe 49,685, held out 24,314  (0s)
+  25,671 parameters; reads standardised (4s)
+    epoch 1: loss 0.6216724702540566, minutes 0.81
+    epoch 2: loss 0.30592414947117075, minutes 1.61
+    epoch 3: loss 0.2414102239643826, minutes 2.41
+    epoch 4: loss 0.20798657703049042, minutes 3.21
+    epoch 5: loss 0.178075154476306, minutes 4.03
+    epoch 6: loss 0.16608060177634745, minutes 4.86
+    epoch 7: loss 0.15981991948450314, minutes 5.66
+    epoch 8: loss 0.15613204600179897, minutes 6.47
+    epoch 9: loss 0.1533605206538649, minutes 7.27
+    epoch 10: loss 0.1515021073138154, minutes 8.0
+  trained (486s); embedding
+  saved 26-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\pos_attn_ae\fold0.npz (9.8 min)
+[pos_attn_ae fold 1] 121,838 sites: encoder 44,036 (+3,728 val), probe 48,151, held out 25,923  (0s)
+  25,671 parameters; reads standardised (3s)
+    epoch 1: loss 0.5953821390005894, minutes 0.81
+    epoch 2: loss 0.3044405291879797, minutes 1.63
+    epoch 3: loss 0.23891868334629632, minutes 2.5
+    epoch 4: loss 0.183888523134193, minutes 3.38
+    epoch 5: loss 0.1681537039018091, minutes 4.28
+    epoch 6: loss 0.16198143526653333, minutes 5.2
+    epoch 7: loss 0.1573550332488352, minutes 6.07
+    epoch 8: loss 0.15431510635538598, minutes 7.2
+    epoch 9: loss 0.1513091402594, minutes 8.0
+  trained (483s); embedding
+  saved 26-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\pos_attn_ae\fold1.npz (10.03 min)
+[pos_attn_ae fold 2] 121,838 sites: encoder 44,002 (+4,528 val), probe 49,914, held out 23,394  (1s)
+  25,671 parameters; reads standardised (5s)
+    epoch 1: loss 0.6038138452310895, minutes 1.04
+    epoch 2: loss 0.3126113530854846, minutes 1.94
+    epoch 3: loss 0.2512209956036058, minutes 2.84
+    epoch 4: loss 0.20863532864077147, minutes 3.75
+    epoch 5: loss 0.1688007618798766, minutes 4.63
+    epoch 6: loss 0.15940631544867226, minutes 5.54
+    epoch 7: loss 0.15425644901602767, minutes 6.44
+    epoch 8: loss 0.15065571622446525, minutes 7.36
+    epoch 9: loss 0.14877671345335539, minutes 8.0
+  trained (485s); embedding
+  saved 26-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\pos_attn_ae\fold2.npz (9.77 min)
+[pos_attn_ae fold 3] 121,838 sites: encoder 43,333 (+4,119 val), probe 50,267, held out 24,119  (1s)
+  25,671 parameters; reads standardised (5s)
+    epoch 1: loss 0.602522359700764, minutes 0.86
+    epoch 2: loss 0.31446422356016496, minutes 1.7
+    epoch 3: loss 0.23704018137034247, minutes 2.58
+    epoch 4: loss 0.1794724280343336, minutes 3.42
+    epoch 5: loss 0.16668926503728418, minutes 4.27
+    epoch 6: loss 0.16055993341347752, minutes 5.14
+    epoch 7: loss 0.15595170496141209, minutes 6.0
+    epoch 8: loss 0.15296701473348281, minutes 6.81
+    epoch 9: loss 0.15010836957132115, minutes 7.45
+    epoch 10: loss 0.1483942265095918, minutes 8.0
+  trained (485s); embedding
+  saved 26-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\pos_attn_ae\fold3.npz (10.43 min)
+[pos_attn_ae fold 4] 121,838 sites: encoder 44,305 (+4,170 val), probe 49,275, held out 24,088  (1s)
+  25,671 parameters; reads standardised (5s)
+    epoch 1: loss 0.6100067569949161, minutes 0.98
+    epoch 2: loss 0.3460530609577552, minutes 1.96
+    epoch 3: loss 0.25382993644338914, minutes 2.92
+    epoch 4: loss 0.20519213558271013, minutes 3.92
+    epoch 5: loss 0.17230103353316756, minutes 4.88
+    epoch 6: loss 0.16278007001369849, minutes 5.83
+    epoch 7: loss 0.15694147759470448, minutes 6.74
+    epoch 8: loss 0.15296162938934632, minutes 7.69
+    epoch 9: loss 0.1512285270567598, minutes 8.0
+  trained (486s); embedding
+  saved 26-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\pos_attn_ae\fold4.npz (9.9 min)

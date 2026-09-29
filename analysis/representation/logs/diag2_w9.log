@@ -1,0 +1,2 @@
+06:19:46 res_attn_mil@v2:4: best epoch 28/60  train 0.5354  val 0.5180  held-out 0.4818  (79.6 min)
+06:30:59 attn_mil@v2:0: best epoch 76/136  train 0.6478  val 0.5260  held-out 0.4493  (11.2 min)

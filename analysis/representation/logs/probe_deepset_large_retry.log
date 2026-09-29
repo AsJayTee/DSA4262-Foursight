@@ -1,0 +1,1 @@
+[deepset_large] logistic 0.5018  knn 0.4793  mlp 0.4932  lgbm 0.4645  rotated 0.4657  +hand lgbm 0.5597  (393s)

@@ -1,0 +1,3 @@
+
+$ probe.py --models random
+[random] logistic 0.1652  knn 0.2017  mlp 0.1912  lgbm 0.2635  rotated 0.2631  +hand lgbm 0.5301  (161s)

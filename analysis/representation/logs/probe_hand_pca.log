@@ -1,0 +1,3 @@
+
+$ probe.py --models hand_pca
+[hand_pca] logistic 0.2516  knn 0.3252  mlp 0.4329  lgbm 0.4185  rotated 0.3627  +hand lgbm 0.5316  (158s)

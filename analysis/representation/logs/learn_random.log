@@ -1,0 +1,23 @@
+
+$ learn.py --model random
+[random] data loaded (13s)
+[random fold 0] 121,838 sites: encoder 43,448 (+4,391 val), probe 49,685, held out 24,314  (0s)
+  18,817 parameters; reads standardised (2s)
+  trained (2s); embedding
+  saved 32-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\random\fold0.npz (0.09 min)
+[random fold 1] 121,838 sites: encoder 44,036 (+3,728 val), probe 48,151, held out 25,923  (0s)
+  18,817 parameters; reads standardised (2s)
+  trained (2s); embedding
+  saved 32-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\random\fold1.npz (0.09 min)
+[random fold 2] 121,838 sites: encoder 44,002 (+4,528 val), probe 49,914, held out 23,394  (0s)
+  18,817 parameters; reads standardised (2s)
+  trained (2s); embedding
+  saved 32-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\random\fold2.npz (0.1 min)
+[random fold 3] 121,838 sites: encoder 43,333 (+4,119 val), probe 50,267, held out 24,119  (0s)
+  18,817 parameters; reads standardised (2s)
+  trained (2s); embedding
+  saved 32-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\random\fold3.npz (0.09 min)
+[random fold 4] 121,838 sites: encoder 44,305 (+4,170 val), probe 49,275, held out 24,088  (0s)
+  18,817 parameters; reads standardised (2s)
+  trained (2s); embedding
+  saved 32-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\random\fold4.npz (0.09 min)

@@ -1,0 +1,48 @@
+[deepset fold 0] 121,838 sites: encoder 43,448 (+4,391 val), probe 49,685, held out 24,314  (278s)
+  18,817 parameters; reads standardised (280s)
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\learn.py:146: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\torch\csrc\autograd\generated\python_variable_methods.cpp:821.)
+  losses.append(float(loss))
+    epoch 1: loss 1.0151093062232524, minutes 0.04, val_ap 0.36410881924731464
+    epoch 2: loss 0.8116732190637027, minutes 0.09, val_ap 0.45415553833454175
+    epoch 3: loss 0.7559769800480675, minutes 0.14, val_ap 0.44379307242929505
+    epoch 4: loss 0.7271949070341447, minutes 0.19, val_ap 0.4443961843151842
+    epoch 5: loss 0.7005072292159585, minutes 0.24, val_ap 0.4474153753655869
+    epoch 6: loss 0.7078750617363874, minutes 0.28, val_ap 0.4406433617189273
+    epoch 7: loss 0.6976668126442853, minutes 0.33, val_ap 0.44856853519286305
+    epoch 8: loss 0.6883840923800187, minutes 0.38, val_ap 0.45603187390907973
+    epoch 9: loss 0.6878637596088297, minutes 0.42, val_ap 0.4544915343392032
+    epoch 10: loss 0.6756174965816386, minutes 0.47, val_ap 0.45405485726679917
+    epoch 11: loss 0.6594373681965996, minutes 0.52, val_ap 0.45561880323236464
+    epoch 12: loss 0.6542051499380784, minutes 0.57, val_ap 0.4537230039516468
+    epoch 13: loss 0.6585594619021696, minutes 0.63, val_ap 0.4514422228883916
+    epoch 14: loss 0.6449399231987841, minutes 0.67, val_ap 0.4585080476053933
+    epoch 15: loss 0.6495360548005384, minutes 0.72, val_ap 0.466040623392005
+    epoch 16: loss 0.639371001369813, minutes 0.77, val_ap 0.46284014073412394
+    epoch 17: loss 0.6368980134234709, minutes 0.82, val_ap 0.46715433425409036
+    epoch 18: loss 0.6283121343921213, minutes 0.86, val_ap 0.4784649498279629
+    epoch 19: loss 0.625577323752291, minutes 0.91, val_ap 0.46793093850722917
+    epoch 20: loss 0.6175369284608785, minutes 0.96, val_ap 0.47356798451417154
+    epoch 21: loss 0.6134146830614875, minutes 1.01, val_ap 0.4788213173949446
+    epoch 22: loss 0.6130115617724026, minutes 1.05, val_ap 0.4763095707583818
+    epoch 23: loss 0.612723208174986, minutes 1.1, val_ap 0.4822437916810371
+    epoch 24: loss 0.6145648062229156, minutes 1.15, val_ap 0.47537419482632226
+    epoch 25: loss 0.5943341395434212, minutes 1.2, val_ap 0.4863691077687543
+    epoch 26: loss 0.5958034075358335, minutes 1.24, val_ap 0.4636712777691998
+    epoch 27: loss 0.6112505553399815, minutes 1.29, val_ap 0.4849685900054964
+    epoch 28: loss 0.5993681230965783, minutes 1.34, val_ap 0.4782359062529038
+    epoch 29: loss 0.5977112983956057, minutes 1.39, val_ap 0.49482380690904654
+    epoch 30: loss 0.589122661159319, minutes 1.44, val_ap 0.47374062402317463
+    epoch 31: loss 0.5868004849728417, minutes 1.48, val_ap 0.4955398644365938
+    epoch 32: loss 0.5882345266201917, minutes 1.53, val_ap 0.4802185590435871
+    epoch 33: loss 0.5849891143686631, minutes 1.58, val_ap 0.4915363055958093
+    epoch 34: loss 0.5842848120366826, minutes 1.63, val_ap 0.48294097048305457
+    epoch 35: loss 0.5596362669678295, minutes 1.67, val_ap 0.4897046429520208
+    epoch 36: loss 0.563735356926918, minutes 1.72, val_ap 0.4928085100686187
+    epoch 37: loss 0.5740468649303212, minutes 1.77, val_ap 0.4768761224696918
+    epoch 38: loss 0.5629519658930161, minutes 1.82, val_ap 0.4817339226159591
+    epoch 39: loss 0.5615230772425147, minutes 1.87, val_ap 0.4877518849131171
+    epoch 40: loss 0.566384460996179, minutes 1.92, val_ap 0.48359265223722037
+  trained (397s); embedding
+  saved 32-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\deepset\fold0.npz (6.68 min)
+done

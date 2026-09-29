@@ -1,0 +1,13 @@
+
+$ learn.py --model hand
+[hand] data loaded (13s)
+[hand fold 0] 121,838 sites: encoder 43,448 (+4,391 val), probe 49,685, held out 24,314  (0s)
+  saved 137-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\hand\fold0.npz (0.01 min)
+[hand fold 1] 121,838 sites: encoder 44,036 (+3,728 val), probe 48,151, held out 25,923  (0s)
+  saved 137-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\hand\fold1.npz (0.01 min)
+[hand fold 2] 121,838 sites: encoder 44,002 (+4,528 val), probe 49,914, held out 23,394  (0s)
+  saved 137-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\hand\fold2.npz (0.01 min)
+[hand fold 3] 121,838 sites: encoder 43,333 (+4,119 val), probe 50,267, held out 24,119  (0s)
+  saved 137-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\hand\fold3.npz (0.01 min)
+[hand fold 4] 121,838 sites: encoder 44,305 (+4,170 val), probe 49,275, held out 24,088  (0s)
+  saved 137-dim vectors -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\.cache\representation\hand\fold4.npz (0.01 min)

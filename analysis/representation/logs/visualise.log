@@ -1,0 +1,17 @@
+wrote /mnt/sdd/DSA4262/analysis/representation/figures/umap.png
+wrote /mnt/sdd/DSA4262/analysis/representation/figures/tsne.png
+          hand: umap kNN AP full 0.638 2-D 0.534  tsne kNN AP full 0.638 2-D 0.540
+      hand_pca: umap kNN AP full 0.623 2-D 0.505  tsne kNN AP full 0.623 2-D 0.529
+        random: umap kNN AP full 0.430 2-D 0.416  tsne kNN AP full 0.430 2-D 0.425
+      mlp_hand: umap kNN AP full 0.759 2-D 0.738  tsne kNN AP full 0.759 2-D 0.750
+       deepset: umap kNN AP full 0.752 2-D 0.746  tsne kNN AP full 0.752 2-D 0.738
+ deepset_large: umap kNN AP full 0.734 2-D 0.730  tsne kNN AP full 0.734 2-D 0.733
+       read_ae: umap kNN AP full 0.399 2-D 0.368  tsne kNN AP full 0.399 2-D 0.373
+  read_ae_pred: umap kNN AP full 0.720 2-D 0.698  tsne kNN AP full 0.720 2-D 0.694
+   pos_lstm_ae: umap kNN AP full 0.534 2-D 0.483  tsne kNN AP full 0.534 2-D 0.487
+   pos_attn_ae: umap kNN AP full 0.450 2-D 0.351  tsne kNN AP full 0.450 2-D 0.376
+    set_masked: umap kNN AP full 0.622 2-D 0.534  tsne kNN AP full 0.622 2-D 0.561
+      attn_mil: umap kNN AP full 0.738 2-D 0.732  tsne kNN AP full 0.738 2-D 0.739
+   contrastive: umap kNN AP full 0.580 2-D 0.460  tsne kNN AP full 0.580 2-D 0.468
+deepset_nokmer: umap kNN AP full 0.759 2-D 0.751  tsne kNN AP full 0.759 2-D 0.754
+     kmer_norm: umap kNN AP full 0.573 2-D 0.497  tsne kNN AP full 0.573 2-D 0.519

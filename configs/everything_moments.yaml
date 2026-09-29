@@ -1,0 +1,32 @@
+# The best model plus every within-site correlation it does not already have.
+#
+# This is the cheap test of the premise behind attention-MIL with pairwise
+# products: that second moments across ALL nine measurements carry signal the
+# tree is not getting. coupling.py already supplies 12 of the 36 pairs; this
+# adds the other 24 (src/m6a/features/moments.py). If the tree cannot use them,
+# a network built to rediscover them has nothing new to find.
+#
+#   python scripts/evaluate.py --config configs/everything_moments.yaml \
+#          --compare-with configs/everything.yaml
+#
+# Screened on 40,000 sites: four columns at abs(AUC-0.5) 0.08-0.14 with at most
+# abs(r) = 0.37 against any existing column. Strong and not redundant, like
+# coupling before it won. Expect little at low depth - a correlation needs reads.
+name: everything_moments
+features: quantiles_all_moments_v1
+model: lightgbm
+model_params:
+  learning_rate: 0.05
+  num_leaves: 63
+  n_estimators: 600
+  min_child_samples: 40
+  feature_fraction: 0.7
+train_depths: [1, 3, 5, 10, null]
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: >
+  everything.yaml plus the 24 cross-channel within-site correlations coupling
+  does not carry (log dwell, log sd). Compared against everything.yaml, which
+  is the same config without them, so the difference is attributable to them.

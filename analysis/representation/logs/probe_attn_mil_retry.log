@@ -1,0 +1,1 @@
+[attn_mil] logistic 0.5024  knn 0.4929  mlp 0.4943  lgbm 0.4701  rotated 0.4584  +hand lgbm 0.5595  (278s)

@@ -1,0 +1,1 @@
+[deepset_nokmer] logistic 0.5015  knn 0.4858  mlp 0.4996  lgbm 0.4632  rotated 0.4567  +hand lgbm 0.5587  (244s)

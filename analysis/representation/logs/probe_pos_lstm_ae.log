@@ -1,0 +1,3 @@
+
+$ probe.py --models pos_lstm_ae
+[pos_lstm_ae] logistic 0.2492  knn 0.2625  mlp 0.2631  lgbm 0.2687  rotated 0.2606  +hand lgbm 0.5390  (244s)

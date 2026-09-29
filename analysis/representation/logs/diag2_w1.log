@@ -1,0 +1,2 @@
+06:12:44 set_transformer@v2:1: best epoch 50/60  train 0.5704  val 0.5238  held-out 0.5178  (72.5 min)
+06:21:56 deepset@v1:2: best epoch 77/107  train 0.6296  val 0.5332  held-out 0.4880  (9.2 min)

@@ -1,0 +1,2 @@
+06:15:48 res_attn_mil@v2:3: best epoch 41/60  train 0.5830  val 0.5193  held-out 0.4794  (75.6 min)
+06:27:22 deepset@v2:4: best epoch 104/164  train 0.6482  val 0.5249  held-out 0.5174  (11.6 min)

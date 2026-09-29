@@ -1,0 +1,3 @@
+
+$ probe.py --models deepset
+[deepset] logistic 0.5088  knn 0.4980  mlp 0.4758  lgbm 0.4791  rotated 0.4617  +hand lgbm 0.5659  (182s)
