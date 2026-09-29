@@ -3,6 +3,8 @@
 
     python scripts/download_data.py                 # the course training set
     python scripts/download_data.py --set sgnex     # SG-NEx data for Task 2
+    python scripts/download_data.py --set data1     # second labelled run -> data/raw/data1/
+    python scripts/download_data.py --set data2     # in-vitro mixing series -> data/raw/data2/
     python scripts/download_data.py --list          # show what is in the bucket
 
 Every object is checked against manifest.json, and anything already present with
@@ -32,8 +34,16 @@ from m6a.env import load_env
 PREFIXES = {
     "course": None,  # root-level objects only
     "sgnex": "sgnex/",
+    # The course's later releases (Canvas, 2026-09-29): data1 is a second
+    # labelled run, data2 an in-vitro mixing series. See docs/data.md.
+    "data1": "data1/",
+    "data2": "data2/",
     "all": "",
 }
+# Prefixes whose folder is KEPT on disk rather than stripped: data1 and data2
+# both contain a file called data.info, so stripping would make the second
+# download overwrite the first. See docs/decisions/0027.
+KEEP_FOLDER = {"data1", "data2"}
 
 
 def select_keys(which: str, client) -> tuple[list[str], str]:
@@ -42,8 +52,11 @@ def select_keys(which: str, client) -> tuple[list[str], str]:
     if prefix is None:
         keys = [k for k in r2.list_keys("", s3=client) if "/" not in k]
         return keys, ""
-    keys = r2.list_keys(prefix, s3=client)
-    return keys, prefix
+    # Zero-byte "folder" objects (keys ending in /) are what a web console
+    # creates when someone makes a folder by hand. They are not files, and
+    # downloading one to a directory path fails.
+    keys = [k for k in r2.list_keys(prefix, s3=client) if not k.endswith("/")]
+    return keys, "" if which in KEEP_FOLDER else prefix
 
 
 def parse_args() -> argparse.Namespace:

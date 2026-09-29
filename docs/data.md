@@ -158,3 +158,65 @@ than one gene, so grouping is unambiguous.
 `m6a.data.assign_folds` implements this with a fixed seed (4262) and no
 dependency on library internals, so the same seed gives the same folds
 everywhere. Do not change the seed — see [../AGENTS.md](../AGENTS.md).
+
+## Later releases: `data1` and `data2`
+
+Released on Canvas on 2026-09-29 as `Team_Project_export.zip`. In the R2
+bucket under `data1/` and `data2/`; fetch with
+`python scripts/download_data.py --set data1` (or `--set data2`), which puts
+them in `data/raw/data1/` and `data/raw/data2/`
+([0027](decisions/0027-later-data-releases-keep-their-folder.md)).
+
+Each folder has a signal file in exactly `dataset0.json.gz`'s format (9
+features per read, 7-mer, central 5-mer always DRACH) and a `data.info` in
+**m6Anet's format**: `transcript_id, transcript_position, n_reads, label,
+start, end`. `start`/`end` are byte offsets into the JSON. Unlike
+`data.info.labelled`, there is **no `gene_id` column**.
+
+### `data1`: a second labelled run of largely the same sites
+
+| | `data1` | `dataset0` |
+|---|---:|---:|
+| sites | 90,810 | 121,838 |
+| transcripts | 4,451 | 5,333 |
+| reads | 7,907,952 | 11,027,106 |
+| positive sites | **6,593 (7.26%)** | 5,475 (4.49%) |
+| reads per site | min 20, median 40, p95 312, max 994 | min 20, median 47, p95 304, max 991 |
+| sites per transcript | median 17 | median 19 |
+
+- **Built the same way as `dataset0`**: whole transcripts (only 1.2% of sites
+  sit on transcripts with fewer than 5 sites), the same >= 20-read floor.
+- **74.1% of its sites are also in `dataset0`** (83.3% on a shared transcript),
+  with different read counts: a different sequencing run of largely the same
+  sites.
+- **Its labels are not `dataset0`'s.** On the 67,320 shared sites they agree
+  94.25% of the time, but only 2,136 of the 3,291 `dataset0` positives there
+  (65%) are positive in `data1`, and `data1` calls 2,717 sites positive that
+  `dataset0` calls negative. So it was labelled from a different experiment,
+  cell line or threshold. Which one is not documented.
+- **No gene ids.** Using it in the gene-grouped split means mapping transcripts
+  to genes; 83% of its sites are on transcripts `dataset0` already maps.
+
+### `data2`: an in-vitro mixing series, labelled by fraction modified
+
+| transcript | label | median reads |
+|---|---:|---:|
+| `tx_id_0` | 1.00 | 1,124 |
+| `tx_id_1` | 0.95 | 550 |
+| `tx_id_2` | 0.75 | 589 |
+| `tx_id_3` | 0.70 | 640 |
+| `tx_id_4` | 0.50 | 850 |
+| `tx_id_5` | 0.25 | 672 |
+| `tx_id_6` | 0.00 | 1,205 |
+
+- **All seven are the same synthetic sequence**: 189 sites each, one every 10
+  bases from 0 to 1880, identical 7-mer at every position. The label is the
+  **fraction of molecules modified**, one value per transcript, not a 0/1
+  label per site.
+- **The signal tracks the fraction.** Mean centre-position current, averaged
+  over sites, moves away from the 0% sample in proportion: 3.55 pA at 100%,
+  2.65 at 75%, 1.77 at 50%, 0.89 at 25%.
+- **Use it to test and calibrate, not to train.** It is a direct test of
+  whether a site score rises with modification stoichiometry. It is synthetic,
+  one sequence, and every candidate A is modified on every modified molecule,
+  which real cells never do.

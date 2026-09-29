@@ -14,6 +14,10 @@ data0/
 predictions.csv
 *.predictions.csv
 
+# Archives: course data arrives zipped from Canvas (e.g. Team_Project_export.zip,
+# holding dataset1/dataset2). *.json.gz above does not catch the archive itself.
+*.zip
+
 # --- secrets ---
 .env
 

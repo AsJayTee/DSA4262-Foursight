@@ -1625,6 +1625,32 @@ catalogued, and one blocker is much larger than expected.
   compare lift instead. This is the single cheapest open item in this file and
   it gates any claim the report makes about beating m6Anet.
 
+## New data: `data1` and `data2` (released 2026-09-29)
+
+Described in [docs/data.md](docs/data.md#later-releases-data1-and-data2).
+Nothing has been run on either yet.
+
+- **`data1`'s labels disagree with `dataset0`'s on shared sites, and nobody
+  knows why.** 67,320 shared sites; 5.75% disagree. Only 65% of `dataset0`'s
+  positives there are positive in `data1`; `data1` adds 2,717 positives
+  `dataset0` calls negative; positive rate 7.26% against 4.49%. Different cell
+  line, experiment or threshold - undocumented. It bears on how much any label
+  can be trusted, and it belongs in the report's limitations.
+- **`data1` is the first evidence about what an evaluation file looks like** -
+  whole transcripts, median 17 sites each, the same >= 20-read floor - which is
+  the structure the cross-site features need
+  ([docs/test-data-assumptions.md](docs/test-data-assumptions.md) assumption 1).
+  Evidence about the course's data, not a promise about the leaderboard file.
+- **Untested: how the current models score on `data1`.** The natural first
+  experiment: `everything` trained on `dataset0`, scored on `data1`'s sites
+  that are NOT in `dataset0` (23,490 sites, 7.41% positive). That is the
+  closest thing available to an external test set. The shared sites cannot be
+  used for this; the model has seen them.
+- **Untested: whether scores track modification fraction on `data2`.** One
+  plot per model: mean score per transcript against its label (0 to 1).
+- **`data1` has no gene ids**, so it cannot join the gene-grouped split without
+  a transcript-to-gene map; `dataset0` covers 83% of its sites.
+
 ## Infrastructure
 
 - **LightGBM needs the system library `libgomp1`, and a fresh Ubuntu image may

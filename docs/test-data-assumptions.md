@@ -63,6 +63,15 @@ will see the model score. We made that file ourselves
 (`scripts/make_sample.py`), so it says nothing about how the course builds its
 test files - but it proves a randomly subsampled file is an easy thing to make.
 
+**Evidence the other way (2026-09-29).** The course's second labelled release,
+`data1`, is built exactly like `dataset0`: whole transcripts, median 17 sites
+each, only 1.2% of sites on transcripts with fewer than 5, the same >= 20-read
+floor ([docs/data.md](data.md#later-releases-data1-and-data2)). The professor
+said we may base decisions on the data provided but that nothing can be
+confirmed about the test set. So: the course's own files keep transcripts
+together, which supports keeping the cross-site features - and the fallback
+below is still worth having, because it costs nothing when the file is dense.
+
 **Options, none built:**
 - Train on an extra copy of every site computed as if it were alone, so the
   model learns that zeros mean "no neighbours" rather than a real value. The
