@@ -40,7 +40,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from m6a import crossval, registry, report as reporting, tracking
+from m6a import crossval, external, registry, report as reporting, tracking
 from m6a.config import Config, describe_train_depths
 from m6a.data import SUBSAMPLE_SEED, resolve_data_dir
 from m6a.env import load_env
@@ -99,6 +99,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Ignore the extracted-feature cache (see src/m6a/feature_cache.py)",
     )
+    ap.add_argument(
+        "--external", action=argparse.BooleanOptionalAction, default=None,
+        help="Score the shipped model on data1 and data2 (default: on for standard "
+             "and full, off for quick and smoke). See docs/decisions/0028.",
+    )
     args = ap.parse_args()
     if args.quick:
         args.profile = "quick"
@@ -138,6 +143,16 @@ def main() -> int:
     )
     if args.smoke:
         print(f"  SMOKE: first {SMOKE_SITES:,} sites only, no W&B")
+    # Held-out data1/data2 (docs/decisions/0028): checked now, before the fitting,
+    # so a missing download fails in seconds rather than after the run.
+    # A custom --json is not dataset0, and the data1 slices ("not in dataset0")
+    # mean nothing against another file - so it defaults off there too.
+    held_out = (args.external if args.external is not None
+                else report.profile.external and args.json is None) and not args.smoke
+    if held_out:
+        external.require(json_path.parent)
+    elif report.profile.external and args.external is None and not args.smoke:
+        print("  data1/data2 evaluation skipped: --json is not dataset0 (--external forces it)")
 
     # Started before the compute, not after it: a broken W&B key should surface
     # now rather than at minute 40 of a run on an instance about to be
@@ -261,6 +276,12 @@ def main() -> int:
 
     out_dir = Path(args.out) if args.out else Path("models") / config.name
     final.save(out_dir)
+
+    # The model being shipped, judged on data a different labelling produced.
+    if held_out:
+        reporting.external(report, external.evaluate(
+            final, config.features, feature_columns, dataset.X.index, json_path.parent,
+            use_cache=not args.no_cache, log=print), config.name)
 
     meta = {
         "name": config.name,

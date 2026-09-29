@@ -253,6 +253,16 @@ conclusion in this repo at least once:
   0.5 is not a neutral default here — it calls 7,250 sites where 5,475 are
   real. See [0019](docs/decisions/0019-a-threshold-sweep-because-a-ranking-cannot-count.md).
 
+**Every standard run is also judged on data1 and data2**
+([0028](docs/decisions/0028-every-run-is-also-judged-on-data1-and-data2.md)):
+the model it would ship scores the course's second labelled release on
+transcripts it never saw (`ext/data1/new_transcripts/pr_auc`) and the in-vitro
+mixing series (`ext/data2/*`). A comparison also reports a paired data1
+difference. **Read it beside the cross-validated result** - the first time
+anyone looked, a +0.065 cross-validated gain was worth nothing on data1. It is
+reported, not a gate. Fetch the data first
+(`download_data.py --set data1`, `--set data2`) or pass `--no-external`.
+
 Every run writes a JSON report to `analysis/evaluation/reports/` **and** uploads
 it to W&B. If you quote a number in `GAPS.md` or the report, quote one that a
 command can regenerate.

@@ -17,8 +17,12 @@ evaluation that does not happen.
 | profile | repetitions | what it computes |
 |---|---:|---|
 | `quick` | 1 | per fold, pooled, calibration. Iteration only; not a recorded result |
-| `standard` | 10 | + strata by depth and motif, + the depth sweep, + every figure |
+| `standard` | 10 | + strata by depth and motif, + the depth sweep, + every figure, + data1/data2 |
 | `full` | 10 | + the signal-only and motif-only ablations |
+
+"data1/data2" is the held-out evaluation on the course's later releases
+(`m6a.external`, docs/decisions/0028): the shipped model scored on data1's unseen
+transcripts and on data2's mixing series. Report only - it gates nothing.
 
 Ten repetitions of the 5-fold split is 50 observations rather than 5, and it is
 the default because a five-point run cannot be topped up after the instance is
@@ -83,15 +87,19 @@ class Profile:
     # goes away. Going 50 -> 100 observations narrows the standard error by 1.9%
     # for twice the compute. See docs/decisions/0013.
     repeats: int = 1
+    # Score the shipped model on data1 and data2 (m6a.external). Standard and
+    # above, for the same reason the depth sweep is: a run without it cannot be
+    # compared with one that has it. See docs/decisions/0028.
+    external: bool = False
 
 
 PROFILES: dict[str, Profile] = {
     "quick": Profile("quick", strata=False, depth_sweep=False, plots=False,
-                     ablations=False, repeats=1),
+                     ablations=False, repeats=1, external=False),
     "standard": Profile("standard", strata=True, depth_sweep=True, plots=True,
-                        ablations=False, repeats=10),
+                        ablations=False, repeats=10, external=True),
     "full": Profile("full", strata=True, depth_sweep=True, plots=True,
-                    ablations=True, repeats=10),
+                    ablations=True, repeats=10, external=True),
 }
 
 
@@ -936,6 +944,60 @@ def bootstrap(
         )
     report.data["bootstrap"] = result
 
+def external(report: Report, block: dict, name: str = "") -> None:
+    """The shipped model on data1 (unseen transcripts / unseen sites) and data2.
+
+    `block` is `m6a.external.evaluate`'s result. Its per-site scores stay in
+    memory for a paired comparison and never reach the report.
+    """
+    from m6a import external as ext
+
+    report.heading("Held out: data1 and data2" + (f" ({name})" if name else ""))
+    rows = []
+    for slice_name in ext.SLICES:
+        r = block["data1"][slice_name]
+        rows.append({"data1 slice": slice_name, "sites": r["n"], "positives": r["n_positive"],
+                     "pr_auc": r["pr_auc"], "ci_low": r["ci_low"], "ci_high": r["ci_high"],
+                     "roc_auc": r["roc_auc"], "lift": r["pr_auc_lift"]})
+    report.show(pd.DataFrame(rows).set_index("data1 slice"))
+    report.log(
+        "Trained on all of dataset0, scored on data1 sites it never saw. data1 is\n"
+        "labelled differently (5.75% of shared sites disagree), so this measures\n"
+        "agreement with a different labelling; dataset0's own labels score 0.326\n"
+        f"on the shared sites. 95% intervals resample whole transcripts "
+        f"({ext.N_RESAMPLES:,} times). Headline slice: {ext.HEADLINE}."
+    )
+    d2 = block["data2"]
+    fractions = sorted(d2["mean_score_by_fraction"])
+    report.log("\ndata2 - mean score by fraction of molecules modified (one sequence):")
+    report.show(pd.DataFrame(
+        {"mean score": [d2["mean_score_by_fraction"][f] for f in fractions]},
+        index=[f"{f:.0%}" for f in fractions]))
+    report.log(f"Spearman, site score vs fraction: {d2['spearman']:.3f}   "
+               f"ROC AUC, 100% vs 0%: {d2['roc_auc_100_vs_0']:.3f}")
+    report.data["external"] = ext.strip(block)
+    report.series("curve/data2/fraction", fractions,
+                  {"curve/data2/mean_score": [d2["mean_score_by_fraction"][f] for f in fractions]})
+
+
+def external_comparison(report: Report, baseline: dict, candidate: dict,
+                        name_baseline: str, name_candidate: str, key: str) -> None:
+    """Paired data1 difference, candidate minus baseline, on identical resamples.
+
+    Reported, never a gate (docs/decisions/0028): data1 is one test set with a
+    different labelling, and the decision stays with whoever reads it.
+    """
+    from m6a import external as ext
+
+    result = ext.compare(baseline, candidate)
+    report.heading(f"Held out, paired: {name_candidate} vs {name_baseline} on data1")
+    report.show(pd.DataFrame(result).T[
+        ["baseline_pr_auc", "candidate_pr_auc", "mean_difference", "ci_low", "ci_high", "win_rate"]])
+    report.log("win_rate: share of transcript resamples on which the candidate scored higher.")
+    report.data.setdefault("external_comparisons", {})[key] = {
+        "baseline": name_baseline, "candidate": name_candidate, **result}
+
+
 def arm(
     report: Report,
     name: str,
@@ -944,6 +1006,7 @@ def arm(
     by: list[str],
     min_positive: int,
     sweep: dict | None = None,
+    held_out: dict | None = None,
 ) -> None:
     """Evaluate a comparison arm in full, not as a column of per-fold numbers.
 
@@ -970,6 +1033,8 @@ def arm(
     if sweep is not None:
         depth_sweep(sub, sweep["datasets"], sweep["models"], sweep["columns"],
                     oof, sweep["subsample_seed"])
+    if held_out is not None:
+        external(sub, held_out, name)
 
     report.data.setdefault("arms", {})[name] = sub.data
     for key, figure in sub.figures.items():

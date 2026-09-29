@@ -62,7 +62,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from m6a import crossval, registry, report as reporting, tracking
+from m6a import crossval, external, registry, report as reporting, tracking
 from m6a.config import Config, describe_train_depths
 from m6a.data import SUBSAMPLE_SEED, resolve_data_dir
 from m6a.env import load_env
@@ -211,6 +211,12 @@ def parse_args() -> argparse.Namespace:
         help="Strata with fewer positives than this get no metrics (default 10)",
     )
     out.add_argument("--by", default="depth,motif", help="Strata to report: depth,motif,fold")
+    out.add_argument(
+        "--external", action=argparse.BooleanOptionalAction, default=None,
+        help="Score the shipped model on data1 and data2 (default: on for standard "
+             "and full, off for quick). Needs `download_data.py --set data1` and "
+             "`--set data2`. See docs/decisions/0028.",
+    )
 
     args = ap.parse_args()
 
@@ -308,6 +314,19 @@ def find_training_run(name: str) -> str | None:
 # modes
 # --------------------------------------------------------------------------
 
+def score_held_out(model_class, model_params, train_on, columns, features, dataset,
+                   json_path, args, report) -> dict:
+    """Fit on every training row, as train.py's shipped model is, and score data1
+    and data2 with it. The fold models cannot do this: each saw only 4/5 of the
+    genes, and the data1 slices are defined against all of dataset0."""
+    report.log(f"\n  fitting on all {len(dataset):,} sites to score data1/data2 ...")
+    model = model_class(**model_params)
+    X, y, reads = crossval.stack_rows(train_on, columns)
+    model.fit(X, y, **({"reads": reads} if getattr(model, "CONSUMES_READS", False) else {}))
+    return external.evaluate(model, features, columns, dataset.X.index, json_path.parent,
+                             use_cache=not args.no_cache, log=report.log)
+
+
 def compare_arm(
     report: reporting.Report,
     args: argparse.Namespace,
@@ -321,6 +340,7 @@ def compare_arm(
     y,
     sites,
     sweep: dict | None,
+    held_out: tuple[dict, dict] | None = None,
 ) -> None:
     """Report a comparison arm in full, pair it overall, then pair it per stratum.
 
@@ -336,7 +356,12 @@ def compare_arm(
         by=[b for b in args.by.split(",") if b != "fold"],
         min_positive=args.min_positive,
         sweep=sweep,
+        held_out=held_out[0] if held_out else None,
     )
+    if held_out:
+        # (baseline block, primary block): paired on identical transcript resamples.
+        reporting.external_comparison(report, held_out[0], held_out[1],
+                                      baseline_name, primary_features, key)
 
     reporting.comparison(
         report,
@@ -519,6 +544,21 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
         )
     if limit:
         report.log(f"  first {limit:,} sites only")
+    # Held-out evaluation on data1/data2 (docs/decisions/0028). Checked here, not
+    # after an hour of fitting. A limited run skips it: data1's slices are
+    # defined against the full training set.
+    # A custom --json is not dataset0, and the data1 slices ("not in dataset0")
+    # mean nothing against another file - so it defaults off there too.
+    held_out = (args.external if args.external is not None
+                else report.profile.external and args.json is None)
+    if report.profile.external and args.external is None and args.json is not None:
+        report.log("  data1/data2 evaluation skipped: --json is not dataset0 "
+                   "(--external forces it)")
+    if held_out and limit:
+        report.log("  data1/data2 evaluation skipped: it needs the full training set")
+        held_out = False
+    if held_out:
+        external.require(json_path.parent)
     report.data["source"] = {
         "kind": "config",
         "path": str(args.config),
@@ -592,6 +632,14 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
             report, {d: datasets[d] for d in parse_depths(args.depths)}, result.models,
             result.columns, result.oof, args.subsample_seed, config.train_depths,
         )
+
+    primary_held_out = None
+    if held_out:
+        primary_held_out = score_held_out(
+            model_class, config.model_params, train_on, result.columns, features,
+            dataset, json_path, args, report,
+        )
+        reporting.external(report, primary_held_out, config.name)
 
     if ablate:
         from m6a.compare import paired_comparison
@@ -678,9 +726,24 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
                  "subsample_seed": args.subsample_seed}
                 if sweep else None
             ),
+            held_out=(
+                (score_held_out(model_class, config.model_params,
+                                [other_sets[d] for d in config.train_depths],
+                                baseline.canonical.columns, args.compare_features,
+                                other_sets[None], json_path, args, report),
+                 primary_held_out)
+                if primary_held_out is not None else None
+            ),
         )
 
     if args.compare_run:
+        if primary_held_out is not None:
+            report.log(
+                "\n  data1/data2 against the pulled run: not paired. A paired data1\n"
+                "  difference needs both arms' per-site scores, and W&B holds only\n"
+                "  the pulled run's ext/* summary numbers. Compare those by eye, or\n"
+                "  use --compare-with to refit the other arm."
+            )
         from m6a.compare import paired_comparison
 
         report.heading(f"Paired against W&B run: {args.compare_run}")
@@ -811,6 +874,15 @@ def run_from_config(args: argparse.Namespace, report: reporting.Report) -> None:
                  "columns": baseline.canonical.columns,
                  "subsample_seed": args.subsample_seed}
                 if sweep else None
+            ),
+            held_out=(
+                (score_held_out(registry.get("models", other_config.model),
+                                other_config.model_params,
+                                [other_sets[d] for d in other_config.train_depths],
+                                baseline.canonical.columns, other_config.features,
+                                other_sets[None], json_path, args, report),
+                 primary_held_out)
+                if primary_held_out is not None else None
             ),
         )
 

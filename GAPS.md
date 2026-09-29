@@ -1628,7 +1628,9 @@ catalogued, and one blocker is much larger than expected.
 ## New data: `data1` and `data2` (released 2026-09-29)
 
 Described in [docs/data.md](docs/data.md#later-releases-data1-and-data2).
-Nothing has been run on either yet.
+**Every standard run now scores both** (`ext/*` keys; decision
+[0028](docs/decisions/0028-every-run-is-also-judged-on-data1-and-data2.md)) -
+reported, not gated. No run recorded before 2026-09-29 has those keys.
 
 - **`data1`'s labels disagree with `dataset0`'s on shared sites, and nobody
   knows why.** 67,320 shared sites; 5.75% disagree. Only 65% of `dataset0`'s
@@ -1641,13 +1643,33 @@ Nothing has been run on either yet.
   the structure the cross-site features need
   ([docs/test-data-assumptions.md](docs/test-data-assumptions.md) assumption 1).
   Evidence about the course's data, not a promise about the leaderboard file.
-- **Untested: how the current models score on `data1`.** The natural first
-  experiment: `everything` trained on `dataset0`, scored on `data1`'s sites
-  that are NOT in `dataset0` (23,490 sites, 7.41% positive). That is the
-  closest thing available to an external test set. The shared sites cannot be
-  used for this; the model has seen them.
-- **Untested: whether scores track modification fraction on `data2`.** One
-  plot per model: mean score per transcript against its label (0 to 1).
+- **MEASURED 2026-09-29: models trained on `dataset0`, scored on the new
+  data** (`analysis/newdata/score_new_data.py`, `results.md`; one test set, no
+  confidence intervals yet). On `data1`'s 23,490 sites NOT in `dataset0`:
+
+  | model | CV on dataset0 | data1 new sites | data1 new transcripts |
+  |---|---:|---:|---:|
+  | `quantiles` | 0.4759 | 0.3558 | 0.3689 |
+  | `everything` | 0.5408 | 0.3636 | 0.3647 |
+  | `everything` minus cross-site | - | **0.3716** | **0.3756** |
+
+  **Most of the drop is label disagreement, not model failure.** Using
+  `dataset0`'s own labels as the "prediction" for `data1`'s labels on shared
+  sites scores only PR AUC 0.326 (ROC 0.711); the `everything` model scores
+  0.433 there. The model agrees with `data1`'s labels better than our own
+  labels do. **But the CV gains mostly do not transfer**: `everything` beats
+  `quantiles` by +0.065 in CV and by +0.008 on new sites (-0.004 on new
+  transcripts), and dropping the cross-site columns does slightly better
+  (+0.008). Unresolved without intervals.
+
+  **On `data2` the score is not monotone in modification fraction** - it
+  rises from 0% to ~70% and then FALLS: `everything` mean score 0.080 at 0%,
+  0.407 at 70%, 0.270 at 100%; Spearman 0.14. A fully modified sample looks
+  less modified than a half-modified one. Leading explanation (untested): the
+  features learned the *heterogeneity* of a partly modified site (spread,
+  tails, cross-position correlation), and a 100% sample has none; also, in
+  this synthetic RNA every A is modified, which cells never do. Matters for any
+  Task 2 claim about how much modification a site carries.
 - **`data1` has no gene ids**, so it cannot join the gene-grouped split without
   a transcript-to-gene map; `dataset0` covers 83% of its sites.
 

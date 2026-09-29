@@ -685,6 +685,28 @@ def flat_metrics(report: dict) -> dict[str, float]:
             flat["boot/difference/ci_low"] = float(boot["difference"]["ci_low"])
             flat["boot/difference/ci_high"] = float(boot["difference"]["ci_high"])
 
+    # Held out on the course's later releases (m6a.external, docs/decisions/0028).
+    # `ext/data1/new_transcripts/pr_auc` is the one to sort on beside
+    # `oof/pr_auc`: the same model, judged by a labelling it never trained on.
+    held_out = report.get("external")
+    if held_out:
+        for slice_name, row in held_out["data1"].items():
+            for key in ("pr_auc", "roc_auc", "pr_auc_lift", "ci_low", "ci_high",
+                        "n", "n_positive"):
+                flat[f"ext/data1/{slice_name}/{key}"] = float(row[key])
+        d2 = held_out["data2"]
+        flat["ext/data2/spearman"] = float(d2["spearman"])
+        flat["ext/data2/roc_auc_100_vs_0"] = float(d2["roc_auc_100_vs_0"])
+        for fraction, value in d2["mean_score_by_fraction"].items():
+            flat[f"ext/data2/mean_score/{int(round(float(fraction) * 100))}pct"] = float(value)
+
+    for key, result in (report.get("external_comparisons") or {}).items():
+        for slice_name in ("new_transcripts", "new_sites"):
+            row = result.get(slice_name)
+            if row:
+                for stat in ("mean_difference", "ci_low", "ci_high", "win_rate"):
+                    flat[f"ext_compare/{key}/{slice_name}/{stat}"] = float(row[stat])
+
     # A comparison arm gets the identical key structure under its own prefix, so
     # the baseline's calibration and depth numbers are recorded rather than
     # thrown away - and the run's own headline keeps the unprefixed names.
