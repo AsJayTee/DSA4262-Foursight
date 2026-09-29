@@ -7,11 +7,19 @@ cross-validation and by +0.008 on data1's unseen sites (GAPS.md). So every
 standard run now also scores the model it ships on:
 
 **data1** - a second labelled run (docs/data.md). Only sites the model never
-trained on count, in two slices:
+trained on count, in three slices, strictest first:
 
-  new_transcripts  transcripts absent from dataset0. The headline: no site of
-                   these transcripts, and so no neighbour label, was seen.
+  new_genes        genes with no transcript in the training data. The headline:
+                   transcripts of one gene share sequence, so this is the only
+                   slice with no leakage at all (AGENTS.md section 3).
+  new_transcripts  transcripts absent from dataset0 - but possibly another
+                   transcript of a training gene.
   new_sites        sites absent from dataset0, many on transcripts it trained on.
+
+data1's data.info has no gene_id, so genes come from
+`data1/transcript_genes.csv` (analysis/newdata/map_genes.py: dataset0's own
+mapping, then Ensembl). A transcript nobody could map is kept OUT of
+new_genes - it might belong to a training gene.
 
 Its labels disagree with dataset0's on 5.75% of shared sites, so a score here
 measures agreement with a *different* labelling. Using dataset0's own labels as
@@ -25,10 +33,10 @@ with the fraction? It is a diagnostic, never a target.
 **Report only.** Nothing here gates a comparison; the decision stays with
 whoever reads it (docs/decisions/0028).
 
-Uncertainty: one test set, so intervals come from resampling data1's
-*transcripts* with replacement - sites on a transcript are correlated, so
-resampling sites would understate the error. A comparison uses the same
-resamples for both arms, so it is paired.
+Uncertainty: one test set, so intervals come from resampling data1's *genes*
+with replacement (the transcript, where no gene is known) - sites of a gene are
+correlated, so resampling sites would understate the error. A comparison uses
+the same resamples for both arms, so it is paired.
 
 Not imported by predict.py.
 """
@@ -42,11 +50,12 @@ import pandas as pd
 
 from m6a.evaluation import metrics
 
-SLICES = ("new_transcripts", "new_sites")
-HEADLINE = "new_transcripts"
+SLICES = ("new_genes", "new_transcripts", "new_sites")
+HEADLINE = "new_genes"
 N_RESAMPLES = 2000
 SEED = 4262
 FILES = {"data1": ("data1", "dataset1.json.gz"), "data2": ("data2", "dataset2.json.gz")}
+GENE_MAP = ("data1", "transcript_genes.csv")
 
 
 def paths(data_dir: str | Path, name: str) -> tuple[Path, Path]:
@@ -54,19 +63,33 @@ def paths(data_dir: str | Path, name: str) -> tuple[Path, Path]:
     return Path(data_dir) / folder / signal, Path(data_dir) / folder / "data.info"
 
 
+def gene_map_path(data_dir: str | Path) -> Path:
+    return Path(data_dir).joinpath(*GENE_MAP)
+
+
 def require(data_dir: str | Path) -> None:
     """Fail at the start of a run, not after an hour of fitting."""
     missing = [str(p) for name in FILES for p in paths(data_dir, name) if not p.exists()]
+    if not gene_map_path(data_dir).exists():
+        missing.append(str(gene_map_path(data_dir)))
     if missing:
         raise SystemExit(
-            "This profile evaluates on data1 and data2, and they are not in "
+            "This profile evaluates on data1 and data2, and these are not in "
             f"{data_dir}:\n  " + "\n  ".join(missing) + "\n"
             "Fetch them with:\n"
             "  python scripts/download_data.py --set data1\n"
             "  python scripts/download_data.py --set data2\n"
+            "(transcript_genes.csv comes with data1; to rebuild it, run\n"
+            "  python analysis/newdata/map_genes.py)\n"
             "or pass --no-external to skip (the run will then lack the ext/* keys "
             "and cannot be compared with runs that have them)."
         )
+
+
+def load_genes(data_dir: str | Path) -> pd.Series:
+    """data1 transcript -> gene id; empty where no source could map it."""
+    table = pd.read_csv(gene_map_path(data_dir), dtype=str, keep_default_na=False)
+    return table.set_index("transcript_id")["gene_id"]
 
 
 def load_info(data_dir: str | Path, name: str) -> pd.DataFrame:
@@ -94,10 +117,24 @@ def score(model, features: str, columns: list[str], json_path: Path, *,
     return pd.Series(model.predict_proba(X, **kwargs), index=X.index, name="score")
 
 
-def slice_masks(index: pd.MultiIndex, train_index: pd.MultiIndex) -> dict[str, np.ndarray]:
+def slice_masks(index: pd.MultiIndex, train_index: pd.MultiIndex,
+                genes: np.ndarray, train_genes: set) -> dict[str, np.ndarray]:
+    """Boolean masks over `index` for each slice. `genes` is each row's gene id
+    ("" where unmapped); an unmapped row is never counted as a new gene."""
     seen_sites = index.isin(train_index)
     seen_transcripts = index.get_level_values(0).isin(set(train_index.get_level_values(0)))
-    return {"new_transcripts": ~seen_transcripts, "new_sites": ~seen_sites}
+    genes = np.asarray(genes, dtype=object)
+    new_gene = (genes != "") & ~pd.Series(genes).isin(train_genes).to_numpy()
+    return {"new_genes": new_gene & ~seen_transcripts, "new_transcripts": ~seen_transcripts,
+            "new_sites": ~seen_sites}
+
+
+def clusters_for(index: pd.MultiIndex, genes: np.ndarray) -> np.ndarray:
+    """What the bootstrap resamples: the gene where known, else the transcript.
+    Sites of one gene are correlated for the same reason sites of one
+    transcript are, and they must be resampled together."""
+    genes = np.asarray(genes, dtype=object)
+    return np.where(genes != "", genes, index.get_level_values(0).to_numpy())
 
 
 def resample_indices(clusters: np.ndarray, n: int = N_RESAMPLES, seed: int = SEED):
@@ -125,14 +162,14 @@ def _ap(y: np.ndarray, s: np.ndarray) -> float:
 
 
 def data1_block(scores: pd.Series, info: pd.DataFrame, train_index: pd.MultiIndex,
-                n: int = N_RESAMPLES) -> dict:
+                genes: np.ndarray, train_genes: set, n: int = N_RESAMPLES) -> dict:
     scores = scores.reindex(info.index)
+    clusters = clusters_for(info.index, genes)
     out = {}
-    for name, mask in slice_masks(info.index, train_index).items():
+    for name, mask in slice_masks(info.index, train_index, genes, train_genes).items():
         y = info["label"].to_numpy()[mask].astype(int)
         s = scores.to_numpy()[mask]
-        boots = [_ap(y[i], s[i]) for i in resample_indices(
-            info.index.get_level_values(0)[mask], n)]
+        boots = [_ap(y[i], s[i]) for i in resample_indices(clusters[mask], n)]
         low, high = np.nanpercentile(boots, [2.5, 97.5])
         out[name] = {"n": int(mask.sum()), "n_positive": int(y.sum()),
                      **metrics(y, s), "ci_low": float(low), "ci_high": float(high)}
@@ -156,16 +193,22 @@ def data2_block(scores: pd.Series, info: pd.DataFrame) -> dict:
 
 
 def evaluate(model, features: str, columns: list[str], train_index: pd.MultiIndex,
-             data_dir: str | Path, *, use_cache: bool = True, log=print) -> dict:
+             train_genes, data_dir: str | Path, *, use_cache: bool = True, log=print) -> dict:
     """Score data1 and data2. Returns the report block, plus the per-site scores
-    under `_scores` for a paired comparison - that key never reaches disk."""
+    under `_scores` for a paired comparison - that key never reaches disk.
+
+    `train_genes` is every gene id in the training data; a data1 site counts
+    as a new gene only if its gene is absent from it."""
     s1 = score(model, features, columns, paths(data_dir, "data1")[0], use_cache=use_cache, log=log)
     s2 = score(model, features, columns, paths(data_dir, "data2")[0], use_cache=use_cache, log=log)
     info1, info2 = load_info(data_dir, "data1"), load_info(data_dir, "data2")
+    genes = load_genes(data_dir).reindex(info1.index.get_level_values(0)).fillna("").to_numpy()
+    train_genes = set(train_genes)
     return {
-        "data1": data1_block(s1, info1, train_index),
+        "data1": data1_block(s1, info1, train_index, genes, train_genes),
         "data2": data2_block(s2, info2),
-        "_scores": {"data1": s1.reindex(info1.index), "info1": info1, "train_index": train_index},
+        "_scores": {"data1": s1.reindex(info1.index), "info1": info1, "train_index": train_index,
+                    "genes": genes, "train_genes": train_genes},
     }
 
 
@@ -177,15 +220,19 @@ def compare(baseline: dict, candidate: dict, n: int = N_RESAMPLES) -> dict:
     assumed.
     """
     a, b = baseline["_scores"], candidate["_scores"]
-    if not a["info1"].index.equals(b["info1"].index) or not a["train_index"].equals(b["train_index"]):
+    if (not a["info1"].index.equals(b["info1"].index)
+            or not a["train_index"].equals(b["train_index"])
+            or a["train_genes"] != b["train_genes"]):
         raise RuntimeError("The two arms were not scored on the same data1 sites.")
     info = a["info1"]
+    clusters = clusters_for(info.index, a["genes"])
     out = {}
-    for name, mask in slice_masks(info.index, a["train_index"]).items():
+    for name, mask in slice_masks(info.index, a["train_index"], a["genes"],
+                                  a["train_genes"]).items():
         y = info["label"].to_numpy()[mask].astype(int)
         sa, sb = a["data1"].to_numpy()[mask], b["data1"].to_numpy()[mask]
-        diffs = np.array([_ap(y[i], sb[i]) - _ap(y[i], sa[i]) for i in resample_indices(
-            info.index.get_level_values(0)[mask], n)])
+        diffs = np.array([_ap(y[i], sb[i]) - _ap(y[i], sa[i])
+                          for i in resample_indices(clusters[mask], n)])
         low, high = np.nanpercentile(diffs, [2.5, 97.5])
         out[name] = {
             "baseline_pr_auc": _ap(y, sa), "candidate_pr_auc": _ap(y, sb),

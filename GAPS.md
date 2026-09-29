@@ -1653,6 +1653,18 @@ reported, not gated. No run recorded before 2026-09-29 has those keys.
   | `everything` | 0.5408 | 0.3636 | 0.3647 |
   | `everything` minus cross-site | - | **0.3716** | **0.3756** |
 
+  **Re-measured on the leak-free slice (2026-09-29).** The table above uses
+  transcripts absent from `dataset0` - but 18% of those sites were on
+  *training genes* (another transcript of the same gene). On genes with no
+  transcript in `dataset0` (12,061 sites, 920 positive, 623 genes), paired over
+  2,000 gene resamples: `everything` 0.3565 against `quantiles` 0.3624,
+  **-0.006, 95% interval [-0.026, +0.015]**, `everything` better on 31% of
+  resamples. The interval excludes anything near the +0.065 cross-validated
+  gain: **on a labelling it did not train on, `everything` is at most +0.015
+  better than `quantiles` and possibly worse.** Regenerate:
+  `evaluate.py --config configs/everything.yaml --profile quick --external
+  --compare-with configs/quantiles.yaml`.
+
   **Most of the drop is label disagreement, not model failure.** Using
   `dataset0`'s own labels as the "prediction" for `data1`'s labels on shared
   sites scores only PR AUC 0.326 (ROC 0.711); the `everything` model scores

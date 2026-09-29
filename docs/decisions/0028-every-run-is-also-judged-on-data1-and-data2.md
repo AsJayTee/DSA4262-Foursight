@@ -32,11 +32,23 @@ as a matter of routine.
 `--external`), the model a run would ship - fitted on every dataset0 training
 row, depth copies included - scores:
 
-- **data1**, in two slices: `new_transcripts` (transcripts absent from dataset0;
-  the headline) and `new_sites` (sites absent from dataset0). Shared sites are
-  never used: the model trained on them, under dataset0's differing labels.
-  PR AUC, ROC AUC, lift, and a 95% interval from **2,000 resamples of whole
-  transcripts**.
+- **data1**, in three slices, strictest first: **`new_genes`** (genes with no
+  transcript in the training data; the headline), `new_transcripts`
+  (transcripts absent from dataset0) and `new_sites` (sites absent from
+  dataset0). Shared sites are never used: the model trained on them, under
+  dataset0's differing labels. PR AUC, ROC AUC, lift, and a 95% interval from
+  **2,000 resamples of whole genes** (the transcript, where no gene is known).
+
+  **Why genes, amended the same day.** The first version's headline was
+  `new_transcripts`. data1 has no gene ids, so a new transcript of a *training*
+  gene - which shares its sequence, the exact leak AGENTS.md section 3 forbids -
+  counted as unseen. Mapped via dataset0's own labels and then Ensembl
+  (`analysis/newdata/map_genes.py`; 4,423 of 4,451 transcripts resolved, and
+  Ensembl agreed with dataset0 on all 493 transcripts both could map), **2,718
+  of the 15,137 `new_transcripts` sites (18%) were on training genes.**
+  `new_genes` is 12,061 sites, 920 positive, 623 genes. The 28 transcripts
+  nothing could map (358 sites) are kept out of it, since they may belong to a
+  training gene. The mapping is `data1/transcript_genes.csv`, beside the data.
 - **data2**: mean score at each modification fraction (0-100%), the Spearman
   correlation of site score with fraction, and ROC AUC of 100% against 0%.
 

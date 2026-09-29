@@ -280,7 +280,8 @@ def main() -> int:
     # The model being shipped, judged on data a different labelling produced.
     if held_out:
         reporting.external(report, external.evaluate(
-            final, config.features, feature_columns, dataset.X.index, json_path.parent,
+            final, config.features, feature_columns, dataset.X.index,
+            dataset.sites["gene_id"].unique(), json_path.parent,
             use_cache=not args.no_cache, log=print), config.name)
 
     meta = {

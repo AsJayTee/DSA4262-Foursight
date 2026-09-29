@@ -28,12 +28,19 @@ def index(pairs):
 
 def test_slices_exclude_what_they_claim_to():
     train = index([("T1", 10), ("T1", 20), ("T2", 5)])
-    data1 = index([("T1", 10), ("T1", 30), ("T2", 5), ("T3", 1), ("T3", 2)])
-    masks = external.slice_masks(data1, train)
+    train_genes = {"G1", "G2"}
+    data1 = index([("T1", 10), ("T1", 30), ("T2", 5), ("T3", 1), ("T3", 2),
+                   ("T4", 7), ("T5", 9)])
+    # T3 is a new transcript of training gene G1 - the leak new_genes exists to
+    # exclude. T4 is a genuinely new gene. T5 could not be mapped to any gene.
+    genes = ["G1", "G1", "G2", "G1", "G1", "G9", ""]
+    masks = external.slice_masks(data1, train, genes, train_genes)
     # new_sites: not a training site. T1:30 is new even though T1 was trained on.
-    assert masks["new_sites"].tolist() == [False, True, False, True, True]
+    assert masks["new_sites"].tolist() == [False, True, False, True, True, True, True]
     # new_transcripts: no site of the transcript was trained on.
-    assert masks["new_transcripts"].tolist() == [False, False, False, True, True]
+    assert masks["new_transcripts"].tolist() == [False, False, False, True, True, True, True]
+    # new_genes: no transcript of the GENE was trained on, and the gene is known.
+    assert masks["new_genes"].tolist() == [False, False, False, False, False, True, False]
 
 
 def test_resamples_are_whole_transcripts_and_deterministic():
@@ -51,8 +58,10 @@ def test_resamples_are_whole_transcripts_and_deterministic():
 
 def _block(scores, labels, idx, train_index):
     info = pd.DataFrame({"label": labels, "n_reads": 30}, index=idx)
+    genes = np.array([f"G{t}" for t in idx.get_level_values(0)], dtype=object)
     return {"_scores": {"data1": pd.Series(scores, index=idx), "info1": info,
-                        "train_index": train_index}}
+                        "train_index": train_index, "genes": genes,
+                        "train_genes": {"Gtrain"}}}
 
 
 def test_identical_arms_differ_by_exactly_zero():
@@ -101,6 +110,13 @@ def test_flat_keys_for_the_held_out_block():
     assert flat["ext/data2/mean_score/25pct"] == 0.3
     assert flat["ext/data2/mean_score/100pct"] == 0.4
     assert flat["ext_compare/features/new_transcripts/win_rate"] == 0.8
+
+
+def test_the_bootstrap_resamples_a_gene_together():
+    idx = index([("T1", 1), ("T2", 2), ("T3", 3)])
+    # T1 and T2 are one gene; T3 has no known gene and stands alone.
+    clusters = external.clusters_for(idx, np.array(["G1", "G1", ""], dtype=object))
+    assert clusters.tolist() == ["G1", "G1", "T3"]
 
 
 def test_missing_data_fails_with_the_command_that_fixes_it(tmp_path):

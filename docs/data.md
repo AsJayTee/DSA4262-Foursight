@@ -194,8 +194,15 @@ start, end`. `start`/`end` are byte offsets into the JSON. Unlike
   (65%) are positive in `data1`, and `data1` calls 2,717 sites positive that
   `dataset0` calls negative. So it was labelled from a different experiment,
   cell line or threshold. Which one is not documented.
-- **No gene ids.** Using it in the gene-grouped split means mapping transcripts
-  to genes; 83% of its sites are on transcripts `dataset0` already maps.
+- **No gene ids in the file - mapped separately.** `data1/transcript_genes.csv`
+  (transcript_id, gene_id, source) gives 4,423 of its 4,451 transcripts a gene:
+  3,432 from `dataset0`'s own labels, 991 from Ensembl's public lookup; 28 are
+  unresolved (likely ids retired in the current Ensembl release). Ensembl and
+  `dataset0` agree on all 493 transcripts both could map. Rebuild with
+  `python analysis/newdata/map_genes.py` (needs internet; sends only transcript
+  ids). **Only 623 of data1's genes have no transcript in `dataset0`** - 12,061
+  sites, 920 positive - and that is the only leak-free held-out slice
+  ([0028](decisions/0028-every-run-is-also-judged-on-data1-and-data2.md)).
 
 ### `data2`: an in-vitro mixing series, labelled by fraction modified
 

@@ -964,8 +964,9 @@ def external(report: Report, block: dict, name: str = "") -> None:
         "Trained on all of dataset0, scored on data1 sites it never saw. data1 is\n"
         "labelled differently (5.75% of shared sites disagree), so this measures\n"
         "agreement with a different labelling; dataset0's own labels score 0.326\n"
-        f"on the shared sites. 95% intervals resample whole transcripts "
-        f"({ext.N_RESAMPLES:,} times). Headline slice: {ext.HEADLINE}."
+        f"on the shared sites. 95% intervals resample whole genes "
+        f"({ext.N_RESAMPLES:,} times). Headline slice: {ext.HEADLINE} - no gene\n"
+        "of it has any transcript in the training data, so nothing leaks."
     )
     d2 = block["data2"]
     fractions = sorted(d2["mean_score_by_fraction"])
@@ -993,7 +994,7 @@ def external_comparison(report: Report, baseline: dict, candidate: dict,
     report.heading(f"Held out, paired: {name_candidate} vs {name_baseline} on data1")
     report.show(pd.DataFrame(result).T[
         ["baseline_pr_auc", "candidate_pr_auc", "mean_difference", "ci_low", "ci_high", "win_rate"]])
-    report.log("win_rate: share of transcript resamples on which the candidate scored higher.")
+    report.log("win_rate: share of gene resamples on which the candidate scored higher.")
     report.data.setdefault("external_comparisons", {})[key] = {
         "baseline": name_baseline, "candidate": name_candidate, **result}
 

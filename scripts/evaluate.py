@@ -323,7 +323,8 @@ def score_held_out(model_class, model_params, train_on, columns, features, datas
     model = model_class(**model_params)
     X, y, reads = crossval.stack_rows(train_on, columns)
     model.fit(X, y, **({"reads": reads} if getattr(model, "CONSUMES_READS", False) else {}))
-    return external.evaluate(model, features, columns, dataset.X.index, json_path.parent,
+    return external.evaluate(model, features, columns, dataset.X.index,
+                             dataset.sites["gene_id"].unique(), json_path.parent,
                              use_cache=not args.no_cache, log=report.log)
 
 
