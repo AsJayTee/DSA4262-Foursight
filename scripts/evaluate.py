@@ -62,7 +62,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from m6a import crossval, external, registry, report as reporting, tracking
+from m6a import crossval, crosssource, external, registry, report as reporting, tracking
 from m6a.config import Config, describe_train_depths
 from m6a.data import SUBSAMPLE_SEED, resolve_data_dir
 from m6a.env import load_env
@@ -211,6 +211,18 @@ def parse_args() -> argparse.Namespace:
         help="Strata with fewer positives than this get no metrics (default 10)",
     )
     out.add_argument("--by", default="depth,motif", help="Strata to report: depth,motif,fold")
+    xsrc = ap.add_argument_group("cross-source (docs/decisions/0029)")
+    xsrc.add_argument(
+        "--cross-source", action="store_true",
+        help="Evaluate --config against --baseline across dataset0 AND data1: one gene "
+             "split over both files, five training arms, gains with paired gene-resampled "
+             "intervals, the selection rule, and the crossed run x labelling test. Runs "
+             "instead of the usual cross-validation.",
+    )
+    xsrc.add_argument("--baseline", default="configs/quantiles.yaml",
+                      help="Baseline config for --cross-source (default: %(default)s)")
+    xsrc.add_argument("--arms", default=",".join(crosssource.ARMS),
+                      help="Training arms for --cross-source (default: all five)")
     out.add_argument(
         "--external", action=argparse.BooleanOptionalAction, default=None,
         help="Score the shipped model on data1 and data2 (default: on for standard "
@@ -313,6 +325,45 @@ def find_training_run(name: str) -> str | None:
 # --------------------------------------------------------------------------
 # modes
 # --------------------------------------------------------------------------
+
+def run_cross_source(args: argparse.Namespace, report: reporting.Report) -> None:
+    """--cross-source: the config against --baseline across both files (0029)."""
+    if args.smoke or args.limit:
+        raise SystemExit("--cross-source needs the full files: data1's sites are matched "
+                         "to dataset0's by identity. Drop --smoke / --limit.")
+    config, baseline = Config.load(args.config), Config.load(args.baseline)
+    json_path, _ = resolve_inputs(args)
+    data_dir = json_path.parent
+    external.require(data_dir)
+    arms = [a.strip() for a in args.arms.split(",") if a.strip()]
+    unknown = sorted(set(arms) - set(crosssource.ARMS))
+    if unknown:
+        raise SystemExit(f"Unknown arm(s) {unknown}; choose from {', '.join(crosssource.ARMS)}.")
+
+    oof, sources = {}, {}
+    for role, cfg in (("config", config), ("baseline", baseline)):
+        report.heading(f"Cross-source fitting: {cfg.name} ({cfg.features}, "
+                       f"train depths {describe_train_depths(cfg.train_depths)})")
+        sources[role] = crosssource.load(
+            cfg.features, cfg.train_depths, data_dir, subsample_seed=args.subsample_seed,
+            use_cache=not args.no_cache, seed=cfg.split.seed, n_folds=cfg.split.n_folds,
+            log=report.log)
+        for name in crosssource.SOURCES:
+            report.log(f"  {name}: {len(sources[role][name]):,} sites, "
+                       f"{int(sources[role][name].y.sum()):,} positive, "
+                       f"{len(set(sources[role][name].genes)):,} genes")
+        oof[role] = crosssource.out_of_fold(
+            sources[role], registry.get("models", cfg.model), cfg.model_params,
+            cfg.train_depths, arms, log=report.log)
+    for name in crosssource.SOURCES:
+        a, b = sources["config"][name], sources["baseline"][name]
+        if not (a.index.equals(b.index) and (a.folds == b.folds).all()):
+            raise RuntimeError(f"{config.name} and {baseline.name} were not scored on the same "
+                               f"{name} sites and folds, so their gains are not paired.")
+    reporting.cross_source(report, crosssource.summarise(sources["config"], oof["config"],
+                                                         oof["baseline"]),
+                           config.name, baseline.name)
+
 
 def score_held_out(model_class, model_params, train_on, columns, features, dataset,
                    json_path, args, report) -> dict:
@@ -925,6 +976,14 @@ def main() -> int:
             "model": config.model,
             "train_depths": describe_train_depths(config.train_depths),
         }
+        if args.cross_source:
+            # Its own run row: a cross-source evaluation measures something
+            # different from a training run's CV and must not resume into it.
+            # eval_schema is what the dashboard's decision view filters on.
+            stem = run_name = f"{stem}__xsrc"
+            settings.update({"eval_schema": crosssource.EVAL_SCHEMA,
+                             "baseline": Config.load(args.baseline).name,
+                             "arms": args.arms})
 
     tracker = tracking.start(
         run_name,
@@ -939,12 +998,14 @@ def main() -> int:
                 **settings, **fingerprint},
         tags=[tracking.EVAL_TAG],
         job_type="evaluate",
-        resume_id=find_training_run(run_name),
+        resume_id=None if args.cross_source else find_training_run(run_name),
     )
 
     try:
         if args.model:
             run_from_model(args, report)
+        elif args.cross_source:
+            run_cross_source(args, report)
         else:
             run_from_config(args, report)
 

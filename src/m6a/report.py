@@ -981,6 +981,50 @@ def external(report: Report, block: dict, name: str = "") -> None:
                   {"curve/data2/mean_score": [d2["mean_score_by_fraction"][f] for f in fractions]})
 
 
+def cross_source(report: Report, block: dict, name: str, baseline_name: str) -> None:
+    """The cross-source matrix, the selection rule, and the crossed test
+    (m6a.crosssource, docs/decisions/0029). Every number is a gain over the
+    baseline, paired on identical gene resamples."""
+    from m6a import crosssource as xs
+
+    report.heading(f"Cross-source: {name} minus {baseline_name}")
+    rows = []
+    for arm, r in block["arms"].items():
+        row = {"trained on": arm}
+        for s in xs.SOURCES:
+            row[f"{s} gain"] = r[s]["gain"]
+            row[f"{s} 95% CI"] = f"[{r[s]['ci_low']:+.4f}, {r[s]['ci_high']:+.4f}]"
+        row.update({"mean gain": r["gain_mean"], "worst gain": r["gain_worst"],
+                    "eligible": "yes" if r["eligible"] else "VETOED"})
+        rows.append(row)
+    report.show(pd.DataFrame(rows).set_index("trained on"), floats="%+.4f")
+    report.log(
+        f"Each row: {name} and {baseline_name} trained the same way, both scored on the\n"
+        "held-out genes of each file against that file's labels. Selection rule\n"
+        f"(0029): choose on mean gain; veto if the worse gain is below {block['veto']:+.3f}.\n"
+        f"Headline arm (what ships today): {block['headline_arm']}."
+    )
+    raw = pd.DataFrame([{"trained on": arm, **{f"{s} PR AUC": r[s]["pr_auc"] for s in xs.SOURCES},
+                         **{f"{s} baseline": r[s]["baseline_pr_auc"] for s in xs.SOURCES}}
+                        for arm, r in block["arms"].items()]).set_index("trained on")
+    report.log("\nRaw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):")
+    report.show(raw)
+    if "crossed" in block:
+        report.log("\nCrossed test on the sites in both files (trained on dataset0), gain over "
+                   f"{baseline_name}:")
+        report.show(pd.DataFrame([{"cell": c, "measurements": r["measurements"],
+                                   "labels": r["labels"], "gain": r["gain"],
+                                   "ci_low": r["ci_low"], "ci_high": r["ci_high"]}
+                                  for c, r in block["crossed"].items()]).set_index("cell"))
+        report.log("A->B: the labelling changes. A->C: the sequencing run changes. A gain that\n"
+                   "survives A->C but not A->B is tied to dataset0's labelling.")
+        g = block["data1_new_genes"]
+        report.log(f"\ndata1 genes absent from dataset0 ({g['n']:,} sites): gain {g['gain']:+.4f} "
+                   f"[{g['ci_low']:+.4f}, {g['ci_high']:+.4f}] - compare with cell D for the "
+                   "gene-population effect.")
+    report.data["cross_source"] = {"config": name, "baseline": baseline_name, **block}
+
+
 def external_comparison(report: Report, baseline: dict, candidate: dict,
                         name_baseline: str, name_candidate: str, key: str) -> None:
     """Paired data1 difference, candidate minus baseline, on identical resamples.

@@ -58,11 +58,15 @@ class LightGBMModel(BaseModel):
         self.booster: lgb.Booster | None = None
         self.columns: list[str] = []
 
-    def fit(self, X, y, groups=None) -> None:
+    def fit(self, X, y, groups=None, sample_weight=None) -> None:
+        # sample_weight: cross-source training (docs/decisions/0029) weights a
+        # site sequenced in both files so it counts once, not twice, and splits
+        # a site's weight across its two labellings when they disagree.
         self.columns = list(X.columns)
         n_estimators = self.params.get("n_estimators", 400)
         train_params = {k: v for k, v in self.params.items() if k != "n_estimators"}
-        dataset = lgb.Dataset(X.values, label=np.asarray(y), feature_name=self.columns)
+        dataset = lgb.Dataset(X.values, label=np.asarray(y), feature_name=self.columns,
+                              weight=None if sample_weight is None else np.asarray(sample_weight))
         self.booster = lgb.train(train_params, dataset, num_boost_round=n_estimators)
 
     def predict_proba(self, X) -> np.ndarray:

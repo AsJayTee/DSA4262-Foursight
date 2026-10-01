@@ -700,6 +700,32 @@ def flat_metrics(report: dict) -> dict[str, float]:
         for fraction, value in d2["mean_score_by_fraction"].items():
             flat[f"ext/data2/mean_score/{int(round(float(fraction) * 100))}pct"] = float(value)
 
+    # Cross-source evaluation (m6a.crosssource, docs/decisions/0029). The three
+    # unprefixed xsrc/ keys are the selection rule for the arm that ships:
+    # sort on xsrc/gain_mean, filter on xsrc/eligible.
+    xsrc = report.get("cross_source")
+    if xsrc:
+        for arm, row in xsrc["arms"].items():
+            for source in ("dataset0", "data1"):
+                for stat in ("pr_auc", "baseline_pr_auc", "gain", "ci_low", "ci_high",
+                             "roc_auc", "win_rate"):
+                    flat[f"xsrc/{arm}/{source}/{stat}"] = float(row[source][stat])
+            flat[f"xsrc/{arm}/gain_mean"] = float(row["gain_mean"])
+            flat[f"xsrc/{arm}/gain_worst"] = float(row["gain_worst"])
+            flat[f"xsrc/{arm}/eligible"] = float(row["eligible"])
+        head = xsrc["arms"].get(xsrc.get("headline_arm", "dataset0"))
+        if head:
+            flat["xsrc/gain_mean"] = float(head["gain_mean"])
+            flat["xsrc/gain_worst"] = float(head["gain_worst"])
+            flat["xsrc/eligible"] = float(head["eligible"])
+        for cell, row in (xsrc.get("crossed") or {}).items():
+            for stat in ("gain", "ci_low", "ci_high", "pr_auc", "baseline_pr_auc"):
+                flat[f"xsrc/crossed/{cell}/{stat}"] = float(row[stat])
+        new_genes = xsrc.get("data1_new_genes")
+        if new_genes:
+            for stat in ("gain", "ci_low", "ci_high", "pr_auc"):
+                flat[f"xsrc/data1_new_genes/{stat}"] = float(new_genes[stat])
+
     for key, result in (report.get("external_comparisons") or {}).items():
         for slice_name in ("new_genes", "new_transcripts", "new_sites"):
             row = result.get(slice_name)

@@ -1,8 +1,10 @@
 # 0029. Models are selected on their gain across both labellings, not on dataset0 alone
 
 - **Date:** 2026-10-01
-- **Status:** Proposed - agreed, not built. Built in the order of "Plan" below;
-  change this line as each step ships.
+- **Status:** Accepted - steps 1, 3 and 4 built 2026-10-01 as
+  `scripts/evaluate.py --cross-source` (`src/m6a/crosssource.py`). Step 2 (the
+  data2 audit) is `analysis/newdata/data2_audit.py`. The W&B dashboard is not
+  yet rebuilt.
 - **Affects:** (when built) `src/m6a/external.py`, `src/m6a/report.py`, `src/m6a/tracking.py`, `scripts/evaluate.py`, a new cross-source mode, AGENTS.md section 6, docs/wandb-panels.md
 
 ## Context

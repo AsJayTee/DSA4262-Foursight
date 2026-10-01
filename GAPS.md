@@ -1632,11 +1632,35 @@ Described in [docs/data.md](docs/data.md#later-releases-data1-and-data2).
 [0028](docs/decisions/0028-every-run-is-also-judged-on-data1-and-data2.md)) -
 reported, not gated. No run recorded before 2026-09-29 has those keys.
 
-- **Unknown: WHY `everything`'s gain does not transfer** - labelling, sequencing
-  run, or gene population, and which feature family carries it. Proposed
-  diagnosis and selection rule:
-  [0029](docs/decisions/0029-models-are-selected-on-cross-source-gain.md).
-  Every model in W&B was chosen on dataset0 alone.
+- **MEASURED 2026-10-01, and it CORRECTS the entry below: `everything`'s gain
+  does transfer, at about a third of its size - and vanishes only on genes
+  dataset0 never had.** Cross-source evaluation
+  ([0029](docs/decisions/0029-models-are-selected-on-cross-source-gain.md);
+  `evaluate.py --config configs/everything.yaml --cross-source`), gains over
+  `quantiles` on held-out genes of each file, 500 paired gene resamples:
+
+  | trained on | gain, dataset0 labels | gain, data1 labels |
+  |---|---:|---:|
+  | dataset0 | +0.065 [+0.054, +0.076] | +0.016 [+0.008, +0.026] |
+  | both, shared sites with both labels | +0.064 [+0.053, +0.074] | +0.025 [+0.017, +0.033] |
+
+  The crossed test on the 67,320 shared sites (dataset0-trained) says where the
+  rest goes: +0.063 (dataset0 run, dataset0 labels) -> +0.029 when only the
+  labelling changes, +0.049 when only the run changes, +0.021 when both do. So
+  **about half the gain is tied to dataset0's labelling**, a fifth to its
+  sequencing run. On data1's genes absent from dataset0 it is -0.003
+  [-0.022, +0.019] against +0.021 on shared genes: the remainder disappears on
+  that gene population (wide interval). The positive control (`quantiles` over
+  `pooled`) is positive in every arm and every cell (+0.011 to +0.017).
+  **Training on both files** lifts data1 PR AUC from 0.3880 to 0.4167 for a
+  0.004 loss on dataset0 (0.5408 -> 0.5367); not yet decided.
+- **Still unknown: which feature family carries the labelling-tied half.** The
+  per-family removals in 0029 step 1 have not been run. The data2 audit
+  (`analysis/newdata/data2_audit.py`) finds the within-read correlation
+  (coupling) and current-spread columns peak at 50-70% modified and fall back
+  at 100% - they measure a *mix* of molecules - and that data2's samples were
+  sequenced to different depths (median 550 to 1,205 reads), so read-count
+  columns confound its score-vs-fraction curve.
 
 - **`data1`'s labels disagree with `dataset0`'s on shared sites, and nobody
   knows why.** 67,320 shared sites; 5.75% disagree. Only 65% of `dataset0`'s

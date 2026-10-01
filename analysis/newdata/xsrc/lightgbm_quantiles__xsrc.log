@@ -1,0 +1,88 @@
+
+Cross-source fitting: lightgbm_quantiles (quantiles_v1, train depths full)
+--------------------------------------------------------------------------
+  dataset0: 121,838 sites, 5,475 positive, 3,852 genes
+  data1: 90,452 sites, 6,550 positive, 3,138 genes
+    fold 0 dataset0     trained on 97,524 rows
+    fold 0 data1        trained on 72,053 rows
+    fold 0 pooled       trained on 169,577 rows
+    fold 0 pooled_both  trained on 276,973 rows
+    fold 1 dataset0     trained on 95,915 rows
+    fold 1 data1        trained on 71,401 rows
+    fold 1 pooled       trained on 167,316 rows
+    fold 1 pooled_both  trained on 273,144 rows
+    fold 2 dataset0     trained on 98,444 rows
+    fold 2 data1        trained on 73,680 rows
+    fold 2 pooled       trained on 172,124 rows
+    fold 2 pooled_both  trained on 281,930 rows
+    fold 3 dataset0     trained on 97,719 rows
+    fold 3 data1        trained on 72,126 rows
+    fold 3 pooled       trained on 169,845 rows
+    fold 3 pooled_both  trained on 277,459 rows
+    fold 4 dataset0     trained on 97,750 rows
+    fold 4 data1        trained on 72,548 rows
+    fold 4 pooled       trained on 170,298 rows
+    fold 4 pooled_both  trained on 278,214 rows
+
+Cross-source fitting: lightgbm_pooled (pooled_v1, train depths full)
+--------------------------------------------------------------------
+  dataset0: 121,838 sites, 5,475 positive, 3,852 genes
+  data1: 90,452 sites, 6,550 positive, 3,138 genes
+    fold 0 dataset0     trained on 97,524 rows
+    fold 0 data1        trained on 72,053 rows
+    fold 0 pooled       trained on 169,577 rows
+    fold 0 pooled_both  trained on 276,973 rows
+    fold 1 dataset0     trained on 95,915 rows
+    fold 1 data1        trained on 71,401 rows
+    fold 1 pooled       trained on 167,316 rows
+    fold 1 pooled_both  trained on 273,144 rows
+    fold 2 dataset0     trained on 98,444 rows
+    fold 2 data1        trained on 73,680 rows
+    fold 2 pooled       trained on 172,124 rows
+    fold 2 pooled_both  trained on 281,930 rows
+    fold 3 dataset0     trained on 97,719 rows
+    fold 3 data1        trained on 72,126 rows
+    fold 3 pooled       trained on 169,845 rows
+    fold 3 pooled_both  trained on 277,459 rows
+    fold 4 dataset0     trained on 97,750 rows
+    fold 4 data1        trained on 72,548 rows
+    fold 4 pooled       trained on 170,298 rows
+    fold 4 pooled_both  trained on 278,214 rows
+
+Cross-source: lightgbm_quantiles minus lightgbm_pooled
+------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+dataset0           +0.0125  [+0.0047, +0.0196]     +0.0155  [+0.0092, +0.0204]    +0.0140     +0.0125      yes
+data1              +0.0031  [-0.0053, +0.0102]     +0.0134  [+0.0068, +0.0194]    +0.0083     +0.0031      yes
+pooled             +0.0158  [+0.0089, +0.0225]     +0.0138  [+0.0087, +0.0192]    +0.0148     +0.0138      yes
+pooled_both        +0.0132  [+0.0059, +0.0199]     +0.0180  [+0.0127, +0.0236]    +0.0156     +0.0132      yes
+ensemble           +0.0126  [+0.0054, +0.0199]     +0.0149  [+0.0098, +0.0199]    +0.0138     +0.0126      yes
+Each row: lightgbm_quantiles and lightgbm_pooled trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0029): choose on mean gain; veto if the worse gain is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+dataset0              0.4759        0.3719             0.4634          0.3564
+data1                 0.4174        0.3817             0.4142          0.3683
+pooled                0.4757        0.3890             0.4599          0.3752
+pooled_both           0.4723        0.3917             0.4591          0.3737
+ensemble              0.4704        0.3930             0.4579          0.3780
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_pooled:
+     measurements    labels   gain  ci_low  ci_high
+cell                                               
+A        dataset0  dataset0 0.0143  0.0046   0.0242
+B        dataset0     data1 0.0108  0.0048   0.0169
+C           data1  dataset0 0.0169  0.0071   0.0261
+D           data1     data1 0.0173  0.0109   0.0226
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain +0.0110 [-0.0045, +0.0236] - compare with cell D for the gene-population effect.
+
+report -> C:\Users\SIAHJI~1\AppData\Local\Temp\xsrc\lightgbm_quantiles__xsrc.json   (711.2s)
+control exit 0
