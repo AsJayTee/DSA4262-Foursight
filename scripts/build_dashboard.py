@@ -64,35 +64,39 @@ def decisions_view(ws, wr, entity: str, project: str):
         "different depths (median 550-1,205 reads), so read-count features confound this "
         "curve (`analysis/newdata/data2_audit.py`). Drawn only by standard runs."
     )
+    # Bar and scalar panels take plain metric names, not wr.SummaryMetric: the
+    # latter saves as `summary_metrics.<key>`, which the workspace UI draws as
+    # an empty panel. Every key here is also logged to history once, so the
+    # plain name plots the same value. Scatter plots do take SummaryMetric.
     sections = [
         ws.Section(name="Read me", is_open=True, panels=[note(ws, wr, read_me)]),
         ws.Section(name="Should we ship this?", is_open=True, panels=[
             wr.BarPlot(title="Selection rule: mean gain and worst gain over the baseline",
-                       metrics=[wr.SummaryMetric("xsrc/gain_mean"),
-                                wr.SummaryMetric("xsrc/gain_worst")]),
+                       metrics=["xsrc/gain_mean",
+                                "xsrc/gain_worst"]),
             wr.BarPlot(title="Gain under each labelling (trained on dataset0, as shipped)",
-                       metrics=[wr.SummaryMetric("xsrc/dataset0/dataset0/gain"),
-                                wr.SummaryMetric("xsrc/dataset0/data1/gain")]),
+                       metrics=["xsrc/dataset0/dataset0/gain",
+                                "xsrc/dataset0/data1/gain"]),
             wr.ScalarChart(title="Eligible (1 = passes the -0.005 veto)",
-                           metric=wr.SummaryMetric("xsrc/eligible")),
+                           metric="xsrc/eligible"),
         ]),
         ws.Section(name="Does it transfer?", is_open=True, panels=[
             wr.ScatterPlot(title="Gain on dataset0 (x) vs gain on data1 (y) - on the diagonal = transfers",
                            x=wr.SummaryMetric("xsrc/dataset0/dataset0/gain"),
                            y=wr.SummaryMetric("xsrc/dataset0/data1/gain")),
             wr.BarPlot(title="Crossed test: where a gain is lost",
-                       metrics=[wr.SummaryMetric(f"xsrc/crossed/{c}/gain") for c in "ABCD"]),
+                       metrics=[f"xsrc/crossed/{c}/gain" for c in "ABCD"]),
             wr.BarPlot(title="data1 genes absent from dataset0 (gene population)",
-                       metrics=[wr.SummaryMetric("xsrc/data1_new_genes/gain")]),
+                       metrics=["xsrc/data1_new_genes/gain"]),
             note(ws, wr, transfer),
         ]),
         ws.Section(name="What should it train on?", is_open=True, panels=[
             wr.BarPlot(title="Mean gain by training arm",
-                       metrics=[wr.SummaryMetric(f"xsrc/{a}/gain_mean") for a in ARMS]),
+                       metrics=[f"xsrc/{a}/gain_mean" for a in ARMS]),
             wr.BarPlot(title="Raw data1 PR AUC by training arm",
-                       metrics=[wr.SummaryMetric(f"xsrc/{a}/data1/pr_auc") for a in ARMS]),
+                       metrics=[f"xsrc/{a}/data1/pr_auc" for a in ARMS]),
             wr.BarPlot(title="Raw dataset0 PR AUC by training arm",
-                       metrics=[wr.SummaryMetric(f"xsrc/{a}/dataset0/pr_auc") for a in ARMS]),
+                       metrics=[f"xsrc/{a}/dataset0/pr_auc" for a in ARMS]),
         ]),
         ws.Section(name="Does the score track modification? (data2)", is_open=False, panels=[
             wr.LinePlot(title="Mean score vs fraction of molecules modified",
@@ -101,7 +105,7 @@ def decisions_view(ws, wr, entity: str, project: str):
         ]),
         ws.Section(name="Held out on data1 (standard runs)", is_open=False, panels=[
             wr.BarPlot(title="data1 PR AUC by slice (new genes is leak-free)",
-                       metrics=[wr.SummaryMetric(f"ext/data1/{s}/pr_auc")
+                       metrics=[f"ext/data1/{s}/pr_auc"
                                 for s in ("new_genes", "new_transcripts", "new_sites")]),
         ]),
     ]
@@ -128,7 +132,7 @@ def history_view(ws, wr, entity: str, project: str):
         ws.Section(name="Read me", is_open=True, panels=[note(ws, wr, read_me)]),
         ws.Section(name="Headline (dataset0 CV)", is_open=True, panels=[
             wr.BarPlot(title="Pooled OOF PR AUC and the 50-observation mean",
-                       metrics=[wr.SummaryMetric("oof/pr_auc"), wr.SummaryMetric("rep/pr_auc_mean")]),
+                       metrics=["oof/pr_auc", "rep/pr_auc_mean"]),
         ]),
         ws.Section(name="Depth collapse", is_open=True, panels=[
             wr.LinePlot(title="PR AUC vs log10 reads per site (SG-NEx median depth 3 is x = 0.48)",

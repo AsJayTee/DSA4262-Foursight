@@ -1,0 +1,24 @@
+# Ablation for decision 0029 step 1: everything without read count as a predictor (n_reads, log_n_reads, tx_n_reads_loo_mean).
+# Judge it with the cross-source rule, not dataset0 CV:
+#
+#   python scripts/evaluate.py --config configs/everything_no_readcount.yaml --cross-source
+#
+# Compared with configs/everything.yaml, the difference is what the removed
+# family is worth under each labelling. See src/m6a/features/ablations.py.
+name: everything_no_readcount
+features: quantiles_all_noreadcount_v1
+model: lightgbm
+model_params:
+  learning_rate: 0.05
+  num_leaves: 63
+  n_estimators: 600
+  min_child_samples: 40
+  feature_fraction: 0.7
+train_depths: [1, 3, 5, 10, null]
+split:
+  seed: 4262        # DO NOT CHANGE - see AGENTS.md
+  n_folds: 5
+  group_by: gene_id
+notes: >
+  Ablation (0029 step 1): everything without read count as a predictor (n_reads, log_n_reads, tx_n_reads_loo_mean). Same parameters and training depths as
+  configs/everything.yaml otherwise.
