@@ -1632,6 +1632,12 @@ Described in [docs/data.md](docs/data.md#later-releases-data1-and-data2).
 [0028](docs/decisions/0028-every-run-is-also-judged-on-data1-and-data2.md)) -
 reported, not gated. No run recorded before 2026-09-29 has those keys.
 
+- **Unknown: WHY `everything`'s gain does not transfer** - labelling, sequencing
+  run, or gene population, and which feature family carries it. Proposed
+  diagnosis and selection rule:
+  [0029](docs/decisions/0029-models-are-selected-on-cross-source-gain.md).
+  Every model in W&B was chosen on dataset0 alone.
+
 - **`data1`'s labels disagree with `dataset0`'s on shared sites, and nobody
   knows why.** 67,320 shared sites; 5.75% disagree. Only 65% of `dataset0`'s
   positives there are positive in `data1`; `data1` adds 2,717 positives
