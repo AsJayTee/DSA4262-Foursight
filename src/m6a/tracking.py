@@ -115,11 +115,12 @@ class Tracker:
             # a depth sweep. Log by step across the longest, emitting only the
             # keys that have a value there. W&B tolerates a missing key at a
             # step; it does not tolerate steps going backwards, which is what
-            # logging each series over its own range would do.
+            # logging each series over its own range would do. A NaN is a hole
+            # on purpose - a reference line's rows carry no data point (0031).
             longest = max(len(values) for values in series.values())
             for i in range(longest):
                 row = {key: float(values[i]) for key, values in series.items()
-                       if i < len(values)}
+                       if i < len(values) and np.isfinite(values[i])}
                 if row:
                     self.run.log(row, step=i)
 

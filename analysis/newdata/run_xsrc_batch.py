@@ -76,6 +76,11 @@ def main() -> None:
             code = subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT).returncode
         print(f"{'done' if code == 0 else 'FAILED'} {name} ({(time.time() - started) / 60:.0f} min)",
               flush=True)
+    # A run started before its process picked up the curve code has no
+    # curve/xsrc/* series; add them so it draws on the Decisions view.
+    subprocess.run([sys.executable, "analysis/newdata/backfill_xsrc_curves.py"], cwd=ROOT)
+    # Line styles in the Decisions view are keyed by run id, so new runs need a rebuild.
+    subprocess.run([sys.executable, "scripts/build_dashboard.py"], cwd=ROOT)
     print("batch finished", flush=True)
 
 

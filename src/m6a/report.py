@@ -977,6 +977,12 @@ def external(report: Report, block: dict, name: str = "") -> None:
     report.log(f"Spearman, site score vs fraction: {d2['spearman']:.3f}   "
                f"ROC AUC, 100% vs 0%: {d2['roc_auc_100_vs_0']:.3f}")
     report.data["external"] = ext.strip(block)
+    # x = 0 new genes, 1 new transcripts, 2 new sites: ever closer to the
+    # training data, so a line that climbs is familiarity, not skill.
+    data1 = [block["data1"][s] for s in ext.SLICES]
+    report.series("curve/ext/data1/slice", list(range(len(data1))),
+                  {f"curve/ext/data1/{stat}": [r[stat] for r in data1]
+                   for stat in ("pr_auc", "ci_low", "ci_high")})
     report.series("curve/data2/fraction", fractions,
                   {"curve/data2/mean_score": [d2["mean_score_by_fraction"][f] for f in fractions]})
 
@@ -1023,6 +1029,73 @@ def cross_source(report: Report, block: dict, name: str, baseline_name: str) -> 
                    f"[{g['ci_low']:+.4f}, {g['ci_high']:+.4f}] - compare with cell D for the "
                    "gene-population effect.")
     report.data["cross_source"] = {"config": name, "baseline": baseline_name, **block}
+    for x_key, (xs, ys) in cross_source_series(block).items():
+        report.series(x_key, xs, ys)
+
+
+# Training arms in order of how much data1 they see, so a line across them reads
+# as "more of the other file". The ensemble is not on that axis and goes last.
+ARM_ORDER = ("dataset0", "pooled", "pooled_both", "data1", "ensemble")
+# Fixed, not fitted to the data, so every run's reference lines coincide.
+REFERENCE_RANGE = (-0.05, 0.10)
+
+
+def cross_source_series(block: dict) -> dict[str, tuple[list[float], dict[str, list[float]]]]:
+    """The cross-source block as overlayable curves, {x_key: (xs, {y_key: ys})}.
+
+    W&B draws a bar chart of one number per run as a label per bar, unreadable
+    past three runs, and its scatter panel cannot draw a reference line. So each
+    question becomes a short line per run (docs/decisions/0031):
+
+      diag      the shipped arm's gain on dataset0 (x) vs data1 (y), one
+                point per run, with y = x and the veto as reference lines.
+      transfer  x = 0 dataset0 labels, 1 data1 labels, 2 data1 genes absent
+                from dataset0. Flat means the gain transfers - the diagonal of
+                a gain-vs-gain scatter, read as a slope instead.
+      crossed   x = 0..3 for cells A..D: where along the swap a gain is lost.
+      arm       x = position in ARM_ORDER: which training data the gain prefers.
+      path      raw PR AUC, dataset0 (x) against data1 (y), one point per arm.
+
+    A function of the block alone, so runs logged before these curves existed
+    can be backfilled from their summary (analysis/newdata/backfill_xsrc_curves.py).
+    """
+    stats = ("gain", "ci_low", "ci_high")
+    out: dict[str, tuple[list[float], dict[str, list[float]]]] = {}
+
+    def ladder(prefix: str, rows: list[dict]) -> dict[str, list[float]]:
+        return {f"{prefix}/{s}": [r[s] for r in rows] for s in stats}
+
+    arms = block["arms"]
+    head = arms.get(block.get("headline_arm", "dataset0"))
+    if head:
+        # One point per run plus reference lines every run draws identically:
+        # y = x (the gain transfers) and the veto on either labelling. NaN
+        # leaves a series out of a row; tracking skips it.
+        lo, hi, veto, nan = *REFERENCE_RANGE, block.get("veto", -0.005), float("nan")
+        out["curve/xsrc/diag/dataset0_gain"] = (
+            [head["dataset0"]["gain"], lo, hi, lo, hi, veto, veto],
+            {"curve/xsrc/diag/data1_gain": [head["data1"]["gain"]] + [nan] * 6,
+             "curve/xsrc/diag/y_equals_x": [nan, lo, hi, nan, nan, nan, nan],
+             "curve/xsrc/diag/veto_data1": [nan, nan, nan, veto, veto, nan, nan],
+             "curve/xsrc/diag/veto_dataset0": [nan, nan, nan, nan, nan, lo, hi]})
+        rows = [head["dataset0"], head["data1"]]
+        if block.get("data1_new_genes"):
+            rows.append(block["data1_new_genes"])
+        out["curve/xsrc/transfer/step"] = (list(range(len(rows))),
+                                           ladder("curve/xsrc/transfer", rows))
+    if block.get("crossed"):
+        cells = sorted(block["crossed"])
+        out["curve/xsrc/crossed/cell"] = (list(range(len(cells))), ladder(
+            "curve/xsrc/crossed", [block["crossed"][c] for c in cells]))
+    present = [a for a in ARM_ORDER if a in arms]
+    out["curve/xsrc/arm/index"] = ([ARM_ORDER.index(a) for a in present], {
+        "curve/xsrc/arm/gain_mean": [arms[a]["gain_mean"] for a in present],
+        "curve/xsrc/arm/dataset0_gain": [arms[a]["dataset0"]["gain"] for a in present],
+        "curve/xsrc/arm/data1_gain": [arms[a]["data1"]["gain"] for a in present]})
+    path = [a for a in present if a != "ensemble"]
+    out["curve/xsrc/path/dataset0_pr_auc"] = ([arms[a]["dataset0"]["pr_auc"] for a in path], {
+        "curve/xsrc/path/data1_pr_auc": [arms[a]["data1"]["pr_auc"] for a in path]})
+    return out
 
 
 def external_comparison(report: Report, baseline: dict, candidate: dict,

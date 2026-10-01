@@ -33,30 +33,58 @@ sys.path.insert(0, str(ROOT / "src"))
 from m6a.env import load_env  # noqa: E402
 
 VIEWS_FILE = ROOT / "docs" / "wandb-views.json"
-ARMS = ("dataset0", "data1", "pooled", "pooled_both", "ensemble")
+from m6a.report import REFERENCE_RANGE  # noqa: E402
+
+# Labels for the integer x axes of the ladder curves (m6a.report.cross_source_series).
+# A W&B line panel cannot name its ticks, so the axis title carries the key.
+TRANSFER_X = "0 = dataset0 labels  |  1 = data1 labels  |  2 = data1 genes not in dataset0"
+CROSSED_X = "0 = A  |  1 = B labels swapped  |  2 = C run swapped  |  3 = D both swapped"
+ARM_X = "trained on: 0 = dataset0  |  1 = pooled  |  2 = pooled_both  |  3 = data1  |  4 = ensemble"
+DIAG = "curve/xsrc/diag/"
+# How each series of the diagonal panel is drawn. W&B keys marks by run, so the
+# build styles the runs that exist; run_xsrc_batch.py rebuilds after a batch.
+DIAG_MARKS = {DIAG + "data1_gain": "points", DIAG + "y_equals_x": "dashed",
+              DIAG + "veto_data1": "dotted", DIAG + "veto_dataset0": "dotted"}
+DIAG_TITLES = {DIAG + "data1_gain": "gain", DIAG + "y_equals_x": "y = x (transfers)",
+               DIAG + "veto_data1": "veto", DIAG + "veto_dataset0": "veto"}
 
 
 def note(ws, wr, text: str):
     return wr.MarkdownPanel(markdown=text)
 
 
-def decisions_view(ws, wr, entity: str, project: str):
+def per_run(run_ids: list[str], styles: dict[str, str]) -> dict[str, str]:
+    return {f"{rid}:{key}": value for rid in run_ids for key, value in styles.items()}
+
+
+def decisions_view(ws, wr, entity: str, project: str, run_ids: list[str]):
     read_me = (
-        "**How to read this view.** Every row is a model evaluated against a baseline "
+        "**How to read this view.** Every run is a model evaluated against a baseline "
         "(usually `quantiles`) on held-out genes of BOTH files - dataset0 and data1, "
         "which are labelled differently ([decision 0029](https://github.com/AsJayTee/"
-        "DSA4262-Foursight/blob/main/docs/decisions/0029-models-are-selected-on-cross-source-gain.md)).\n\n"
-        "**The rule:** choose on `xsrc/gain_mean` (mean gain across the two labellings); "
-        "reject if `xsrc/eligible` is 0 (the worse gain is below -0.005). "
-        "`oof/pr_auc` is dataset0 cross-validation only and over-ranked `everything` by ~3x - "
-        "it is context, not the decision.\n\n"
-        "Make a row with `python scripts/evaluate.py --config <cfg> --cross-source`."
+        "DSA4262-Foursight/blob/main/docs/decisions/0029-models-are-selected-on-cross-source-gain.md)). "
+        "Every number is a **gain**: the model's PR AUC minus the baseline's, on identical sites.\n\n"
+        "**The rule:** choose on `xsrc/gain_mean` (the table is sorted by it); reject if "
+        "`xsrc/eligible` is 0 (the worse gain is below -0.005). `oof/pr_auc` is dataset0 "
+        "cross-validation only and over-ranked `everything` by ~3x - context, not the decision.\n\n"
+        "**Reading the lines.** Most panels have an integer x axis: each point is one "
+        "condition, named in the axis title. A flat line means the gain does not depend on "
+        "the condition; a line that falls means the gain is lost there. Hover for exact "
+        "values; filter the run table to compare two runs.\n\n"
+        "Make a run with `python scripts/evaluate.py --config <cfg> --cross-source`. "
+        "Panel guide: `docs/wandb-panels.md`."
     )
-    transfer = (
-        "**Crossed test** (shared sites, trained on dataset0), gain over the baseline: "
-        "A = dataset0 run + dataset0 labels; B = labels swapped to data1's; "
-        "C = run swapped to data1's; D = both. A gain that drops A->B is tied to "
-        "dataset0's labelling; A->C, to its sequencing run."
+    diag = (
+        "**The diagonal.** Each dot is one model, as it would ship (trained on dataset0). "
+        "x = its gain under dataset0's labels, y = under data1's. **On the dashed line** the "
+        "gain transfers fully. **Below it** part of the gain belongs to dataset0's labelling - "
+        "`everything` sits far below. **Left of or below a dotted line** the model is vetoed."
+    )
+    crossed = (
+        "**Crossed test** on the 67,320 sites in both files, trained on dataset0. "
+        "A = dataset0's measurements + dataset0's labels. B = data1's labels. "
+        "C = data1's measurements (another sequencing run). D = both. "
+        "A drop from A to B: the gain is tied to dataset0's labelling. A to C: to its run."
     )
     data2 = (
         "**data2** is one synthetic sequence at 0-100% modified molecules. A model that "
@@ -64,49 +92,59 @@ def decisions_view(ws, wr, entity: str, project: str):
         "different depths (median 550-1,205 reads), so read-count features confound this "
         "curve (`analysis/newdata/data2_audit.py`). Drawn only by standard runs."
     )
-    # Bar and scalar panels take plain metric names, not wr.SummaryMetric: the
-    # latter saves as `summary_metrics.<key>`, which the workspace UI draws as
-    # an empty panel. Every key here is also logged to history once, so the
-    # plain name plots the same value. Scatter plots do take SummaryMetric.
     sections = [
         ws.Section(name="Read me", is_open=True, panels=[note(ws, wr, read_me)]),
         ws.Section(name="Should we ship this?", is_open=True, panels=[
-            wr.BarPlot(title="Selection rule: mean gain and worst gain over the baseline",
-                       metrics=["xsrc/gain_mean",
-                                "xsrc/gain_worst"]),
-            wr.BarPlot(title="Gain under each labelling (trained on dataset0, as shipped)",
-                       metrics=["xsrc/dataset0/dataset0/gain",
-                                "xsrc/dataset0/data1/gain"]),
-            wr.ScalarChart(title="Eligible (1 = passes the -0.005 veto)",
-                           metric="xsrc/eligible"),
+            wr.LinePlot(title="Gain on dataset0 vs data1 - on the dashed line = transfers",
+                        x=DIAG + "dataset0_gain", y=list(DIAG_MARKS),
+                        title_x="gain under dataset0's labels",
+                        title_y="gain under data1's labels",
+                        range_x=REFERENCE_RANGE, range_y=REFERENCE_RANGE,
+                        line_marks=per_run(run_ids, DIAG_MARKS),
+                        line_titles=per_run(run_ids, DIAG_TITLES)),
+            wr.LinePlot(title="Gain as the test moves away from dataset0 (flat = transfers)",
+                        x="curve/xsrc/transfer/step", y=["curve/xsrc/transfer/gain"],
+                        title_x=TRANSFER_X, title_y="gain over baseline (PR AUC)"),
+            note(ws, wr, diag),
         ]),
-        ws.Section(name="Does it transfer?", is_open=True, panels=[
-            wr.ScatterPlot(title="Gain on dataset0 (x) vs gain on data1 (y) - on the diagonal = transfers",
-                           x=wr.SummaryMetric("xsrc/dataset0/dataset0/gain"),
-                           y=wr.SummaryMetric("xsrc/dataset0/data1/gain")),
-            wr.BarPlot(title="Crossed test: where a gain is lost",
-                       metrics=[f"xsrc/crossed/{c}/gain" for c in "ABCD"]),
-            wr.BarPlot(title="data1 genes absent from dataset0 (gene population)",
-                       metrics=["xsrc/data1_new_genes/gain"]),
-            note(ws, wr, transfer),
+        ws.Section(name="Where is the gain lost?", is_open=True, panels=[
+            wr.LinePlot(title="Crossed test: gain in cells A-D",
+                        x="curve/xsrc/crossed/cell", y=["curve/xsrc/crossed/gain"],
+                        title_x=CROSSED_X, title_y="gain over baseline (PR AUC)"),
+            note(ws, wr, crossed),
+            wr.LinePlot(title="Same, with 95% gene-bootstrap interval (filter to one run)",
+                        x="curve/xsrc/transfer/step",
+                        y=["curve/xsrc/transfer/gain", "curve/xsrc/transfer/ci_low",
+                           "curve/xsrc/transfer/ci_high"],
+                        title_x=TRANSFER_X, title_y="gain over baseline (PR AUC)"),
         ]),
         ws.Section(name="What should it train on?", is_open=True, panels=[
-            wr.BarPlot(title="Mean gain by training arm",
-                       metrics=[f"xsrc/{a}/gain_mean" for a in ARMS]),
-            wr.BarPlot(title="Raw data1 PR AUC by training arm",
-                       metrics=[f"xsrc/{a}/data1/pr_auc" for a in ARMS]),
-            wr.BarPlot(title="Raw dataset0 PR AUC by training arm",
-                       metrics=[f"xsrc/{a}/dataset0/pr_auc" for a in ARMS]),
+            wr.LinePlot(title="Mean gain by training data (the selection number, per arm)",
+                        x="curve/xsrc/arm/index", y=["curve/xsrc/arm/gain_mean"],
+                        title_x=ARM_X, title_y="mean gain over baseline"),
+            wr.LinePlot(title="Gain by training data, under each labelling",
+                        x="curve/xsrc/arm/index",
+                        y=["curve/xsrc/arm/dataset0_gain", "curve/xsrc/arm/data1_gain"],
+                        title_x=ARM_X, title_y="gain over baseline"),
+            wr.LinePlot(title="Raw PR AUC trade-off: each vertex is a training arm "
+                              "(dataset0 -> pooled -> pooled_both -> data1)",
+                        x="curve/xsrc/path/dataset0_pr_auc", y=["curve/xsrc/path/data1_pr_auc"],
+                        title_x="PR AUC on dataset0 held-out genes (4.5% positive)",
+                        title_y="PR AUC on data1 held-out genes (7.3% positive)"),
         ]),
         ws.Section(name="Does the score track modification? (data2)", is_open=False, panels=[
             wr.LinePlot(title="Mean score vs fraction of molecules modified",
-                        x="curve/data2/fraction", y=["curve/data2/mean_score"]),
+                        x="curve/data2/fraction", y=["curve/data2/mean_score"],
+                        title_x="fraction of molecules modified", title_y="mean score"),
             note(ws, wr, data2),
         ]),
         ws.Section(name="Held out on data1 (standard runs)", is_open=False, panels=[
-            wr.BarPlot(title="data1 PR AUC by slice (new genes is leak-free)",
-                       metrics=[f"ext/data1/{s}/pr_auc"
-                                for s in ("new_genes", "new_transcripts", "new_sites")]),
+            wr.LinePlot(title="data1 PR AUC by how far from training (only 0 is leak-free)",
+                        x="curve/ext/data1/slice",
+                        y=["curve/ext/data1/pr_auc", "curve/ext/data1/ci_low",
+                           "curve/ext/data1/ci_high"],
+                        title_x="0 = new genes  |  1 = new transcripts  |  2 = new sites",
+                        title_y="PR AUC"),
         ]),
     ]
     runset = ws.RunsetSettings(
@@ -131,8 +169,8 @@ def history_view(ws, wr, entity: str, project: str):
     sections = [
         ws.Section(name="Read me", is_open=True, panels=[note(ws, wr, read_me)]),
         ws.Section(name="Headline (dataset0 CV)", is_open=True, panels=[
-            wr.BarPlot(title="Pooled OOF PR AUC and the 50-observation mean",
-                       metrics=["oof/pr_auc", "rep/pr_auc_mean"]),
+            wr.ScatterPlot(title="Accuracy at full depth (x) vs at SG-NEx depth 3 (y)",
+                           x=wr.SummaryMetric("oof/pr_auc"), y=wr.SummaryMetric("depth/3/pr_auc")),
         ]),
         ws.Section(name="Depth collapse", is_open=True, panels=[
             wr.LinePlot(title="PR AUC vs log10 reads per site (SG-NEx median depth 3 is x = 0.48)",
@@ -187,7 +225,11 @@ def main() -> int:
     # wandb-workspaces joins the URL path with os.path on Windows, giving
     # "team\project" - unusable in a browser and unparseable by from_url.
     url = lambda v: v.replace("\\", "/")  # noqa: E731
-    for build in (decisions_view, history_view):
+    import wandb
+    run_ids = [r.id for r in wandb.Api().runs(f"{entity}/{project}",
+                                               filters={"config.eval_schema": {"$gte": 2}})]
+    builds = (lambda *a: decisions_view(*a, run_ids=run_ids), history_view)
+    for build in builds:
         view = build(ws, wr, entity, project)
         n_panels = sum(len(s.panels) for s in view.sections)
         if args.dry_run:

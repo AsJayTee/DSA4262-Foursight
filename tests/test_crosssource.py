@@ -104,3 +104,29 @@ def test_identical_models_have_zero_gain_and_pass_the_rule():
     row = block["arms"]["dataset0"]
     assert row["gain_mean"] == 0 and row["eligible"]
     assert all(cell["gain"] == 0 for cell in block["crossed"].values())
+
+def test_curves_align_and_reference_lines_are_fixed():
+    """Every curve's y lists match its x list (W&B pairs them by step), and the
+    diagonal panel's reference lines do not depend on the run, so they coincide
+    across runs (docs/decisions/0031)."""
+    from m6a.report import REFERENCE_RANGE, cross_source_series
+
+    def cell(g):
+        return {"pr_auc": 0.5 + g, "gain": g, "ci_low": g - 0.01, "ci_high": g + 0.01}
+
+    def block(g):
+        arms = {a: {"dataset0": cell(g), "data1": cell(g / 2), "gain_mean": 0.75 * g}
+                for a in ("dataset0", "data1", "ensemble")}
+        return {"arms": arms, "headline_arm": "dataset0", "veto": -0.005,
+                "crossed": {c: cell(g) for c in "ABCD"}, "data1_new_genes": cell(0.0)}
+
+    a, b = cross_source_series(block(0.06)), cross_source_series(block(0.01))
+    for x_key, (xs_, ys) in a.items():
+        assert all(len(v) == len(xs_) for v in ys.values()), x_key
+    diag = "curve/xsrc/diag/"
+    ref = {k: v for k, v in a[diag + "dataset0_gain"][1].items() if not k.endswith("data1_gain")}
+    for key, values in ref.items():
+        np.testing.assert_array_equal(values, b[diag + "dataset0_gain"][1][key])
+    assert min(a[diag + "dataset0_gain"][0]) == REFERENCE_RANGE[0]
+    # The arm axis keeps its position when an arm is absent (unweighted models).
+    assert a["curve/xsrc/arm/index"][0] == [0, 3, 4]
