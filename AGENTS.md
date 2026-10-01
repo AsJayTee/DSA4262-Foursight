@@ -253,6 +253,22 @@ conclusion in this repo at least once:
   0.5 is not a neutral default here — it calls 7,250 sites where 5,475 are
   real. See [0019](docs/decisions/0019-a-threshold-sweep-because-a-ranking-cannot-count.md).
 
+**Choose models on cross-source gain, not on `oof/pr_auc`**
+([0029](docs/decisions/0029-models-are-selected-on-cross-source-gain.md)).
+dataset0 cross-validation over-ranked `everything` by about 3x: +0.065 under
+dataset0's labels, +0.016 under data1's. Before claiming a change is better:
+
+```bash
+python scripts/evaluate.py --config configs/your_experiment.yaml --cross-source
+```
+
+It trains the config and a baseline (`--baseline`, default `quantiles.yaml`)
+five ways over both files on one gene split and reports each gain under each
+labelling. **The rule:** choose on the mean gain; reject if the worse gain is
+below -0.005. About 25 minutes for a depth-augmented config on a laptop. The
+result lands in the W&B **Decisions** view
+([0030](docs/decisions/0030-the-wandb-dashboard-is-code.md)).
+
 **Every standard run is also judged on data1 and data2**
 ([0028](docs/decisions/0028-every-run-is-also-judged-on-data1-and-data2.md)):
 the model it would ship scores the course's second labelled release on
@@ -315,6 +331,7 @@ has them — which is the failure the profiles exist to prevent.
 | A new feature set or model | `src/m6a/features/`, `src/m6a/models/` |
 | Evaluating or comparing two runs | `scripts/evaluate.py` — don't write your own |
 | One figure across N finished runs | `scripts/compare_runs.py` (reads W&B, fits nothing) |
+| A W&B panel or view | `scripts/build_dashboard.py` — never by hand in the UI (0030) |
 | A report section, or a profile | `src/m6a/report.py` (shared — write a record) |
 | A plot | `src/m6a/figures.py` (additive; matplotlib imported inside the function) |
 | Anything that talks to W&B | `src/m6a/tracking.py` — the flat metric keys are a schema |

@@ -39,6 +39,8 @@ train = [
     "python-dotenv>=1.0",
     "scipy>=1.10",
     "matplotlib>=3.7",
+    # scripts/build_dashboard.py builds the W&B views from code (docs/decisions/0030).
+    "wandb-workspaces>=0.4",
 ]
 # Experimental MIL models. Deliberately isolated — see AGENTS.md.
 mil = ["torch>=2.0"]

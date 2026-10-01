@@ -2,6 +2,24 @@
 
 <https://wandb.ai/dsa4262-team/dsa4262-project>
 
+> **Since 2026-10-01 the dashboard is built from code, not by hand**
+> ([0030](decisions/0030-the-wandb-dashboard-is-code.md)):
+> `python scripts/build_dashboard.py` creates or updates two saved views, whose
+> URLs are in [wandb-views.json](wandb-views.json):
+>
+> - **Decisions** - start here. Runs scored on held-out data, sorted by
+>   `xsrc/gain_mean`: the selection rule of
+>   [0029](decisions/0029-models-are-selected-on-cross-source-gain.md) (mean gain
+>   over the baseline across both labellings, vetoed below -0.005), the crossed
+>   run x labelling test, training-arm comparison, data2.
+> - **History (CV only)** - the panels this page describes below, for the runs
+>   evaluated before 2026-09-29 (`eval_schema` 1).
+>
+> **Do not edit the views in the W&B UI** - the next build overwrites them.
+> Change `scripts/build_dashboard.py`. The panel recipes below remain the
+> reference for *reading* the History view; `oof/pr_auc` is no longer the
+> number to choose a model on.
+
 Every run logs the same keys, so the project **is** the comparison — you are
 never evaluating against nothing. This page is how to set the workspace up once
 so that a new run drops straight onto every panel, and how to read each one
