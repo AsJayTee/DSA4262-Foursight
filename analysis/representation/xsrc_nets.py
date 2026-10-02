@@ -94,6 +94,20 @@ def cache_path(model: str, arm: str, fold: int, genes: float):
     return OUT / f"{model}_{arm}_fold{fold}{suffix(genes)}.npy"
 
 
+def weights_path(model: str, arm: str, fold: int, genes: float):
+    return OUT / "weights" / f"{model}_{arm}_fold{fold}{suffix(genes)}.pt"
+
+
+def save_weights(model, model_name, arm, fold, genes, std, extra=None) -> None:
+    """Everything needed to rescore without retraining - other depths, data2,
+    SG-NEx: the weights, and the read standardisation the network was trained
+    with (and, for deepset_hand, the hand-feature standardisation)."""
+    path = weights_path(model_name, arm, fold, genes)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save({"model": model_name, "state_dict": model.state_dict(),
+                "read_mean": std.mean, "read_scale": std.scale, **(extra or {})}, path)
+
+
 def load(genes: float):
     sources, bundle = xsrc_deepset.load(genes)
     s0, s1 = sources["dataset0"], sources["data1"]
@@ -125,18 +139,20 @@ def fit_one(model_name: str, bundle, arm: str, fold: int, args, log) -> np.ndarr
         graph.train(model, graph.graphs_of(np.flatnonzero(fit_rows), bundle.graph_id, bundle.position),
                     graph.graphs_of(np.flatnonzero(val_rows), bundle.graph_id, bundle.position),
                     *graph_args, target, bundle.y_own, args.minutes, args.epochs, 4262 + fold, log)
+        save_weights(model, model_name, arm, fold, args.genes, std)
         scores = graph.score(model, graph.graphs_of(held_rows, bundle.graph_id, bundle.position),
                              *graph_args)
         out[held_rows] = [scores[r] for r in held_rows]
         return out
 
-    site = bundle.kmer_onehot
+    site, extra = bundle.kmer_onehot, None
     if model_name == "deepset_hand":
         mean = np.nanmean(bundle.hand[fit_rows], 0)
         sd = np.nanstd(bundle.hand[fit_rows], 0)
         hand = np.nan_to_num((bundle.hand - mean) / np.where(sd > 0, sd, 1)).astype(np.float32)
         site = np.concatenate([site, hand], 1)
         model = DeepSetHand(hand.shape[1])
+        extra = {"hand_mean": mean, "hand_sd": sd}
     elif model_name in KNN_MODELS:
         model = readgraph.KNNDeepSet(model_name.removeprefix("knn_"), k=KNN_K)
     else:
@@ -147,6 +163,7 @@ def fit_one(model_name: str, bundle, arm: str, fold: int, args, log) -> np.ndarr
     # is a supervised set encoder, which "deepset" selects.
     learn.train(model, "deepset", "set", True, view, {"encoder": fit_rows, "encoder_val": val_rows},
                 values, args.minutes, args.epochs, fold, log, recipe="v3")
+    save_weights(model, model_name, arm, fold, args.genes, std, extra)
     out[held_rows] = learn.site_logits(model, values, bundle.reads.offsets, held_rows, site,
                                        bundle.window_onehot)
     return out
