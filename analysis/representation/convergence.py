@@ -53,7 +53,8 @@ def verdict(run: dict) -> dict:
     best = max(range(ran), key=aps.__getitem__) + 1 if ran else 0
     early = aps[: max(1, int(ran * 0.75))]
     late = (max(aps) - max(early)) if ran else 0.0
-    under = run["stop"] == "cap" and (best > 0.9 * ran or late > 0.005)
+    # Only a finished network has a verdict: a running one has not stopped yet.
+    under = run["done"] and run["stop"] == "cap" and (best > 0.9 * ran or late > 0.005)
     return {**run, "ran": ran, "best": best, "best_ap": max(aps) if aps else float("nan"),
             "late": late, "undertrained": under}
 
