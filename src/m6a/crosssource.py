@@ -32,7 +32,8 @@ is paired.
 from resampling whole genes (paired: same resamples for both):
 
 - per arm and file: PR AUC, the baseline's, the gain;
-- the selection rule: mean gain across the two files, and the worse one, which
+- the selection rule (0032 amends 0029): rank on the worse of the two files'
+  gains; report the mean too. The worse one also
   vetoes a model below `VETO` (-0.005, fixed in 0029 before any result);
 - the crossed test on shared sites, dataset0 arm: dataset0 vs data1
   measurements x dataset0 vs data1 labels - where a gain survives and where it

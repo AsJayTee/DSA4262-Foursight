@@ -1007,7 +1007,7 @@ def cross_source(report: Report, block: dict, name: str, baseline_name: str) -> 
     report.log(
         f"Each row: {name} and {baseline_name} trained the same way, both scored on the\n"
         "held-out genes of each file against that file's labels. Selection rule\n"
-        f"(0029): choose on mean gain; veto if the worse gain is below {block['veto']:+.3f}.\n"
+        f"(0032): rank on the worse gain; veto if it is below {block['veto']:+.3f}.\n"
         f"Headline arm (what ships today): {block['headline_arm']}."
     )
     raw = pd.DataFrame([{"trained on": arm, **{f"{s} PR AUC": r[s]["pr_auc"] for s in xs.SOURCES},

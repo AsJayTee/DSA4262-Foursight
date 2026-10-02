@@ -50,6 +50,7 @@ from m6a import report as reporting
 from m6a.config import Config
 from m6a.crossval import _reads_for
 from m6a.data import SUBSAMPLE_SEED, ReadBlocks
+from m6a.env import load_env
 
 ARMS = ("dataset0", "pooled_both")
 MODEL = "deepset"
@@ -192,6 +193,8 @@ def main() -> None:
                     help="all: fit each fold in its own process (a machine with the cores and "
                          "~3 GB of memory per fold), then combine")
     args = ap.parse_args()
+    # evaluate.py does this in its main(); without it the run silently skips W&B.
+    load_env(common.ROOT / ".env")
     torch.set_num_threads(args.threads)
     log = lambda *a: print(*a, flush=True)  # noqa: E731
     started = time.time()

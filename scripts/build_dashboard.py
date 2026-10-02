@@ -7,7 +7,7 @@
 Two saved views of the shared workspace (docs/decisions/0030):
 
   Decisions          runs scored on held-out data (eval_schema >= 2), sorted by
-                     xsrc/gain_mean - the selection rule of docs/decisions/0029
+                     xsrc/gain_worst - the selection rule of docs/decisions/0032
   History (CV only)  the earlier runs (eval_schema 1) and the panels that read
                      them: depth collapse, calibration, thresholds, curves
 
@@ -64,7 +64,7 @@ def decisions_view(ws, wr, entity: str, project: str, run_ids: list[str]):
         "which are labelled differently ([decision 0029](https://github.com/AsJayTee/"
         "DSA4262-Foursight/blob/main/docs/decisions/0029-models-are-selected-on-cross-source-gain.md)). "
         "Every number is a **gain**: the model's PR AUC minus the baseline's, on identical sites.\n\n"
-        "**The rule:** choose on `xsrc/gain_mean` (the table is sorted by it); reject if "
+        "**The rule** ([0032](https://github.com/AsJayTee/DSA4262-Foursight/blob/main/docs/decisions/0032-rank-on-the-worse-gain.md)): rank on `xsrc/gain_worst`, the worse of the two gains (the table is sorted by it) - we do not know which labelling the test set uses. Gaps under ~0.005 are ties; break them on ""`xsrc/data1_new_genes/gain`. Reject if "
         "`xsrc/eligible` is 0 (the worse gain is below -0.005). `oof/pr_auc` is dataset0 "
         "cross-validation only and over-ranked `everything` by ~3x - context, not the decision.\n\n"
         "**Reading the lines.** Most panels have an integer x axis: each point is one "
@@ -119,7 +119,7 @@ def decisions_view(ws, wr, entity: str, project: str, run_ids: list[str]):
                         title_x=TRANSFER_X, title_y="gain over baseline (PR AUC)"),
         ]),
         ws.Section(name="What should it train on?", is_open=True, panels=[
-            wr.LinePlot(title="Mean gain by training data (the selection number, per arm)",
+            wr.LinePlot(title="Mean gain by training data (context; the rule uses the lower line of the next panel)",
                         x="curve/xsrc/arm/index", y=["curve/xsrc/arm/gain_mean"],
                         title_x=ARM_X, title_y="mean gain over baseline"),
             wr.LinePlot(title="Gain by training data, under each labelling",
@@ -149,9 +149,9 @@ def decisions_view(ws, wr, entity: str, project: str, run_ids: list[str]):
     ]
     runset = ws.RunsetSettings(
         filters=[ws.Config("eval_schema") >= 2],
-        order=[ws.Ordering(ws.Summary("xsrc/gain_mean"), ascending=False)],
-        pinned_columns=["config:features", "config:baseline", "summary:xsrc/gain_mean",
-                        "summary:xsrc/gain_worst", "summary:xsrc/eligible",
+        order=[ws.Ordering(ws.Summary("xsrc/gain_worst"), ascending=False)],
+        pinned_columns=["config:features", "config:baseline", "summary:xsrc/gain_worst",
+                        "summary:xsrc/data1_new_genes/gain", "summary:xsrc/gain_mean", "summary:xsrc/eligible",
                         "summary:xsrc/dataset0/dataset0/gain", "summary:xsrc/dataset0/data1/gain",
                         "summary:xsrc/pooled_both/gain_mean", "summary:oof/pr_auc",
                         "summary:ext/data1/new_genes/pr_auc"],

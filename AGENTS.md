@@ -264,8 +264,10 @@ python scripts/evaluate.py --config configs/your_experiment.yaml --cross-source
 
 It trains the config and a baseline (`--baseline`, default `quantiles.yaml`)
 five ways over both files on one gene split and reports each gain under each
-labelling. **The rule:** choose on the mean gain; reject if the worse gain is
-below -0.005. About 25 minutes for a depth-augmented config on a laptop. The
+labelling. **The rule** ([0032](docs/decisions/0032-rank-on-the-worse-gain.md)):
+rank on the *worse* of the two gains, because nobody knows which labelling the
+test set uses; gaps under ~0.005 are ties, broken on the data1-new-genes gain.
+Reject if the worse gain is below -0.005. About 25 minutes for a depth-augmented config on a laptop. The
 result lands in the W&B **Decisions** view
 ([0030](docs/decisions/0030-the-wandb-dashboard-is-code.md)).
 
