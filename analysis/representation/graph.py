@@ -19,6 +19,17 @@ held out too. The three variants differ only in the neighbour step:
          attention over its neighbours and transcript with a learned bias by
          distance - it chooses which reads and which neighbours count.
 
+Variants of h2gcn (discussed 2026-10-02; every option defaults to the model above):
+
+  window / local / transcript   which neighbours it sees: local edges within
+         `window` nt, the transcript summary, or both - where its gain lives
+  output="twohead"  one head per labelling (dataset0's, data1's); ships the mean
+  output="noisy"    one hidden "is m6A" probability, read through a learned
+         true-/false-positive rate per labelling (the two files as two noisy
+         annotators of one truth); ships the hidden probability
+  reader="knn"      a site's reads encoded by the mutual k-NN read graph
+         (readgraph.py) instead of mean + sd: reads -> site -> transcript
+
 Plain torch (dense per-batch adjacency), no torch_geometric.
 """
 
@@ -36,11 +47,14 @@ from sklearn.metrics import average_precision_score
 import common
 from encoders import KMER, N_VALUES, log_count, masked_mean_sd, mlp, with_kmer
 from learn import Warmup
+import readgraph
 
 KINDS = ("gcn", "h2gcn", "gat")
 WINDOW = 200          # nt; label clustering is 5-10x within 50 nt, ~6-13x within 200
 TRAIN_SITES = 1024    # sites per training batch
 SCORE_BUDGET = 400_000  # sites x widest site, per scoring batch
+QUADRATIC_BUDGET = 20_000_000  # sites x widest site^2, for the k-NN reader
+OUTPUTS = ("single", "twohead", "noisy")
 
 
 def t(x) -> torch.Tensor:
@@ -48,26 +62,47 @@ def t(x) -> torch.Tensor:
 
 
 class GraphNet(nn.Module):
-    def __init__(self, kind: str, width: int = 64, d: int = 64, layers: int = 2, heads: int = 4):
+    def __init__(self, kind: str, width: int = 64, d: int = 64, layers: int = 2, heads: int = 4,
+                 window: int = WINDOW, local: bool = True, transcript: bool = True,
+                 output: str = "single", reader: str = "mean"):
         super().__init__()
-        if kind not in KINDS:
-            raise ValueError(f"kind must be one of {KINDS}")
+        if kind not in KINDS or output not in OUTPUTS or reader not in ("mean", "knn"):
+            raise ValueError(f"kind {KINDS}, output {OUTPUTS}, reader mean|knn")
+        if (not local or not transcript or output != "single" or reader != "mean") and kind != "h2gcn":
+            raise ValueError("the neighbour, output and reader variants are defined for h2gcn only")
         self.kind, self.heads = kind, heads
-        self.phi = mlp([N_VALUES + KMER, width, width])
-        if kind == "gat":
+        self.window, self.local, self.transcript = window, local, transcript
+        self.output, self.reader = output, reader
+        self.quadratic = reader == "knn"
+        if reader == "knn":
+            self.knn = readgraph.KNNDeepSet("static", k=4)
+            self.site_in = mlp([32, d, d])
+        else:
+            self.phi = mlp([N_VALUES + KMER, width, width])
+        if reader == "knn":
+            pass
+        elif kind == "gat":
             self.attend = nn.Sequential(nn.Linear(width, 32), nn.Tanh())
             self.gate = nn.Sequential(nn.Linear(width, 32), nn.Sigmoid())
             self.weigh = nn.Linear(32, 1)
             pooled = width
         else:
             pooled = 2 * width
-        self.site_in = mlp([pooled + 1 + KMER, d, d])
+        if reader != "knn":
+            self.site_in = mlp([pooled + 1 + KMER, d, d])
         if kind == "gcn":
             self.layers = nn.ModuleList([nn.Linear(d, d) for _ in range(layers)])
             self.head = nn.Linear(d, 1)
         elif kind == "h2gcn":
-            self.layers = nn.ModuleList([nn.Linear(3 * d + 1, d) for _ in range(layers)])
-            self.head = nn.Linear(d * (layers + 1), 1)
+            n_in = d * (1 + local + transcript) + local
+            self.layers = nn.ModuleList([nn.Linear(n_in, d) for _ in range(layers)])
+            self.head = nn.Linear(d * (layers + 1), 2 if output == "twohead" else 1)
+            if output == "noisy":
+                # Per labelling (0 = dataset0, 1 = data1): P(called positive |
+                # truly m6A) and P(called positive | not). Start near a clean
+                # annotator so the hidden output starts out meaning "m6A".
+                self.tpr = nn.Parameter(torch.full((2,), 2.2))     # sigmoid ~ 0.90
+                self.fpr = nn.Parameter(torch.full((2,), -3.9))    # sigmoid ~ 0.02
         else:
             self.q = nn.ModuleList([nn.Linear(d, d) for _ in range(layers)])
             self.k = nn.ModuleList([nn.Linear(d, d) for _ in range(layers)])
@@ -82,6 +117,8 @@ class GraphNet(nn.Module):
             self.head = nn.Linear(d, 1)
 
     def sites(self, reads, mask, kmer):
+        if self.reader == "knn":
+            return self.site_in(self.knn.embed(reads, mask, kmer))
         h = self.phi(with_kmer(reads, kmer))
         if self.kind == "gat":
             scores = self.weigh(self.attend(h) * self.gate(h)).squeeze(-1)
@@ -94,7 +131,7 @@ class GraphNet(nn.Module):
     def forward(self, reads, mask, kmer, gid, pos, n_graphs):
         s = self.sites(reads, mask, kmer)
         delta = (pos[:, None] - pos[None, :]).abs()
-        adj = (gid[:, None] == gid[None, :]) & (delta <= WINDOW)
+        adj = (gid[:, None] == gid[None, :]) & (delta <= self.window)
         adj.fill_diagonal_(False)
         deg = adj.sum(1, keepdim=True).float()
         count = torch.zeros(n_graphs).index_add_(0, gid, torch.ones(len(gid)))[gid].unsqueeze(1)
@@ -111,9 +148,15 @@ class GraphNet(nn.Module):
         if self.kind == "h2gcn":
             outs = [s]
             for layer in self.layers:
-                neighbours = (adj.float() @ s) / deg.clamp(min=1)
-                others = (transcript_sum(s) - s) / (count - 1).clamp(min=1)
-                s = F.relu(layer(torch.cat([s, neighbours, others, (deg > 0).float()], -1)))
+                parts = [s]
+                if self.local:
+                    parts += [(adj.float() @ s) / deg.clamp(min=1), (deg > 0).float()]
+                if self.transcript:
+                    parts.append((transcript_sum(s) - s) / (count - 1).clamp(min=1))
+                if self.local and self.transcript:
+                    # The order every recorded h2gcn was trained with.
+                    parts = [parts[0], parts[1], parts[3], parts[2]]
+                s = F.relu(layer(torch.cat(parts, -1)))
                 outs.append(s)
             return self.head(torch.cat(outs, -1)).squeeze(-1)
 
@@ -136,6 +179,36 @@ class GraphNet(nn.Module):
             s = s + self.o[i](out.reshape(n, -1))
             s = s + self.ff[i](self.norm2[i](s))
         return self.head(s).squeeze(-1)
+
+
+    def predict_logit(self, *inputs):
+        """The one score a site ships with."""
+        out = self(*inputs)
+        return out.mean(-1) if self.output == "twohead" else out
+
+    def loss(self, out, rows, target, pos_weight):
+        """Single output: BCE on `target` (the arm's target, as every recorded
+        run). Two-head / noisy: each site's labels kept apart - its own file's,
+        and the other file's where the site is in both - via `self.obs`
+        (y_own, y_other with NaN where unshared, file), set by xsrc_nets.py.
+        A shared site's copy carries each label at weight 1/2, so a physical
+        site counts once over its two copies, as pooled_both weighs it."""
+        if self.output == "single":
+            return F.binary_cross_entropy_with_logits(out, t(target[rows]), pos_weight=pos_weight)
+        y_own, y_other, file = (a[rows] for a in self.obs)
+        shared = ~np.isnan(y_other)
+        labels = torch.cat([t(y_own), t(np.nan_to_num(y_other[shared]))]).float()
+        who = torch.cat([t(file), t(1 - file[shared])]).long()
+        node = torch.cat([torch.arange(len(rows)), t(np.flatnonzero(shared))])
+        weight = torch.cat([t(np.where(shared, 0.5, 1.0)), torch.full((int(shared.sum()),), 0.5)]).float()
+        if self.output == "twohead":
+            logits = out[node, who]
+            per = F.binary_cross_entropy_with_logits(logits, labels, pos_weight=pos_weight, reduction="none")
+        else:
+            p = torch.sigmoid(out[node])
+            q = (p * torch.sigmoid(self.tpr[who]) + (1 - p) * torch.sigmoid(self.fpr[who])).clamp(1e-6, 1 - 1e-6)
+            per = -(pos_weight * labels * torch.log(q) + (1 - labels) * torch.log(1 - q))
+        return (per * weight).sum() / weight.sum()
 
 
 # ------------------------------------------------------------------ batching
@@ -172,11 +245,15 @@ def score(model, graphs, values, offsets, kmer, position) -> dict:
         picks = [np.arange(offsets[r], offsets[r + 1]) for g in batch for r in g]
         inputs, rows = _batch(batch, picks, values, kmer, position)
         with torch.no_grad():
-            out.update(zip(rows.tolist(), model(*inputs).numpy()))
+            predict = getattr(model, "predict_logit", model)
+            out.update(zip(rows.tolist(), predict(*inputs).numpy()))
 
     for g in graphs:
         new_width, new_size = max(width, int(counts[g].max())), size + len(g)
-        if batch and (new_size * new_width > SCORE_BUDGET or new_size > 2048):
+        # The k-NN reader compares every pair of a site's reads.
+        quadratic = getattr(model, "quadratic", False)
+        cost = new_size * new_width ** 2 if quadratic else new_size * new_width
+        if batch and (cost > (QUADRATIC_BUDGET if quadratic else SCORE_BUDGET) or new_size > 2048):
             flush()
             batch, new_width, new_size = [], int(counts[g].max()), len(g)
         batch.append(g)
@@ -212,8 +289,7 @@ def train(model, train_graphs, val_graphs, values, offsets, kmer, position, targ
                 continue
             picks = [batcher._subset(r) for b in batch for r in b]
             inputs, brows = _batch(batch, picks, values, kmer, position)
-            loss = F.binary_cross_entropy_with_logits(model(*inputs), t(target[brows]),
-                                                      pos_weight=pos_weight)
+            loss = model.loss(model(*inputs), brows, target, pos_weight)
             optimiser.zero_grad()
             loss.backward()
             optimiser.step()

@@ -38,6 +38,7 @@ import time
 from types import SimpleNamespace
 
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 
@@ -59,7 +60,23 @@ SET_MODELS = ("deepset", "deepset_hand", "attn_mil", "set_transformer")
 # k-NN read graphs (readgraph.py); k = 4 from knn_k_analysis.py, agreed 2026-10-02.
 KNN_MODELS = tuple(f"knn_{m}" for m in readgraph.MODES)
 KNN_K = 4
-MODELS = SET_MODELS + graph.KINDS + KNN_MODELS
+# h2gcn variants (graph.py), discussed 2026-10-02.
+GRAPH_VARIANTS = {
+    "h2gcn_local": {"window": 50, "transcript": False},      # local edges within 50 nt only
+    "h2gcn_transcript": {"local": False},                    # transcript summary only
+    "h2gcn_twohead": {"output": "twohead"},                  # one head per labelling
+    "h2gcn_noisy": {"output": "noisy"},                      # two noisy annotators of one truth
+    "h2gcn_knn": {"reader": "knn"},                          # k-NN read graph inside h2gcn
+}
+GRAPH_MODELS = {**{k: {"kind": k} for k in graph.KINDS},
+                **{k: {"kind": "h2gcn", **v} for k, v in GRAPH_VARIANTS.items()}}
+# Two labellings in one training set exist only when both files are trained on.
+MODEL_ARMS = {"h2gcn_twohead": ("pooled_both",), "h2gcn_noisy": ("pooled_both",)}
+MODELS = SET_MODELS + KNN_MODELS + tuple(GRAPH_MODELS)
+
+
+def arms_of(model: str) -> tuple:
+    return MODEL_ARMS.get(model, ARMS)
 # Slowest first, so the pool's tail is short.
 ORDER = ("set_transformer", "gat", "h2gcn", "gcn", "knn_dynamic", "knn_static", "knn_random",
          "deepset_hand", "attn_mil", "deepset")
@@ -118,6 +135,10 @@ def load(genes: float):
     bundle.position = np.concatenate([s0.index.get_level_values(1),
                                       s1.index.get_level_values(1)]).astype(np.int64)
     bundle.hand = np.concatenate([s0.X[None].to_numpy(), s1.X[None].to_numpy()]).astype(np.float32)
+    # The other file's label of the same site, NaN where the site is in one file.
+    bundle.y_other = np.concatenate([
+        pd.Series(s1.y, index=s1.index).reindex(s0.index).to_numpy(),
+        pd.Series(s0.y, index=s0.index).reindex(s1.index).to_numpy()]).astype(np.float32)
     return sources, bundle
 
 
@@ -133,9 +154,10 @@ def fit_one(model_name: str, bundle, arm: str, fold: int, args, log) -> np.ndarr
     out = np.full(len(bundle.genes), np.nan, dtype=np.float32)
     held_rows = np.flatnonzero(held)
 
-    if model_name in graph.KINDS:
+    if model_name in GRAPH_MODELS:
         graph_args = (values, bundle.reads.offsets, bundle.kmer_onehot, bundle.position)
-        model = graph.GraphNet(model_name)
+        model = graph.GraphNet(**GRAPH_MODELS[model_name])
+        model.obs = (bundle.y_own, bundle.y_other, bundle.file)
         graph.train(model, graph.graphs_of(np.flatnonzero(fit_rows), bundle.graph_id, bundle.position),
                     graph.graphs_of(np.flatnonzero(val_rows), bundle.graph_id, bundle.position),
                     *graph_args, target, bundle.y_own, args.minutes, args.epochs, 4262 + fold, log)
@@ -184,11 +206,11 @@ def baseline_scores(sources, genes: float, log) -> dict:
 def candidate(model: str, sources, genes: float) -> dict | None:
     n0 = len(sources["dataset0"])
     folds = sorted(np.unique(sources["dataset0"].folds))
-    paths = [cache_path(model, a, f, genes) for a in ARMS for f in folds]
+    paths = [cache_path(model, a, f, genes) for a in arms_of(model) for f in folds]
     if not all(p.exists() for p in paths):
         return None
     out = {}
-    for arm in ARMS:
+    for arm in arms_of(model):
         total = np.nanmax(np.stack([np.load(cache_path(model, arm, f, genes)) for f in folds]), 0)
         out[arm] = {"dataset0": total[:n0], "data1": total[n0:]}
     return out
@@ -199,13 +221,15 @@ def combine(model: str, sources, args, log) -> None:
     if cand is None:
         raise SystemExit(f"{model}: not every fold is fitted - run `xsrc_nets.py fit --model {model}`.")
     base = baseline_scores(sources, args.genes, log)
-    block = xs.summarise(sources, cand, base)
+    # The selection rule is read off the arm that ships; a both-files-only model ships that one.
+    headline = "dataset0" if "dataset0" in cand else "pooled_both"
+    block = xs.summarise(sources, cand, base, headline_arm=headline)
     report = reporting.new("standard", subsample_seed=SUBSAMPLE_SEED, log=log)
     reporting.cross_source(report, block, f"{model} (network)", Config.load(BASELINE).name)
     extra = {}
     deepset = candidate("deepset", sources, args.genes) if model != "deepset" else None
     if deepset is not None:
-        vs = xs.summarise(sources, cand, deepset)
+        vs = xs.summarise(sources, cand, deepset, headline_arm=headline)
         report.data["vs_deepset"] = vs
         log(f"\nvs deepset alone (same arms, same genes):")
         for arm, r in vs["arms"].items():
@@ -222,7 +246,7 @@ def combine(model: str, sources, args, log) -> None:
     tracker = tracking.start(
         name, enabled=not (args.no_wandb or smoke), job_type="evaluate", tags=[tracking.EVAL_TAG],
         config={"eval_schema": xs.EVAL_SCHEMA, "baseline": Config.load(BASELINE).name,
-                "arms": ",".join(ARMS), "features": "reads (network)", "model": model,
+                "arms": ",".join(arms_of(model)), "features": "reads (network)", "model": model,
                 "train_depths": "full (random read subsets)", "network_minutes": args.minutes,
                 "script": "analysis/representation/xsrc_nets.py"})
     try:
@@ -232,7 +256,7 @@ def combine(model: str, sources, args, log) -> None:
             tracker.summary(extra)
     finally:
         tracker.finish()
-    r = block["arms"]["dataset0"]
+    r = block["arms"][headline]
     log(f"{model}: worst {r['gain_worst']:+.4f}  mean {r['gain_mean']:+.4f}  -> {path}")
 
 
@@ -266,7 +290,7 @@ def main() -> None:
                        "--threads", str(args.threads), "--genes", str(args.genes)]
         # One job per network, so seventy networks spread over the cores.
         queue = [["baseline"]] + [["fit", "--model", m, "--fold", str(f), "--arm", a]
-                                  for m in models for f in range(n_folds) for a in ARMS
+                                  for m in models for f in range(n_folds) for a in arms_of(m)
                                   if not cache_path(m, a, f, args.genes).exists()]
         running, failed = [], []
         while queue or running:
@@ -298,7 +322,7 @@ def main() -> None:
         folds = [args.fold] if args.fold is not None else range(n_folds)
         for model in models:
             for fold in folds:
-                for arm in ([args.arm] if args.arm else ARMS):
+                for arm in ([args.arm] if args.arm else arms_of(model)):
                     path = cache_path(model, arm, fold, args.genes)
                     if path.exists():
                         continue
