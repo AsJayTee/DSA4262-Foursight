@@ -45,7 +45,9 @@ def existing() -> set[str]:
     import wandb
     project = os.environ.get("WANDB_PROJECT", "dsa4262-project")
     entity = os.environ.get("WANDB_ENTITY") or wandb.Api().default_entity
-    return {r.name for r in wandb.Api().runs(f"{entity}/{project}")}
+    # Finished only: a run killed mid-way (the laptop slept on 2026-10-01) has
+    # no results and must not block its own rerun.
+    return {r.name for r in wandb.Api().runs(f"{entity}/{project}") if r.state == "finished"}
 
 
 ABLATIONS = [  # decision 0029 step 1: everything minus one family at a time

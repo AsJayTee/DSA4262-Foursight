@@ -193,7 +193,10 @@ def train(model, name, kind, supervised, bundle, roles, values, minutes, epochs,
                     scores = model(t(hand[val])).numpy()
             else:
                 scores = site_logits(model, values, offsets, val, kmer, windows)
-            record["val_ap"] = float(average_precision_score(y[val], scores))
+            # A soft target (xsrc_deepset.py's pooled_both: two labellings
+            # averaged) cannot score AP; such a bundle carries 0/1 `y_val`.
+            y_val = getattr(bundle, "y_val", y)
+            record["val_ap"] = float(average_precision_score(y_val[val], scores))
             if track_train:
                 # The underfit/overfit diagnostic: the same metric on a fixed
                 # sample of the network's OWN training sites, all reads.
