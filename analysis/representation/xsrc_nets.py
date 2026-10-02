@@ -11,6 +11,8 @@ files; a shared site's target is the mean of its two labels):
   attn_mil         gated attention over reads (which reads look modified)
   set_transformer  reads attend to each other - a GNN over one site's reads
   gcn / h2gcn / gat  reads -> site -> transcript graphs (graph.py)
+  knn_static / knn_dynamic / knn_random  mutual k-NN graph over a site's reads
+                   (readgraph.py, k = 4); knn_random is the shuffled-graph control
 
 Every model: one seed, learn.py's recipe v3 - trained to convergence (warm-up,
 halve the rate on an 8-epoch validation plateau, stop after 25 without a gain;
@@ -43,6 +45,7 @@ import common
 import encoders as E
 import graph
 import learn
+import readgraph
 import xsrc_deepset
 from m6a import crosssource as xs
 from m6a import registry, tracking
@@ -53,9 +56,13 @@ from m6a.env import load_env
 
 ARMS = ("dataset0", "pooled_both")
 SET_MODELS = ("deepset", "deepset_hand", "attn_mil", "set_transformer")
-MODELS = SET_MODELS + graph.KINDS
+# k-NN read graphs (readgraph.py); k = 4 from knn_k_analysis.py, agreed 2026-10-02.
+KNN_MODELS = tuple(f"knn_{m}" for m in readgraph.MODES)
+KNN_K = 4
+MODELS = SET_MODELS + graph.KINDS + KNN_MODELS
 # Slowest first, so the pool's tail is short.
-ORDER = ("set_transformer", "gat", "h2gcn", "gcn", "deepset_hand", "attn_mil", "deepset")
+ORDER = ("set_transformer", "gat", "h2gcn", "gcn", "knn_dynamic", "knn_static", "knn_random",
+         "deepset_hand", "attn_mil", "deepset")
 OUT = common.OUT / "xsrc_nets"
 BASELINE = xsrc_deepset.BASELINE
 
@@ -130,6 +137,8 @@ def fit_one(model_name: str, bundle, arm: str, fold: int, args, log) -> np.ndarr
         hand = np.nan_to_num((bundle.hand - mean) / np.where(sd > 0, sd, 1)).astype(np.float32)
         site = np.concatenate([site, hand], 1)
         model = DeepSetHand(hand.shape[1])
+    elif model_name in KNN_MODELS:
+        model = readgraph.KNNDeepSet(model_name.removeprefix("knn_"), k=KNN_K)
     else:
         model = learn.build(model_name, 0)
     view = SimpleNamespace(reads=bundle.reads, kmer_onehot=site, window_onehot=bundle.window_onehot,
@@ -213,7 +222,7 @@ def combine(model: str, sources, args, log) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("stage", choices=("fit", "baseline", "combine", "all"))
-    ap.add_argument("--model", choices=MODELS, help="fit/combine: one model (default: all)")
+    ap.add_argument("--model", help="one model or a comma-separated list (default: all)")
     ap.add_argument("--fold", type=int)
     ap.add_argument("--arm", choices=ARMS)
     ap.add_argument("--minutes", type=float, default=240.0, help="safety cap per network")
@@ -227,7 +236,10 @@ def main() -> None:
     torch.set_num_threads(args.threads)
     log = lambda *a: print(*a, flush=True)  # noqa: E731
     OUT.mkdir(parents=True, exist_ok=True)
-    models = [args.model] if args.model else [m for m in ORDER]
+    models = args.model.split(",") if args.model else [m for m in ORDER]
+    unknown = sorted(set(models) - set(MODELS))
+    if unknown:
+        raise SystemExit(f"Unknown model(s) {unknown}; choose from {', '.join(MODELS)}.")
     n_folds = Config.load(BASELINE).split.n_folds
 
     if args.stage == "all":
