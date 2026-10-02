@@ -35,6 +35,7 @@ from sklearn.metrics import average_precision_score
 
 import common
 from encoders import KMER, N_VALUES, log_count, masked_mean_sd, mlp, with_kmer
+from learn import Warmup
 
 KINDS = ("gcn", "h2gcn", "gat")
 WINDOW = 200          # nt; label clustering is 5-10x within 50 nt, ~6-13x within 200
@@ -187,7 +188,7 @@ def score(model, graphs, values, offsets, kmer, position) -> dict:
 
 def train(model, train_graphs, val_graphs, values, offsets, kmer, position, target, y_val,
           minutes: float, epochs: int, seed: int, log) -> list[dict]:
-    """Recipe v2 of learn.train (AdamW, warm-up + cosine, patience 60), over
+    """Recipe v3 of learn.train (AdamW, warm-up, halve on plateau, patience 25), over
     batches of whole transcripts; early stopping on validation AP."""
     rng = np.random.default_rng(seed)
     batcher = common.SetBatcher(values, offsets, seed=seed)
@@ -196,9 +197,9 @@ def train(model, train_graphs, val_graphs, values, offsets, kmer, position, targ
     pos_weight = torch.tensor([(len(rows) - positives) / max(positives, 1)])
     per_epoch = max(1, -(-len(rows) // TRAIN_SITES))
     optimiser = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
-    warm, total = 3 * per_epoch, max(epochs * per_epoch, 1)
-    schedule = torch.optim.lr_scheduler.LambdaLR(optimiser, lambda s: min(
-        (s + 1) / warm, 0.5 * (1 + np.cos(np.pi * min(s, total) / total))))
+    # learn.py's recipe v3, so every model converges under the same rule.
+    schedule = Warmup(optimiser, 3 * per_epoch)
+    plateau = torch.optim.lr_scheduler.ReduceLROnPlateau(optimiser, "max", factor=0.5, patience=8)
     val_rows = np.concatenate(val_graphs)
     history, best, best_ap, started = [], None, -1.0, time.time()
     for epoch in range(epochs):
@@ -225,12 +226,13 @@ def train(model, train_graphs, val_graphs, values, offsets, kmer, position, targ
         ap = float(average_precision_score(y_val[val_rows], [scores[r] for r in val_rows]))
         history.append({"epoch": epoch + 1, "loss": float(np.mean(losses)), "val_ap": ap,
                         "minutes": round((time.time() - started) / 60, 2)})
+        plateau.step(ap)
         log(f"    epoch {epoch + 1}: loss {history[-1]['loss']:.4f}, val_ap {ap:.4f}, "
-            f"minutes {history[-1]['minutes']}")
+            f"minutes {history[-1]['minutes']}, lr {optimiser.param_groups[0]['lr']:.2e}")
         if ap > best_ap:
             best_ap, best = ap, copy.deepcopy(model.state_dict())
-        if epoch + 1 - max(i for i, h in enumerate(history, 1) if h["val_ap"] == best_ap) >= 60:
-            log("    stopping: no validation gain in 60 epochs")
+        if epoch + 1 - max(i for i, h in enumerate(history, 1) if h["val_ap"] == best_ap) >= 25:
+            log("    stopping: no validation gain in 25 epochs")
             break
         if time.time() - started > minutes * 60:
             break

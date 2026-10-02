@@ -12,8 +12,10 @@ files; a shared site's target is the mean of its two labels):
   set_transformer  reads attend to each other - a GNN over one site's reads
   gcn / h2gcn / gat  reads -> site -> transcript graphs (graph.py)
 
-Every model: one seed, learn.py's recipe v2, validation on 10% of training
-genes for early stopping. Each model is also compared against `deepset`.
+Every model: one seed, learn.py's recipe v3 - trained to convergence (warm-up,
+halve the rate on an 8-epoch validation plateau, stop after 25 without a gain;
+the time cap is a safety net only) on 90% of training genes, early-stopped on
+the other 10%. `convergence.py` checks every network stopped on patience. Each model is also compared against `deepset`.
 
     python analysis/representation/xsrc_nets.py all --jobs 14           # Ronin
     python analysis/representation/xsrc_nets.py fit --model gat --fold 0
@@ -135,7 +137,7 @@ def fit_one(model_name: str, bundle, arm: str, fold: int, args, log) -> np.ndarr
     # learn.train branches on the name only to pick the loss; every model here
     # is a supervised set encoder, which "deepset" selects.
     learn.train(model, "deepset", "set", True, view, {"encoder": fit_rows, "encoder_val": val_rows},
-                values, args.minutes, args.epochs, fold, log, recipe="v2")
+                values, args.minutes, args.epochs, fold, log, recipe="v3")
     out[held_rows] = learn.site_logits(model, values, bundle.reads.offsets, held_rows, site,
                                        bundle.window_onehot)
     return out
@@ -187,7 +189,7 @@ def combine(model: str, sources, args, log) -> None:
                           f"vs_deepset/{arm}/dataset0/gain": r["dataset0"]["gain"],
                           f"vs_deepset/{arm}/data1/gain": r["data1"]["gain"]})
     report.data["network"] = {"model": model, "minutes": args.minutes, "epochs": args.epochs,
-                              "genes": args.genes, "recipe": "v2", "seeds": 1}
+                              "genes": args.genes, "recipe": "v3", "seeds": 1}
     smoke = args.genes < 1
     name = f"{model}_nn__xsrc"
     path = reporting.write(report, common.RESULTS, name + ("__smoke" if smoke else ""))
@@ -213,8 +215,9 @@ def main() -> None:
     ap.add_argument("stage", choices=("fit", "baseline", "combine", "all"))
     ap.add_argument("--model", choices=MODELS, help="fit/combine: one model (default: all)")
     ap.add_argument("--fold", type=int)
-    ap.add_argument("--minutes", type=float, default=45.0, help="cap per network")
-    ap.add_argument("--epochs", type=int, default=150)
+    ap.add_argument("--arm", choices=ARMS)
+    ap.add_argument("--minutes", type=float, default=240.0, help="safety cap per network")
+    ap.add_argument("--epochs", type=int, default=300)
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--jobs", type=int, default=14, help="all: concurrent fit processes")
     ap.add_argument("--genes", type=float, default=1.0, help="fraction of genes (smoke only)")
@@ -232,9 +235,10 @@ def main() -> None:
         logs.mkdir(exist_ok=True)
         common_args = ["--minutes", str(args.minutes), "--epochs", str(args.epochs),
                        "--threads", str(args.threads), "--genes", str(args.genes)]
-        queue = [["baseline"]] + [["fit", "--model", m, "--fold", str(f)]
-                                  for m in models for f in range(n_folds)
-                                  if not all(cache_path(m, a, f, args.genes).exists() for a in ARMS)]
+        # One job per network, so seventy networks spread over the cores.
+        queue = [["baseline"]] + [["fit", "--model", m, "--fold", str(f), "--arm", a]
+                                  for m in models for f in range(n_folds) for a in ARMS
+                                  if not cache_path(m, a, f, args.genes).exists()]
         running, failed = [], []
         while queue or running:
             while queue and len(running) < args.jobs:
@@ -265,7 +269,7 @@ def main() -> None:
         folds = [args.fold] if args.fold is not None else range(n_folds)
         for model in models:
             for fold in folds:
-                for arm in ARMS:
+                for arm in ([args.arm] if args.arm else ARMS):
                     path = cache_path(model, arm, fold, args.genes)
                     if path.exists():
                         continue

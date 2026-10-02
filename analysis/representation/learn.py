@@ -125,6 +125,25 @@ def read_codes(model, values, offsets, rows, kmer, windows, chunk=131_072):
 PATIENCE = 30   # supervised: stop after this many epochs without a better validation AP
 
 
+class Warmup:
+    """Linear warm-up to the base rate, then hands the rate over untouched.
+    Not LambdaLR: that rewrites the rate on every step and would undo each
+    ReduceLROnPlateau halving."""
+
+    def __init__(self, optimiser, steps: int, lr: float = 1e-3):
+        self.optimiser, self.steps, self.lr, self.done = optimiser, steps, lr, 0
+        self._set(lr / steps)
+
+    def _set(self, lr: float) -> None:
+        for group in self.optimiser.param_groups:
+            group["lr"] = lr
+
+    def step(self) -> None:
+        self.done += 1
+        if self.done <= self.steps:
+            self._set(self.lr * min(1.0, (self.done + 1) / self.steps))
+
+
 def train(model, name, kind, supervised, bundle, roles, values, minutes, epochs, fold, log,
           track_train: int = 0, recipe: str = "v1"):
     """recipe v1: Adam 1e-3, constant rate, patience 30 - every recorded run.
@@ -139,7 +158,17 @@ def train(model, name, kind, supervised, bundle, roles, values, minutes, epochs,
     batcher = common.SetBatcher(values, offsets, seed=4262 + fold)
     positives = y[rows].sum()
     pos_weight = torch.tensor([(len(rows) - positives) / max(positives, 1)])
-    if recipe == "v2":
+    plateau = None
+    if recipe == "v3":
+        # Convergence-based, the same for every model (xsrc_nets.py): a fixed
+        # cosine length favours whichever model fits more epochs in the time
+        # cap. Warm-up, then halve the rate on an 8-epoch validation plateau;
+        # stop after 25 without a gain.
+        optimiser = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
+        schedule = Warmup(optimiser, 3 * max(1, -(-len(rows) // BATCH)))
+        plateau = torch.optim.lr_scheduler.ReduceLROnPlateau(optimiser, "max", factor=0.5, patience=8)
+        patience = 25
+    elif recipe == "v2":
         optimiser = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
         per_epoch = max(1, -(-len(rows) // BATCH))
         warm, total = 3 * per_epoch, max(epochs * per_epoch, 1)
@@ -205,6 +234,9 @@ def train(model, name, kind, supervised, bundle, roles, values, minutes, epochs,
                 record["train_ap"] = float(average_precision_score(y[seen], fit))
             if record["val_ap"] > best_ap:
                 best_ap, best = record["val_ap"], copy.deepcopy(model.state_dict())
+            if plateau is not None:
+                plateau.step(record["val_ap"])
+                record["lr"] = optimiser.param_groups[0]["lr"]
         history.append(record)
         since_best = len(history) - 1 - max(
             (i for i, h in enumerate(history) if h.get("val_ap") == best_ap), default=len(history) - 1)
