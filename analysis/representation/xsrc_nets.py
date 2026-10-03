@@ -70,6 +70,9 @@ GRAPH_VARIANTS = {
     "h2gcn_knn": {"reader": "knn"},                          # k-NN read graph inside h2gcn
     # local edges only + one head per labelling: the two best findings together (2026-10-03)
     "h2gcn_local_twohead": {"window": 50, "transcript": False, "output": "twohead"},
+    # The last pre-leaderboard batch (2026-10-03), both on h2gcn_local:
+    "h2gcn_local_deep": {"window": 50, "transcript": False, "deep": 3},   # residual read + site encoders
+    "h2gcn_aux": {"window": 50, "transcript": False, "aux": 0.5},         # + own-reads-only auxiliary head
 }
 GRAPH_MODELS = {**{k: {"kind": k} for k in graph.KINDS},
                 **{k: {"kind": "h2gcn", **v} for k, v in GRAPH_VARIANTS.items()}}

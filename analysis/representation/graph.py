@@ -29,6 +29,13 @@ Variants of h2gcn (discussed 2026-10-02; every option defaults to the model abov
          annotators of one truth); ships the hidden probability
   reader="knn"      a site's reads encoded by the mutual k-NN read graph
          (readgraph.py) instead of mean + sd: reads -> site -> transcript
+  deep=N            N pre-norm residual blocks after the read encoder and after
+         the site encoder (encoders.ResBlock): depth where it has not been
+         tried inside the graph model; the graph itself stays 2 layers
+  aux=w             a second head scores each site from its own reads alone,
+         before the graph, trained with weight w beside the main loss (deep
+         supervision): the read encoder must keep evidence that works without
+         neighbours. The shipped score is the main head's
 
 Plain torch (dense per-batch adjacency), no torch_geometric.
 """
@@ -45,7 +52,7 @@ import torch.nn.functional as F
 from sklearn.metrics import average_precision_score
 
 import common
-from encoders import KMER, N_VALUES, log_count, masked_mean_sd, mlp, with_kmer
+from encoders import KMER, N_VALUES, ResBlock, log_count, masked_mean_sd, mlp, with_kmer
 from learn import Warmup
 import readgraph
 
@@ -64,11 +71,12 @@ def t(x) -> torch.Tensor:
 class GraphNet(nn.Module):
     def __init__(self, kind: str, width: int = 64, d: int = 64, layers: int = 2, heads: int = 4,
                  window: int = WINDOW, local: bool = True, transcript: bool = True,
-                 output: str = "single", reader: str = "mean"):
+                 output: str = "single", reader: str = "mean", deep: int = 0, aux: float = 0.0):
         super().__init__()
         if kind not in KINDS or output not in OUTPUTS or reader not in ("mean", "knn"):
             raise ValueError(f"kind {KINDS}, output {OUTPUTS}, reader mean|knn")
-        if (not local or not transcript or output != "single" or reader != "mean") and kind != "h2gcn":
+        if (not local or not transcript or output != "single" or reader != "mean" or deep or aux) \
+                and kind != "h2gcn":
             raise ValueError("the neighbour, output and reader variants are defined for h2gcn only")
         self.kind, self.heads = kind, heads
         self.window, self.local, self.transcript = window, local, transcript
@@ -90,6 +98,14 @@ class GraphNet(nn.Module):
             pooled = 2 * width
         if reader != "knn":
             self.site_in = mlp([pooled + 1 + KMER, d, d])
+        if deep:
+            # Residual stacks; the final LayerNorm keeps the scale the graph
+            # layers were designed for. deep=0 leaves the recorded models intact.
+            self.phi = nn.Sequential(self.phi, *[ResBlock(width) for _ in range(deep)], nn.LayerNorm(width))
+            self.site_in = nn.Sequential(self.site_in, *[ResBlock(d) for _ in range(deep)], nn.LayerNorm(d))
+        self.aux = aux
+        if aux:
+            self.aux_head = nn.Linear(d, 1)
         if kind == "gcn":
             self.layers = nn.ModuleList([nn.Linear(d, d) for _ in range(layers)])
             self.head = nn.Linear(d, 1)
@@ -130,6 +146,9 @@ class GraphNet(nn.Module):
 
     def forward(self, reads, mask, kmer, gid, pos, n_graphs):
         s = self.sites(reads, mask, kmer)
+        if self.aux:
+            # Read by loss(); the shipped score never uses it.
+            self._aux_logit = self.aux_head(s).squeeze(-1)
         delta = (pos[:, None] - pos[None, :]).abs()
         adj = (gid[:, None] == gid[None, :]) & (delta <= self.window)
         adj.fill_diagonal_(False)
@@ -194,7 +213,11 @@ class GraphNet(nn.Module):
         A shared site's copy carries each label at weight 1/2, so a physical
         site counts once over its two copies, as pooled_both weighs it."""
         if self.output == "single":
-            return F.binary_cross_entropy_with_logits(out, t(target[rows]), pos_weight=pos_weight)
+            loss = F.binary_cross_entropy_with_logits(out, t(target[rows]), pos_weight=pos_weight)
+            if self.aux:
+                loss = loss + self.aux * F.binary_cross_entropy_with_logits(
+                    self._aux_logit, t(target[rows]), pos_weight=pos_weight)
+            return loss
         y_own, y_other, file = (a[rows] for a in self.obs)
         shared = ~np.isnan(y_other)
         labels = torch.cat([t(y_own), t(np.nan_to_num(y_other[shared]))]).float()

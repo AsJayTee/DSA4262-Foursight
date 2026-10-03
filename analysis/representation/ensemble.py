@@ -23,7 +23,18 @@ import common
 import xsrc_nets as X
 from m6a import crosssource as xs
 
-MEMBERS = ("h2gcn", "h2gcn_local", "h2gcn_twohead", "deepset", "set_transformer", "attn_mil")
+MEMBERS = ("h2gcn", "h2gcn_local", "h2gcn_twohead", "h2gcn_local_deep", "h2gcn_aux", "deepset")
+# Finalists retrained with seeds 1 and 2 (both files only): their seed average
+# is an ensemble too, and the usual cheap gain.
+SEEDED = ("h2gcn", "h2gcn_local", "h2gcn_twohead")
+
+
+def seeded(model: str, sources, seed: int):
+    X.SEED = seed
+    try:
+        return X.candidate(model, sources, 1.0)
+    finally:
+        X.SEED = 0
 
 
 def ranks(v: np.ndarray) -> np.ndarray:
@@ -38,10 +49,19 @@ def main() -> None:
         cand = X.candidate(m, sources, 1.0)
         if cand is not None:
             pool[m] = cand
+    for m in SEEDED:
+        runs = [seeded(m, sources, s) for s in (0, 1, 2)]
+        if all(r is not None and "pooled_both" in r for r in runs):
+            pool[f"{m} x3 seeds"] = {"pooled_both": {s: np.mean([ranks(r["pooled_both"][s]) for r in runs], 0)
+                                                     for s in xs.SOURCES}}
+            for i, r in enumerate(runs[1:], 1):
+                pool[f"{m} seed {i}"] = {"pooled_both": r["pooled_both"]}
     rows = []
     for arm in X.ARMS:
         names = [n for n in pool if arm in pool[n]]
-        combos = [c for k in (1, 2, 3) for c in itertools.combinations(names, k)]
+        # Seeds of one model are compared alone, not mixed into combinations.
+        mixable = [n for n in names if " seed " not in n]
+        combos = [(n,) for n in names] + [c for k in (2, 3) for c in itertools.combinations(mixable, k)]
         for combo in combos:
             avg = {s: np.mean([ranks(pool[n][arm][s]) for n in combo], 0) for s in xs.SOURCES}
             block = xs.summarise(sources, {arm: avg}, {arm: base[arm]}, n=200, headline_arm=arm)
