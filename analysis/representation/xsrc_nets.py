@@ -68,17 +68,25 @@ GRAPH_VARIANTS = {
     "h2gcn_noisy": {"output": "noisy"},                      # two noisy annotators of one truth
     "h2gcn_noisy2": {"output": "noisy"},                     # the same, positives not up-weighted
     "h2gcn_knn": {"reader": "knn"},                          # k-NN read graph inside h2gcn
+    # local edges only + one head per labelling: the two best findings together (2026-10-03)
+    "h2gcn_local_twohead": {"window": 50, "transcript": False, "output": "twohead"},
 }
 GRAPH_MODELS = {**{k: {"kind": k} for k in graph.KINDS},
                 **{k: {"kind": "h2gcn", **v} for k, v in GRAPH_VARIANTS.items()}}
 # Two labellings in one training set exist only when both files are trained on.
 MODEL_ARMS = {"h2gcn_twohead": ("pooled_both",), "h2gcn_noisy": ("pooled_both",),
-              "h2gcn_noisy2": ("pooled_both",)}
+              "h2gcn_noisy2": ("pooled_both",), "h2gcn_local_twohead": ("pooled_both",)}
+# --arms: restrict every model to some arms (the seed runs train only the arm that ships).
+ARMS_OVERRIDE: tuple | None = None
+# --seed: 0 is the run every W&B row comes from; other seeds change only the
+# initialisation, batch order and read subsets - never the split or the folds.
+SEED = 0
 MODELS = SET_MODELS + KNN_MODELS + tuple(GRAPH_MODELS)
 
 
 def arms_of(model: str) -> tuple:
-    return MODEL_ARMS.get(model, ARMS)
+    arms = MODEL_ARMS.get(model, ARMS)
+    return tuple(a for a in arms if a in ARMS_OVERRIDE) if ARMS_OVERRIDE else arms
 # Slowest first, so the pool's tail is short.
 ORDER = ("set_transformer", "gat", "h2gcn", "gcn", "knn_dynamic", "knn_static", "knn_random",
          "deepset_hand", "attn_mil", "deepset")
@@ -106,7 +114,7 @@ class DeepSetHand(nn.Module):
 
 
 def suffix(genes: float) -> str:
-    return "" if genes >= 1 else f"_genes{genes:g}"
+    return ("" if genes >= 1 else f"_genes{genes:g}") + (f"_s{SEED}" if SEED else "")
 
 
 def cache_path(model: str, arm: str, fold: int, genes: float):
@@ -152,7 +160,8 @@ def fit_one(model_name: str, bundle, arm: str, fold: int, args, log) -> np.ndarr
     target = bundle.y_own if arm == "dataset0" else bundle.y_both
     std = common.Standardiser.fit(bundle.reads, fit_rows)
     values = std(bundle.reads.values)
-    torch.manual_seed(4262 + fold)
+    seed = 4262 + fold + 1000 * SEED
+    torch.manual_seed(seed)
     out = np.full(len(bundle.genes), np.nan, dtype=np.float32)
     held_rows = np.flatnonzero(held)
 
@@ -163,7 +172,7 @@ def fit_one(model_name: str, bundle, arm: str, fold: int, args, log) -> np.ndarr
         model.unweighted = model_name == "h2gcn_noisy2"
         graph.train(model, graph.graphs_of(np.flatnonzero(fit_rows), bundle.graph_id, bundle.position),
                     graph.graphs_of(np.flatnonzero(val_rows), bundle.graph_id, bundle.position),
-                    *graph_args, target, bundle.y_own, args.minutes, args.epochs, 4262 + fold, log)
+                    *graph_args, target, bundle.y_own, args.minutes, args.epochs, seed, log)
         save_weights(model, model_name, arm, fold, args.genes, std)
         scores = graph.score(model, graph.graphs_of(held_rows, bundle.graph_id, bundle.position),
                              *graph_args)
@@ -187,7 +196,8 @@ def fit_one(model_name: str, bundle, arm: str, fold: int, args, log) -> np.ndarr
     # learn.train branches on the name only to pick the loss; every model here
     # is a supervised set encoder, which "deepset" selects.
     learn.train(model, "deepset", "set", True, view, {"encoder": fit_rows, "encoder_val": val_rows},
-                values, args.minutes, args.epochs, fold, log, recipe="v3")
+                # learn.train seeds its batch order and read subsets from this argument.
+                values, args.minutes, args.epochs, fold + 1000 * SEED, log, recipe="v3")
     save_weights(model, model_name, arm, fold, args.genes, std, extra)
     out[held_rows] = learn.site_logits(model, values, bundle.reads.offsets, held_rows, site,
                                        bundle.window_onehot)
@@ -244,10 +254,11 @@ def combine(model: str, sources, args, log) -> None:
     report.data["network"] = {"model": model, "minutes": args.minutes, "epochs": args.epochs,
                               "genes": args.genes, "recipe": "v3", "seeds": 1}
     smoke = args.genes < 1
-    name = f"{model}_nn__xsrc"
+    name = f"{model}_nn__xsrc" + (f"__seed{SEED}" if SEED else "")
     path = reporting.write(report, common.RESULTS, name + ("__smoke" if smoke else ""))
     tracker = tracking.start(
-        name, enabled=not (args.no_wandb or smoke), job_type="evaluate", tags=[tracking.EVAL_TAG],
+        # Only seed 0 is a Decisions row; other seeds are read from their reports.
+        name, enabled=not (args.no_wandb or smoke or SEED), job_type="evaluate", tags=[tracking.EVAL_TAG],
         config={"eval_schema": xs.EVAL_SCHEMA, "baseline": Config.load(BASELINE).name,
                 "arms": ",".join(arms_of(model)), "features": "reads (network)", "model": model,
                 "train_depths": "full (random read subsets)", "network_minutes": args.minutes,
@@ -269,6 +280,8 @@ def main() -> None:
     ap.add_argument("--model", help="one model or a comma-separated list (default: all)")
     ap.add_argument("--fold", type=int)
     ap.add_argument("--arm", choices=ARMS)
+    ap.add_argument("--arms", help="comma-separated: restrict every model to these arms")
+    ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--minutes", type=float, default=240.0, help="safety cap per network")
     ap.add_argument("--epochs", type=int, default=300)
     ap.add_argument("--threads", type=int, default=4)
@@ -276,6 +289,9 @@ def main() -> None:
     ap.add_argument("--genes", type=float, default=1.0, help="fraction of genes (smoke only)")
     ap.add_argument("--no-wandb", action="store_true")
     args = ap.parse_args()
+    global SEED, ARMS_OVERRIDE
+    SEED = args.seed
+    ARMS_OVERRIDE = tuple(args.arms.split(",")) if args.arms else None
     load_env(common.ROOT / ".env")
     torch.set_num_threads(args.threads)
     log = lambda *a: print(*a, flush=True)  # noqa: E731
@@ -290,7 +306,8 @@ def main() -> None:
         logs = common.ROOT / "analysis" / "representation" / "logs"
         logs.mkdir(exist_ok=True)
         common_args = ["--minutes", str(args.minutes), "--epochs", str(args.epochs),
-                       "--threads", str(args.threads), "--genes", str(args.genes)]
+                       "--threads", str(args.threads), "--genes", str(args.genes),
+                       "--seed", str(args.seed)] + (["--arms", args.arms] if args.arms else [])
         # One job per network, so seventy networks spread over the cores.
         queue = [["baseline"]] + [["fit", "--model", m, "--fold", str(f), "--arm", a]
                                   for m in models for f in range(n_folds) for a in arms_of(m)
@@ -330,9 +347,10 @@ def main() -> None:
                     if path.exists():
                         continue
                     started = time.time()
-                    log(f"[{model} {arm} fold {fold}]")
+                    tag = f"[{model} {arm} fold {fold}" + (f" seed {SEED}]" if SEED else "]")
+                    log(tag)
                     np.save(path, fit_one(model, bundle, arm, fold, args, log))
-                    log(f"[{model} {arm} fold {fold}] done ({(time.time() - started) / 60:.1f} min)")
+                    log(f"{tag} done ({(time.time() - started) / 60:.1f} min)")
         return
     # Deepset first: every other model is also compared against it.
     for model in sorted(models, key=lambda m: m != "deepset"):
