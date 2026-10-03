@@ -105,7 +105,8 @@ class GraphNet(nn.Module):
             self.site_in = nn.Sequential(self.site_in, *[ResBlock(d) for _ in range(deep)], nn.LayerNorm(d))
         self.aux = aux
         if aux:
-            self.aux_head = nn.Linear(d, 1)
+            # With two heads the auxiliary head has two as well, one per labelling.
+            self.aux_head = nn.Linear(d, 2 if output == "twohead" else 1)
         if kind == "gcn":
             self.layers = nn.ModuleList([nn.Linear(d, d) for _ in range(layers)])
             self.head = nn.Linear(d, 1)
@@ -227,6 +228,9 @@ class GraphNet(nn.Module):
         if self.output == "twohead":
             logits = out[node, who]
             per = F.binary_cross_entropy_with_logits(logits, labels, pos_weight=pos_weight, reduction="none")
+            if self.aux:
+                per = per + self.aux * F.binary_cross_entropy_with_logits(
+                    self._aux_logit[node, who], labels, pos_weight=pos_weight, reduction="none")
         else:
             p = torch.sigmoid(out[node])
             q = (p * torch.sigmoid(self.tpr[who]) + (1 - p) * torch.sigmoid(self.fpr[who])).clamp(1e-6, 1 - 1e-6)

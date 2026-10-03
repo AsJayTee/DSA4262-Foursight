@@ -73,12 +73,15 @@ GRAPH_VARIANTS = {
     # The last pre-leaderboard batch (2026-10-03), both on h2gcn_local:
     "h2gcn_local_deep": {"window": 50, "transcript": False, "deep": 3},   # residual read + site encoders
     "h2gcn_aux": {"window": 50, "transcript": False, "aux": 0.5},         # + own-reads-only auxiliary head
+    # The two winners together, on twohead's base (full h2gcn): 2026-10-03
+    "h2gcn_twohead_aux": {"output": "twohead", "aux": 0.5},
 }
 GRAPH_MODELS = {**{k: {"kind": k} for k in graph.KINDS},
                 **{k: {"kind": "h2gcn", **v} for k, v in GRAPH_VARIANTS.items()}}
 # Two labellings in one training set exist only when both files are trained on.
 MODEL_ARMS = {"h2gcn_twohead": ("pooled_both",), "h2gcn_noisy": ("pooled_both",),
-              "h2gcn_noisy2": ("pooled_both",), "h2gcn_local_twohead": ("pooled_both",)}
+              "h2gcn_noisy2": ("pooled_both",), "h2gcn_local_twohead": ("pooled_both",),
+              "h2gcn_twohead_aux": ("pooled_both",)}
 # --arms: restrict every model to some arms (the seed runs train only the arm that ships).
 ARMS_OVERRIDE: tuple | None = None
 # --seed: 0 is the run every W&B row comes from; other seeds change only the
