@@ -42,17 +42,34 @@ from m6a.data import SUBSAMPLE_SEED, resolve_data_dir  # noqa: E402
 from m6a.env import load_env  # noqa: E402
 
 NETS = ROOT / ".cache" / "representation" / "xsrc_nets"
-COMPARE = ("h2gcn", "deepset", "attn_mil", "set_transformer")
+COMPARE = ("h2gcn", "h2gcn_local", "deepset", "attn_mil", "set_transformer")
 
 
 def m6anet_scores(path: Path, index: pd.MultiIndex) -> np.ndarray:
+    """m6Anet's site probabilities in `index` order; NaN where it gave none."""
     site = pd.read_csv(path).set_index(["transcript_id", "transcript_position"])["probability_modified"]
     scores = site.reindex(index).to_numpy()
     missing = int(np.isnan(scores).sum())
-    if missing:
+    # m6Anet dropped one transcript's 10 sites of data1's 90,810 (2026-10-03);
+    # a handful is tolerable, a September-style partial run (28k of 122k) is not.
+    if missing > 0.001 * len(index):
         raise SystemExit(f"{path}: {missing:,} of {len(index):,} labelled sites have no m6Anet score - "
-                         "was inference run on the full file?")
+                         "was inference run on the full file? (run_ronin.sh pretrained)")
     return scores
+
+
+def keep_scored(sources: dict, scores: dict, *others: dict) -> tuple:
+    """Drop the sites m6Anet did not score from the sources AND every model's
+    scores, so every comparison is on identical sites."""
+    keep = {s: ~np.isnan(scores["dataset0"][s]) for s in xs.SOURCES}
+    for s in xs.SOURCES:
+        if (~keep[s]).any():
+            print(f"  {s}: {int((~keep[s]).sum())} sites without an m6Anet score left out of every comparison")
+    thin = {s: xs.Source(s, src.index[keep[s]], {d: X.iloc[keep[s]] for d, X in src.X.items()},
+                         src.y[keep[s]], src.genes[keep[s]], src.folds[keep[s]])
+            for s, src in sources.items()}
+    cut = lambda block: {arm: {s: v[keep[s]] for s, v in by.items()} for arm, by in block.items()}  # noqa: E731
+    return (thin, cut(scores), *(None if o is None else cut(o) for o in others))
 
 
 def network(model: str, sources) -> dict | None:
@@ -76,7 +93,8 @@ def row(name: str, block: dict) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--dataset0", default="data0/m6anet_out/data.site_proba.csv")
+    # Not data0/m6anet_out: the September run there scored 28,357 of 121,838 sites.
+    ap.add_argument("--dataset0", default="data/m6anet/dataset0_pretrained_out/data.site_proba.csv")
     ap.add_argument("--data1", default="data/m6anet/data1_pretrained_out/data.site_proba.csv")
     ap.add_argument("--no-wandb", action="store_true")
     args = ap.parse_args()
@@ -86,6 +104,9 @@ def main() -> None:
                         "data1": m6anet_scores(ROOT / args.data1, sources["data1"].index)}}
     stored = np.load(NETS / "baseline_lgbm.npz")
     lgbm = {"dataset0": {s: stored[f"dataset0__{s}"] for s in xs.SOURCES}}
+    nets = {model: network(model, sources) for model in COMPARE}
+    sources, m6a, lgbm, *cut_nets = keep_scored(sources, m6a, lgbm, *nets.values())
+    nets = dict(zip(nets, cut_nets))
 
     report = reporting.new("standard", subsample_seed=SUBSAMPLE_SEED)
     # m6Anet as a candidate against the usual baseline, so it gets a Decisions row.
@@ -95,8 +116,7 @@ def main() -> None:
 
     # Then every model against m6Anet: m6Anet as the baseline.
     rows = [row("quantiles + LightGBM", xs.summarise(sources, lgbm, m6a))]
-    for model in COMPARE:
-        cand = network(model, sources)
+    for model, cand in nets.items():
         if cand is not None:
             rows.append(row(f"{model} (network)", xs.summarise(sources, cand, m6a)))
     table = pd.DataFrame(rows).set_index("model")

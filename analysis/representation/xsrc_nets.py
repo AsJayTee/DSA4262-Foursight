@@ -66,12 +66,14 @@ GRAPH_VARIANTS = {
     "h2gcn_transcript": {"local": False},                    # transcript summary only
     "h2gcn_twohead": {"output": "twohead"},                  # one head per labelling
     "h2gcn_noisy": {"output": "noisy"},                      # two noisy annotators of one truth
+    "h2gcn_noisy2": {"output": "noisy"},                     # the same, positives not up-weighted
     "h2gcn_knn": {"reader": "knn"},                          # k-NN read graph inside h2gcn
 }
 GRAPH_MODELS = {**{k: {"kind": k} for k in graph.KINDS},
                 **{k: {"kind": "h2gcn", **v} for k, v in GRAPH_VARIANTS.items()}}
 # Two labellings in one training set exist only when both files are trained on.
-MODEL_ARMS = {"h2gcn_twohead": ("pooled_both",), "h2gcn_noisy": ("pooled_both",)}
+MODEL_ARMS = {"h2gcn_twohead": ("pooled_both",), "h2gcn_noisy": ("pooled_both",),
+              "h2gcn_noisy2": ("pooled_both",)}
 MODELS = SET_MODELS + KNN_MODELS + tuple(GRAPH_MODELS)
 
 
@@ -158,6 +160,7 @@ def fit_one(model_name: str, bundle, arm: str, fold: int, args, log) -> np.ndarr
         graph_args = (values, bundle.reads.offsets, bundle.kmer_onehot, bundle.position)
         model = graph.GraphNet(**GRAPH_MODELS[model_name])
         model.obs = (bundle.y_own, bundle.y_other, bundle.file)
+        model.unweighted = model_name == "h2gcn_noisy2"
         graph.train(model, graph.graphs_of(np.flatnonzero(fit_rows), bundle.graph_id, bundle.position),
                     graph.graphs_of(np.flatnonzero(val_rows), bundle.graph_id, bundle.position),
                     *graph_args, target, bundle.y_own, args.minutes, args.epochs, 4262 + fold, log)

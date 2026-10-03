@@ -207,7 +207,12 @@ class GraphNet(nn.Module):
         else:
             p = torch.sigmoid(out[node])
             q = (p * torch.sigmoid(self.tpr[who]) + (1 - p) * torch.sigmoid(self.fpr[who])).clamp(1e-6, 1 - 1e-6)
-            per = -(pos_weight * labels * torch.log(q) + (1 - labels) * torch.log(1 - q))
+            # Up-weighting positives (as every other model here does) distorts
+            # q away from a probability, and the learned rates then stop meaning
+            # anything: h2gcn_noisy estimated data1 calls 18% of unmodified
+            # sites positive, against a 7.3% positive rate (2026-10-03).
+            w = 1.0 if getattr(self, "unweighted", False) else pos_weight
+            per = -(w * labels * torch.log(q) + (1 - labels) * torch.log(1 - q))
         return (per * weight).sum() / weight.sum()
 
 
