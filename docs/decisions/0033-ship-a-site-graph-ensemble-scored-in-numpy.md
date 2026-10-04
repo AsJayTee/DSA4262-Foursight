@@ -2,7 +2,7 @@
 
 - **Date:** 2026-10-04
 - **Status:** Accepted
-- **Affects:** `models/final/` (the shipped model; the previous LightGBM moves to `models/final/lightgbm/`), `scripts/predict.py` (a branch for models that consume sites), `src/m6a/models/site_graph.py` (new), `analysis/representation/final_fit.py` and `export_final.py` (new), `tests/test_site_graph.py` (new). No new dependency.
+- **Affects:** `models/final/` (the shipped model; the previous LightGBM model, a placeholder, is removed - `configs/quantiles.yaml` rebuilds it), `scripts/predict.py` (a branch for models that consume sites), `src/m6a/models/site_graph.py` (new), `analysis/representation/final_fit.py` and `export_final.py` (new), `tests/test_site_graph.py` (new). No new dependency.
 
 ## Context
 

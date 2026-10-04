@@ -6,9 +6,9 @@
 Reads .cache/representation/final/<model>_s<seed>.pt (final_fit.py) and writes,
 per network, an .npz of its weights plus its read standardisation and
 constructor arguments, and a meta.json naming the ensemble for
-m6a.models.site_graph (docs/decisions/0033). The previous LightGBM model is
-moved to <out>/lightgbm/, where `predict.py --model models/final/lightgbm`
-still runs it.
+m6a.models.site_graph (docs/decisions/0033). A LightGBM model found in <out>
+is moved aside to <out>/lightgbm/ rather than overwritten; the placeholder
+that shipped until 2026-10-04 was then deleted.
 """
 
 from __future__ import annotations

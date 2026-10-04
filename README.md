@@ -30,25 +30,44 @@ python scripts/predict.py \
 Expected output:
 
 ```
-1,000 sites scored -> predictions.csv  (0.5s, model=lightgbm_quantiles)
+1,000 sites scored -> predictions.csv  (1.1s, model=site_graph_ensemble)
 ```
+
+A full-size file (~120,000 sites) takes about two minutes on a laptop.
 
 `data/sample/sample.json.gz` is a 1,000-site test dataset included in this repo
 so the above runs immediately. To predict on your own data, point `--input` at
 any `data.json` or `data.json.gz` in m6Anet's processed format.
 
-> The sample is drawn from the training set, so scores on it are optimistic. It
-> is there to prove the code runs, not to measure accuracy.
+> **The sample proves the code runs; it does not measure accuracy.** Its sites
+> are training sites, and its 1,000 sites are spread over 884 transcripts, so
+> almost none has a neighbouring site for the model to use. Do not compare
+> models on it - see Results for numbers that mean something.
 
 ### Output format
 
 ```csv
 transcript_id,transcript_position,score
-ENST00000000412,769,0.0010114002630883252
-ENST00000000412,2195,0.006718969056015129
+ENST00000000412,769,0.58625
+ENST00000000412,2195,0.2705
 ```
 
-One row per site in the input, with `score` the probability of m6A in `[0, 1]`.
+One row per site in the input, with `score` in `[0, 1]`: higher means more
+likely m6A. It is the average, over the four networks of the ensemble, of each
+site's rank within the file, so it orders sites correctly but is **not a
+calibrated probability** - do not count modified sites by thresholding it
+([decision 0033](docs/decisions/0033-ship-a-site-graph-ensemble-scored-in-numpy.md)).
+
+### The shipped model
+
+An ensemble of four graph networks, scored in plain numpy (no torch needed).
+Each site's reads are summarised by a DeepSets encoder, then each site is
+combined with the other candidate sites on its transcript by an H2GCN-style
+graph network (Zhu et al., NeurIPS 2020) that keeps a site's own evidence
+separate from its neighbours'. Trained on both labelled releases (dataset0 and
+data1). On held-out genes, scored against data1's labels, it reaches PR AUC
+0.450 against 0.392 for LightGBM on read quantiles, and stays about 0.10 ahead
+at 3 reads per site. Details: [decision 0033](docs/decisions/0033-ship-a-site-graph-ensemble-scored-in-numpy.md).
 
 ---
 
@@ -63,7 +82,13 @@ both training and validation.
 | Random classifier | — | 0.500 | 0.045 | 1.0× |
 | Logistic regression (baseline) | pooled mean/std | 0.9008 | 0.4121 | 9.2× |
 | LightGBM | pooled mean/std | 0.9125 | 0.4634 | 10.3× |
-| **LightGBM (shipped)** | **read quantiles** | **0.9169** | **0.4759** | **10.6×** |
+| LightGBM | read quantiles | 0.9169 | 0.4759 | 10.6× |
+
+This table is dataset0 cross-validation only. Models are now chosen on
+cross-source evaluation over both labelled releases
+([0029](docs/decisions/0029-models-are-selected-on-cross-source-gain.md),
+[0032](docs/decisions/0032-rank-on-the-worse-gain.md)); the shipped graph
+ensemble is described above.
 
 At 4.49% positives, **PR AUC is the metric that discriminates.** ROC AUC
 flatters everything here — all three models sit above 0.90, while their PR AUCs
