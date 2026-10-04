@@ -32,6 +32,13 @@ Variants of h2gcn (discussed 2026-10-02; every option defaults to the model abov
   deep=N            N pre-norm residual blocks after the read encoder and after
          the site encoder (encoders.ResBlock): depth where it has not been
          tried inside the graph model; the graph itself stays 2 layers
+  pool="quantile"   reads pooled into the site by mean, sd AND the 10/25/50/75/90th
+         percentile of each read-encoding dimension - the shape of the read
+         distribution (a shifted subpopulation sits in the tails), as the
+         quantile features that first helped the trees
+  frac=True         a per-read head estimates P(read modified); its mean over the
+         site's reads (the modified fraction) and that mean's standard error
+         join the site description
   aux=w             a second head scores each site from its own reads alone,
          before the graph, trained with weight w beside the main loss (deep
          supervision): the read encoder must keep evidence that works without
@@ -61,6 +68,20 @@ WINDOW = 200          # nt; label clustering is 5-10x within 50 nt, ~6-13x withi
 TRAIN_SITES = 1024    # sites per training batch
 SCORE_BUDGET = 400_000  # sites x widest site, per scoring batch
 QUADRATIC_BUDGET = 20_000_000  # sites x widest site^2, for the k-NN reader
+QUANTILES = (0.10, 0.25, 0.50, 0.75, 0.90)
+
+
+def masked_quantiles(h: torch.Tensor, mask: torch.Tensor, levels=QUANTILES) -> torch.Tensor:
+    """(sites, reads, d) -> (sites, len(levels) * d): per-dimension quantiles over each
+    site's valid reads, linearly interpolated like numpy's default. Differentiable
+    through the sort. With one read every quantile is that read."""
+    n = mask.sum(1).clamp(min=1).float()                                  # (sites,)
+    ordered = h.masked_fill(~mask.unsqueeze(-1), float("inf")).sort(dim=1).values
+    pos = (n[:, None] - 1) * torch.tensor(levels)[None, :]                # (sites, Q)
+    lo, hi = pos.floor().long(), pos.ceil().long()
+    w = (pos - lo.float()).unsqueeze(-1)
+    take = lambda i: ordered.gather(1, i.unsqueeze(-1).expand(-1, -1, h.shape[-1]))  # noqa: E731
+    return ((1 - w) * take(lo) + w * take(hi)).flatten(1)
 OUTPUTS = ("single", "twohead", "noisy")
 
 
@@ -71,12 +92,13 @@ def t(x) -> torch.Tensor:
 class GraphNet(nn.Module):
     def __init__(self, kind: str, width: int = 64, d: int = 64, layers: int = 2, heads: int = 4,
                  window: int = WINDOW, local: bool = True, transcript: bool = True,
-                 output: str = "single", reader: str = "mean", deep: int = 0, aux: float = 0.0):
+                 output: str = "single", reader: str = "mean", deep: int = 0, aux: float = 0.0,
+                 pool: str = "meansd", frac: bool = False):
         super().__init__()
         if kind not in KINDS or output not in OUTPUTS or reader not in ("mean", "knn"):
             raise ValueError(f"kind {KINDS}, output {OUTPUTS}, reader mean|knn")
-        if (not local or not transcript or output != "single" or reader != "mean" or deep or aux) \
-                and kind != "h2gcn":
+        if (not local or not transcript or output != "single" or reader != "mean" or deep or aux
+                or pool != "meansd" or frac) and kind != "h2gcn":
             raise ValueError("the neighbour, output and reader variants are defined for h2gcn only")
         self.kind, self.heads = kind, heads
         self.window, self.local, self.transcript = window, local, transcript
@@ -96,6 +118,12 @@ class GraphNet(nn.Module):
             pooled = width
         else:
             pooled = 2 * width
+        self.pool, self.frac = pool, frac
+        if pool == "quantile":
+            pooled += len(QUANTILES) * width
+        if frac:
+            self.read_mod = nn.Linear(width, 1)
+            pooled += 2
         if reader != "knn":
             self.site_in = mlp([pooled + 1 + KMER, d, d])
         if deep:
@@ -142,7 +170,15 @@ class GraphNet(nn.Module):
             w = torch.softmax(scores.masked_fill(~mask, float("-inf")), 1).unsqueeze(-1)
             pooled = (h * w).sum(1)
         else:
-            pooled = torch.cat(masked_mean_sd(h, mask), -1)
+            parts = list(masked_mean_sd(h, mask))
+            if getattr(self, "pool", "meansd") == "quantile":
+                parts.append(masked_quantiles(h, mask))
+            if getattr(self, "frac", False):
+                m = mask.float()
+                n = m.sum(1, keepdim=True).clamp(min=1)
+                f = (torch.sigmoid(self.read_mod(h)).squeeze(-1) * m).sum(1, keepdim=True) / n
+                parts += [f, torch.sqrt(f * (1 - f) / n + 1e-6)]
+            pooled = torch.cat(parts, -1)
         return self.site_in(torch.cat([pooled, log_count(mask), kmer], -1))
 
     def forward(self, reads, mask, kmer, gid, pos, n_graphs):

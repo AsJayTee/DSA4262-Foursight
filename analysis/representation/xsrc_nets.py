@@ -75,13 +75,17 @@ GRAPH_VARIANTS = {
     "h2gcn_aux": {"window": 50, "transcript": False, "aux": 0.5},         # + own-reads-only auxiliary head
     # The two winners together, on twohead's base (full h2gcn): 2026-10-03
     "h2gcn_twohead_aux": {"output": "twohead", "aux": 0.5},
+    # Richer read pooling on h2gcn_aux (2026-10-04): quantiles; quantiles + modified fraction
+    "h2gcn_aux_q": {"window": 50, "transcript": False, "aux": 0.5, "pool": "quantile"},
+    "h2gcn_aux_qf": {"window": 50, "transcript": False, "aux": 0.5, "pool": "quantile", "frac": True},
 }
 GRAPH_MODELS = {**{k: {"kind": k} for k in graph.KINDS},
                 **{k: {"kind": "h2gcn", **v} for k, v in GRAPH_VARIANTS.items()}}
 # Two labellings in one training set exist only when both files are trained on.
 MODEL_ARMS = {"h2gcn_twohead": ("pooled_both",), "h2gcn_noisy": ("pooled_both",),
               "h2gcn_noisy2": ("pooled_both",), "h2gcn_local_twohead": ("pooled_both",),
-              "h2gcn_twohead_aux": ("pooled_both",)}
+              "h2gcn_twohead_aux": ("pooled_both",), "h2gcn_aux_q": ("pooled_both",),
+              "h2gcn_aux_qf": ("pooled_both",)}
 # --arms: restrict every model to some arms (the seed runs train only the arm that ships).
 ARMS_OVERRIDE: tuple | None = None
 # --seed: 0 is the run every W&B row comes from; other seeds change only the
