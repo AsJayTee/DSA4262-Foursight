@@ -60,6 +60,14 @@ def main() -> int:
     meta = json.loads(meta_path.read_text())
     started = time.time()
 
+    model_class = registry.get("models", meta["model"])
+    if getattr(model_class, "CONSUMES_SITES", False):
+        # A site-graph model needs each site's reads, 7-mer and position to build
+        # transcript graphs, so it is handed the sites rather than a feature
+        # table (docs/decisions/0033). Numpy only, like the rest of this path.
+        out = model_class.load(model_dir).predict_sites(iter_sites(input_path))[SUBMISSION_COLUMNS]
+        return write(out, Path(args.output), meta, started)
+
     # The model records which feature extractor produced its training columns,
     # so prediction cannot silently use a different one.
     extractor = registry.get("features", meta["features"])()
@@ -73,18 +81,18 @@ def main() -> int:
             "The model and the code have drifted apart."
         )
 
-    model = registry.get("models", meta["model"]).load(model_dir)
+    model = model_class.load(model_dir)
     scores = model.predict_proba(features[meta["columns"]])
 
     out = features.index.to_frame(index=False)
     out["score"] = scores
-    out = out[SUBMISSION_COLUMNS]
+    return write(out[SUBMISSION_COLUMNS], Path(args.output), meta, started)
 
-    output_path = Path(args.output)
+
+def write(out, output_path: Path, meta: dict, started: float) -> int:
     if str(output_path.parent) not in ("", "."):
         output_path.parent.mkdir(parents=True, exist_ok=True)
     out.to_csv(output_path, index=False)
-
     print(
         f"{len(out):,} sites scored -> {output_path}  "
         f"({time.time() - started:.1f}s, model={meta['name']})"
