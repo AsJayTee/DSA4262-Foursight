@@ -22,6 +22,12 @@ This asks that directly, from labels alone, before any model is built:
    exon junction), so the exon-junction effect cannot masquerade as structure.
 5. Separately: is the modified A more often predicted UNPAIRED?
 
+--predictor linearpartition repeats the test with LinearPartition (Zhang et al.,
+Bioinformatics 2020; -V, the same Vienna energy model), which folds the WHOLE
+transcript with no span limit - so the result cannot be an artefact of
+RNAplfold's local windows, and pairs 400-800 nt apart can be tested too. Build:
+git clone https://github.com/LinearFold/LinearPartition && make (path: --lp-bin).
+
 Per cell line (dataset0, data1 are different cell lines). Predicted structure is
 for the unmodified sequence in vitro; read every result with that caveat.
 Analysis-side only: RNAplfold never enters predict.py.
@@ -52,6 +58,7 @@ OUT = ROOT / "analysis" / "newdata" / "fold_comodification"
 WINDOW, SPAN, FLANK = 480, 400, 5   # span 400: pairs up to 400 nt apart can link (200 left the 200-400 band empty)
 TAUS = (0.1, 0.3)
 BANDS = [(25, 50), (50, 100), (100, 200), (200, 400)]
+PREDICTOR, LP_BIN = "rnaplfold", "/mnt/sdd/LinearPartition/linearpartition"   # set in main
 RESAMPLES = 200
 RNG = np.random.default_rng(4262)
 
@@ -76,6 +83,33 @@ def fold(item: tuple[str, str, list[int]]) -> tuple[str, dict, dict]:
     the max pair probability between every two sites' windows, and each A's
     unpaired probability."""
     tid, seq, sites = item
+    if PREDICTOR == "linearpartition":
+        pairs, unpaired = fold_linearpartition(seq, sites)
+    else:
+        pairs, unpaired = fold_rnaplfold(seq)
+    return tid, *site_links(pairs, unpaired, sites)
+
+
+def fold_linearpartition(seq: str, sites: list[int]):
+    """Global ensemble folding; pairs >= 0.001 kept so unpaired probabilities
+    (1 - sum of a base's pair probabilities) are accurate."""
+    with tempfile.TemporaryDirectory() as d:
+        out = Path(d) / "bpp.txt"
+        subprocess.run([LP_BIN, "-V", "-r", str(out), "-c", "0.001"], input=seq + "\n", text=True,
+                       check=True, capture_output=True)
+        pairs, paired = [], np.zeros(len(seq))
+        for line in open(out):
+            f = line.split()
+            if len(f) == 3:
+                i, j, q = int(f[0]) - 1, int(f[1]) - 1, float(f[2])
+                paired[i] += q
+                paired[j] += q
+                if q >= 0.01:
+                    pairs.append((i, j, q))
+    return pairs, {s: float(1 - paired[s]) for s in sites if 0 <= s < len(seq)}
+
+
+def fold_rnaplfold(seq: str):
     with tempfile.TemporaryDirectory() as d:
         subprocess.run(["RNAplfold", "-W", str(WINDOW), "-L", str(SPAN), "-u", "1", "--cutoff", "0.01"],
                        input=f">t\n{seq}\n", text=True, cwd=d, check=True, capture_output=True)
@@ -89,6 +123,10 @@ def fold(item: tuple[str, str, list[int]]) -> tuple[str, dict, dict]:
             if line[0].isdigit():
                 i, u = line.split()[:2]
                 unpaired[int(i) - 1] = float(u)
+    return pairs, unpaired
+
+
+def site_links(pairs, unpaired, sites):
     # nucleotide -> owning site(s), for windows of +-FLANK around each A
     owner: dict[int, list[int]] = {}
     for k, a in enumerate(sites):
@@ -101,7 +139,7 @@ def fold(item: tuple[str, str, list[int]]) -> tuple[str, dict, dict]:
                 if a != b:
                     key = (min(a, b), max(a, b))
                     link[key] = max(link.get(key, 0.0), p)
-    return tid, {(sites[a], sites[b]): p for (a, b), p in link.items()}, \
+    return {(sites[a], sites[b]): p for (a, b), p in link.items()}, \
         {s: unpaired.get(s, np.nan) for s in sites}
 
 
@@ -161,10 +199,20 @@ def compare(name: str, pairs: pd.DataFrame) -> list[dict]:
 
 
 def main() -> None:
+    global PREDICTOR, LP_BIN, BANDS, OUT
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--jobs", type=int, default=60)
     ap.add_argument("--limit", type=int, help="first N transcripts only (smoke)")
+    ap.add_argument("--predictor", choices=("rnaplfold", "linearpartition"), default="rnaplfold")
+    ap.add_argument("--lp-bin", default=LP_BIN)
     args = ap.parse_args()
+    PREDICTOR, LP_BIN = args.predictor, args.lp_bin
+    if PREDICTOR == "linearpartition":
+        # Global folding has no span limit, so the next band out is testable too.
+        BANDS = BANDS + [(400, 800)]
+        OUT = OUT.with_name(OUT.name + "_linearpartition")
+    if args.limit:
+        OUT = OUT.with_name(OUT.name + "_smoke")
     OUT.mkdir(parents=True, exist_ok=True)
     data_dir = resolve_data_dir()
     keys = ["transcript_id", "transcript_position", "label"]
@@ -176,7 +224,7 @@ def main() -> None:
         by_tx = by_tx.iloc[:args.limit]
     cdna = read_cdna(set(by_tx.index))
     items = [(t, cdna[t], list(map(int, s))) for t, s in by_tx.items() if t in cdna and len(s) >= 1]
-    print(f"folding {len(items):,} transcripts with {args.jobs} processes ...", flush=True)
+    print(f"folding {len(items):,} transcripts with {PREDICTOR}, {args.jobs} processes ...", flush=True)
     links, unpaired = {}, {}
     with Pool(args.jobs) as pool:
         for i, (t, L, U) in enumerate(pool.imap_unordered(fold, items, chunksize=4)):
