@@ -90,8 +90,9 @@ GRAPH_MODELS = {**{k: {"kind": k} for k in graph.KINDS},
 MODEL_ARMS = {"h2gcn_twohead": ("pooled_both",), "h2gcn_noisy": ("pooled_both",),
               "h2gcn_noisy2": ("pooled_both",), "h2gcn_local_twohead": ("pooled_both",),
               "h2gcn_twohead_aux": ("pooled_both",), "h2gcn_aux_q": ("pooled_both",),
-              "h2gcn_aux_qf": ("pooled_both",), "h2gcn_aux_r100": ("pooled_both",),
-              "h2gcn_aux_r200": ("pooled_both",), "h2gcn_aux_r400": ("pooled_both",)}
+              "h2gcn_aux_qf": ("pooled_both",)}
+# The radius variants run both arms: dataset0-only is the unseen-cell-line test
+# (dataset0 and data1 are different cell lines - course staff, 2026-10-05).
 # --arms: restrict every model to some arms (the seed runs train only the arm that ships).
 ARMS_OVERRIDE: tuple | None = None
 # --seed: 0 is the run every W&B row comes from; other seeds change only the
