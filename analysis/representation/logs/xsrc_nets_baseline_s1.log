@@ -1,0 +1,11 @@
+loaded: dataset0 121,838 sites, data1 90,452
+    fold 0 dataset0     trained on 97,524 rows
+    fold 0 pooled_both  trained on 276,973 rows
+    fold 1 dataset0     trained on 95,915 rows
+    fold 1 pooled_both  trained on 273,144 rows
+    fold 2 dataset0     trained on 98,444 rows
+    fold 2 pooled_both  trained on 281,930 rows
+    fold 3 dataset0     trained on 97,719 rows
+    fold 3 pooled_both  trained on 277,459 rows
+    fold 4 dataset0     trained on 97,750 rows
+    fold 4 pooled_both  trained on 278,214 rows

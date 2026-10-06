@@ -1,0 +1,110 @@
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
+wandb: Currently logged in as: jinthau-siah (dsa4262-team) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Using an existing wandb-core service via WANDB_SERVICE.
+wandb: setting up run 21zotkb5
+wandb: Tracking run with wandb version 0.30.0
+wandb: Run data is saved locally in /mnt/sdd/DSA4262/wandb/run-20261002_054148-21zotkb5
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run mlp_quantiles__xsrc
+wandb: ⭐️ View project at https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: 🚀 View run at https://wandb.ai/dsa4262-team/dsa4262-project/runs/21zotkb5
+
+Cross-source fitting: mlp_quantiles (quantiles_v1, train depths full)
+---------------------------------------------------------------------
+  dataset0: 121,838 sites, 5,475 positive, 3,852 genes
+  data1: 90,452 sites, 6,550 positive, 3,138 genes
+    fold 0 dataset0     trained on 97,524 rows
+    fold 0 data1        trained on 72,053 rows
+    fold 1 dataset0     trained on 95,915 rows
+    fold 1 data1        trained on 71,401 rows
+    fold 2 dataset0     trained on 98,444 rows
+    fold 2 data1        trained on 73,680 rows
+    fold 3 dataset0     trained on 97,719 rows
+    fold 3 data1        trained on 72,126 rows
+    fold 4 dataset0     trained on 97,750 rows
+    fold 4 data1        trained on 72,548 rows
+
+Cross-source fitting: lightgbm_quantiles (quantiles_v1, train depths full)
+--------------------------------------------------------------------------
+  dataset0: 121,838 sites, 5,475 positive, 3,852 genes
+  data1: 90,452 sites, 6,550 positive, 3,138 genes
+    fold 0 dataset0     trained on 97,524 rows
+    fold 0 data1        trained on 72,053 rows
+    fold 1 dataset0     trained on 95,915 rows
+    fold 1 data1        trained on 71,401 rows
+    fold 2 dataset0     trained on 98,444 rows
+    fold 2 data1        trained on 73,680 rows
+    fold 3 dataset0     trained on 97,719 rows
+    fold 3 data1        trained on 72,126 rows
+    fold 4 dataset0     trained on 97,750 rows
+    fold 4 data1        trained on 72,548 rows
+
+Cross-source: mlp_quantiles minus lightgbm_quantiles
+----------------------------------------------------
+            dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                   
+dataset0          +0.0038  [-0.0062, +0.0151]     -0.0059  [-0.0138, +0.0024]    -0.0011     -0.0059   VETOED
+data1             +0.0011  [-0.0101, +0.0107]     -0.0096  [-0.0175, -0.0012]    -0.0042     -0.0096   VETOED
+ensemble          +0.0029  [-0.0071, +0.0125]     -0.0031  [-0.0105, +0.0037]    -0.0001     -0.0031      yes
+Each row: mlp_quantiles and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0029): choose on mean gain; veto if the worse gain is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+            dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                  
+dataset0             0.4797        0.3660             0.4759          0.3719
+data1                0.4185        0.3721             0.4174          0.3817
+ensemble             0.4734        0.3898             0.4704          0.3930
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels    gain  ci_low  ci_high
+cell                                                
+A        dataset0  dataset0  0.0013 -0.0126   0.0150
+B        dataset0     data1  0.0039 -0.0064   0.0119
+C           data1  dataset0 -0.0093 -0.0231   0.0055
+D           data1     data1 -0.0045 -0.0148   0.0050
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain -0.0090 [-0.0258, +0.0116] - compare with cell D for the gene-population effect.
+
+report -> /mnt/sdd/xsrc_reports/mlp_quantiles__xsrc.json   (390.0s)
+wandb: updating run metadata; uploading artifact mlp_quantiles__xsrc-report
+wandb: uploading artifact mlp_quantiles__xsrc-report
+wandb: uploading output.log; uploading wandb-summary.json; uploading config.yaml
+wandb: uploading config.yaml
+wandb: uploading data
+wandb: 
+wandb: Run history:
+wandb:     curve/xsrc/arm/data1_gain ▅▁█
+wandb:  curve/xsrc/arm/dataset0_gain █▁▆
+wandb:      curve/xsrc/arm/gain_mean ▆▁█
+wandb:          curve/xsrc/arm/index ▁▆█
+wandb:       curve/xsrc/crossed/cell ▁▃▆█
+wandb:    curve/xsrc/crossed/ci_high █▆▁▁
+wandb:     curve/xsrc/crossed/ci_low ▅█▁▄
+wandb:       curve/xsrc/crossed/gain ▇█▁▄
+wandb:    curve/xsrc/diag/data1_gain ▁
+wandb: curve/xsrc/diag/dataset0_gain ▄▁█▁█▃▃
+wandb:                           +87 ...
+wandb: 
+wandb: Run summary:
+wandb: xsrc/crossed/A/baseline_pr_auc 0.5125
+wandb:         xsrc/crossed/A/ci_high 0.015
+wandb:          xsrc/crossed/A/ci_low -0.01261
+wandb:            xsrc/crossed/A/gain 0.00131
+wandb:          xsrc/crossed/A/pr_auc 0.51381
+wandb: xsrc/crossed/B/baseline_pr_auc 0.36517
+wandb:         xsrc/crossed/B/ci_high 0.01193
+wandb:          xsrc/crossed/B/ci_low -0.00644
+wandb:            xsrc/crossed/B/gain 0.00386
+wandb:          xsrc/crossed/B/pr_auc 0.36903
+wandb:                            +68 ...
+wandb: 
+wandb: 🚀 View run mlp_quantiles__xsrc at: https://wandb.ai/dsa4262-team/dsa4262-project/runs/21zotkb5
+wandb: ⭐️ View project at: https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: Synced 5 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20261002_054148-21zotkb5/logs
+  logged to W&B: https://wandb.ai/dsa4262-team/dsa4262-project/runs/21zotkb5

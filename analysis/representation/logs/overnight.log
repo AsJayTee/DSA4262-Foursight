@@ -1,0 +1,9 @@
+14:43:38 slate finished
+14:43:38 start knn: knn_static,knn_dynamic,knn_random
+23:03:08 done knn (exit 0)
+23:03:08 start variants: h2gcn_twohead,h2gcn_noisy,h2gcn_local,h2gcn_transcript
+00:52:58 done variants (exit 0)
+00:53:03 gate: dataset0     data1 PR AUC knn_static 0.3840 vs knn_random 0.3905 (-0.0065)
+00:53:03 gate: pooled_both  data1 PR AUC knn_static 0.4155 vs knn_random 0.4206 (-0.0051)
+00:53:03 gate: FAIL - h2gcn_knn skipped
+00:53:03 overnight queue finished

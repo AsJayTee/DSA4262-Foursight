@@ -1,0 +1,296 @@
+start baseline
+start fit --model knn_static --fold 0 --arm dataset0
+start fit --model knn_static --fold 0 --arm pooled_both
+start fit --model knn_static --fold 1 --arm dataset0
+start fit --model knn_static --fold 1 --arm pooled_both
+start fit --model knn_static --fold 2 --arm dataset0
+start fit --model knn_static --fold 2 --arm pooled_both
+start fit --model knn_static --fold 3 --arm dataset0
+start fit --model knn_static --fold 3 --arm pooled_both
+start fit --model knn_static --fold 4 --arm dataset0
+start fit --model knn_static --fold 4 --arm pooled_both
+start fit --model knn_dynamic --fold 0 --arm dataset0
+start fit --model knn_dynamic --fold 0 --arm pooled_both
+start fit --model knn_dynamic --fold 1 --arm dataset0
+start fit --model knn_dynamic --fold 1 --arm pooled_both
+start fit --model knn_dynamic --fold 2 --arm dataset0
+done baseline
+start fit --model knn_dynamic --fold 2 --arm pooled_both
+done fit --model knn_static --fold 1 --arm dataset0
+start fit --model knn_dynamic --fold 3 --arm dataset0
+done fit --model knn_dynamic --fold 1 --arm dataset0
+start fit --model knn_dynamic --fold 3 --arm pooled_both
+done fit --model knn_static --fold 0 --arm dataset0
+start fit --model knn_dynamic --fold 4 --arm dataset0
+done fit --model knn_dynamic --fold 0 --arm pooled_both
+start fit --model knn_dynamic --fold 4 --arm pooled_both
+done fit --model knn_static --fold 2 --arm dataset0
+done fit --model knn_static --fold 3 --arm dataset0
+start fit --model knn_random --fold 0 --arm dataset0
+start fit --model knn_random --fold 0 --arm pooled_both
+done fit --model knn_static --fold 0 --arm pooled_both
+done fit --model knn_static --fold 1 --arm pooled_both
+done fit --model knn_static --fold 2 --arm pooled_both
+done fit --model knn_static --fold 4 --arm dataset0
+done fit --model knn_dynamic --fold 2 --arm dataset0
+start fit --model knn_random --fold 1 --arm dataset0
+start fit --model knn_random --fold 1 --arm pooled_both
+start fit --model knn_random --fold 2 --arm dataset0
+start fit --model knn_random --fold 2 --arm pooled_both
+start fit --model knn_random --fold 3 --arm dataset0
+done fit --model knn_static --fold 3 --arm pooled_both
+done fit --model knn_static --fold 4 --arm pooled_both
+done fit --model knn_dynamic --fold 0 --arm dataset0
+done fit --model knn_dynamic --fold 2 --arm pooled_both
+start fit --model knn_random --fold 3 --arm pooled_both
+start fit --model knn_random --fold 4 --arm dataset0
+start fit --model knn_random --fold 4 --arm pooled_both
+done fit --model knn_dynamic --fold 1 --arm pooled_both
+done fit --model knn_dynamic --fold 3 --arm dataset0
+done fit --model knn_dynamic --fold 4 --arm dataset0
+done fit --model knn_dynamic --fold 3 --arm pooled_both
+done fit --model knn_random --fold 1 --arm dataset0
+done fit --model knn_random --fold 4 --arm dataset0
+done fit --model knn_random --fold 0 --arm pooled_both
+done fit --model knn_random --fold 4 --arm pooled_both
+done fit --model knn_random --fold 3 --arm dataset0
+done fit --model knn_random --fold 2 --arm pooled_both
+done fit --model knn_random --fold 0 --arm dataset0
+done fit --model knn_random --fold 2 --arm dataset0
+done fit --model knn_dynamic --fold 4 --arm pooled_both
+done fit --model knn_random --fold 1 --arm pooled_both
+done fit --model knn_random --fold 3 --arm pooled_both
+loaded: dataset0 121,838 sites, data1 90,452
+
+Cross-source: knn_static (network) minus lightgbm_quantiles
+-----------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+dataset0           +0.0345  [+0.0234, +0.0454]     +0.0122  [+0.0028, +0.0210]    +0.0233     +0.0122      yes
+pooled_both        +0.0403  [+0.0276, +0.0524]     +0.0238  [+0.0151, +0.0336]    +0.0321     +0.0238      yes
+Each row: knn_static (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+dataset0              0.5104        0.3840             0.4759          0.3719
+pooled_both           0.5126        0.4155             0.4723          0.3917
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels   gain  ci_low  ci_high
+cell                                               
+A        dataset0  dataset0 0.0456  0.0316   0.0589
+B        dataset0     data1 0.0258  0.0157   0.0356
+C           data1  dataset0 0.0345  0.0206   0.0484
+D           data1     data1 0.0109  0.0012   0.0221
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain +0.0166 [-0.0026, +0.0387] - compare with cell D for the gene-population effect.
+
+vs deepset alone (same arms, same genes):
+  dataset0     dataset0 -0.0109  data1 -0.0053  worst -0.0109
+  pooled_both  dataset0 -0.0066  data1 +0.0036  worst -0.0066
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
+wandb: Currently logged in as: jinthau-siah (dsa4262-team) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run h7vus96x
+wandb: Tracking run with wandb version 0.30.0
+wandb: Run data is saved locally in /mnt/sdd/DSA4262/wandb/run-20261002_225147-h7vus96x
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run knn_static_nn__xsrc
+wandb: ⭐️ View project at https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: 🚀 View run at https://wandb.ai/dsa4262-team/dsa4262-project/runs/h7vus96x
+wandb: updating run metadata; uploading artifact knn_static_nn__xsrc-report
+wandb: uploading artifact knn_static_nn__xsrc-report
+wandb: uploading requirements.txt; uploading wandb-summary.json; uploading config.yaml; uploading wandb-metadata.json
+wandb: uploading wandb-summary.json; uploading config.yaml; uploading wandb-metadata.json
+wandb: 
+wandb: Run history:
+wandb:     curve/xsrc/arm/data1_gain ▁█
+wandb:  curve/xsrc/arm/dataset0_gain ▁█
+wandb:      curve/xsrc/arm/gain_mean ▁█
+wandb:          curve/xsrc/arm/index ▁█
+wandb:       curve/xsrc/crossed/cell ▁▃▆█
+wandb:    curve/xsrc/crossed/ci_high █▄▆▁
+wandb:     curve/xsrc/crossed/ci_low █▄▅▁
+wandb:       curve/xsrc/crossed/gain █▄▆▁
+wandb:    curve/xsrc/diag/data1_gain ▁
+wandb: curve/xsrc/diag/dataset0_gain ▅▁█▁█▃▃
+wandb:                           +76 ...
+wandb: 
+wandb: Run summary:
+wandb:       vs_deepset/dataset0/data1/gain -0.00529
+wandb:    vs_deepset/dataset0/dataset0/gain -0.01088
+wandb:       vs_deepset/dataset0/gain_worst -0.01088
+wandb:    vs_deepset/pooled_both/data1/gain 0.00358
+wandb: vs_deepset/pooled_both/dataset0/gain -0.00656
+wandb:    vs_deepset/pooled_both/gain_worst -0.00656
+wandb:       xsrc/crossed/A/baseline_pr_auc 0.5125
+wandb:               xsrc/crossed/A/ci_high 0.05886
+wandb:                xsrc/crossed/A/ci_low 0.03161
+wandb:                  xsrc/crossed/A/gain 0.04561
+wandb:                                  +57 ...
+wandb: 
+wandb: 🚀 View run knn_static_nn__xsrc at: https://wandb.ai/dsa4262-team/dsa4262-project/runs/h7vus96x
+wandb: ⭐️ View project at: https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: Synced 4 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20261002_225147-h7vus96x/logs
+  logged to W&B: https://wandb.ai/dsa4262-team/dsa4262-project/runs/h7vus96x
+knn_static: worst +0.0122  mean +0.0233  -> /mnt/sdd/DSA4262/analysis/representation/results/knn_static_nn__xsrc.json
+
+Cross-source: knn_dynamic (network) minus lightgbm_quantiles
+------------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+dataset0           +0.0287  [+0.0169, +0.0404]     +0.0120  [+0.0031, +0.0207]    +0.0203     +0.0120      yes
+pooled_both        +0.0459  [+0.0326, +0.0579]     +0.0235  [+0.0137, +0.0337]    +0.0347     +0.0235      yes
+Each row: knn_dynamic (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+dataset0              0.5046        0.3838             0.4759          0.3719
+pooled_both           0.5182        0.4152             0.4723          0.3917
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels   gain  ci_low  ci_high
+cell                                               
+A        dataset0  dataset0 0.0400  0.0265   0.0548
+B        dataset0     data1 0.0264  0.0159   0.0356
+C           data1  dataset0 0.0338  0.0184   0.0486
+D           data1     data1 0.0116  0.0012   0.0221
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain +0.0153 [-0.0058, +0.0360] - compare with cell D for the gene-population effect.
+
+vs deepset alone (same arms, same genes):
+  dataset0     dataset0 -0.0167  data1 -0.0055  worst -0.0167
+  pooled_both  dataset0 -0.0010  data1 +0.0033  worst -0.0010
+wandb: setting up run hfwkzddz
+wandb: Tracking run with wandb version 0.30.0
+wandb: Run data is saved locally in /mnt/sdd/DSA4262/wandb/run-20261002_225724-hfwkzddz
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run knn_dynamic_nn__xsrc
+wandb: ⭐️ View project at https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: 🚀 View run at https://wandb.ai/dsa4262-team/dsa4262-project/runs/hfwkzddz
+wandb: updating run metadata; uploading artifact knn_dynamic_nn__xsrc-report
+wandb: uploading artifact knn_dynamic_nn__xsrc-report
+wandb: uploading wandb-metadata.json; uploading requirements.txt; uploading wandb-summary.json; uploading config.yaml
+wandb: uploading config.yaml
+wandb: 
+wandb: Run history:
+wandb:     curve/xsrc/arm/data1_gain ▁█
+wandb:  curve/xsrc/arm/dataset0_gain ▁█
+wandb:      curve/xsrc/arm/gain_mean ▁█
+wandb:          curve/xsrc/arm/index ▁█
+wandb:       curve/xsrc/crossed/cell ▁▃▆█
+wandb:    curve/xsrc/crossed/ci_high █▄▇▁
+wandb:     curve/xsrc/crossed/ci_low █▅▆▁
+wandb:       curve/xsrc/crossed/gain █▅▆▁
+wandb:    curve/xsrc/diag/data1_gain ▁
+wandb: curve/xsrc/diag/dataset0_gain ▅▁█▁█▃▃
+wandb:                           +76 ...
+wandb: 
+wandb: Run summary:
+wandb:       vs_deepset/dataset0/data1/gain -0.0055
+wandb:    vs_deepset/dataset0/dataset0/gain -0.01666
+wandb:       vs_deepset/dataset0/gain_worst -0.01666
+wandb:    vs_deepset/pooled_both/data1/gain 0.00327
+wandb: vs_deepset/pooled_both/dataset0/gain -0.001
+wandb:    vs_deepset/pooled_both/gain_worst -0.001
+wandb:       xsrc/crossed/A/baseline_pr_auc 0.5125
+wandb:               xsrc/crossed/A/ci_high 0.05477
+wandb:                xsrc/crossed/A/ci_low 0.02652
+wandb:                  xsrc/crossed/A/gain 0.04005
+wandb:                                  +57 ...
+wandb: 
+wandb: 🚀 View run knn_dynamic_nn__xsrc at: https://wandb.ai/dsa4262-team/dsa4262-project/runs/hfwkzddz
+wandb: ⭐️ View project at: https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: Synced 4 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20261002_225724-hfwkzddz/logs
+  logged to W&B: https://wandb.ai/dsa4262-team/dsa4262-project/runs/hfwkzddz
+knn_dynamic: worst +0.0120  mean +0.0203  -> /mnt/sdd/DSA4262/analysis/representation/results/knn_dynamic_nn__xsrc.json
+
+Cross-source: knn_random (network) minus lightgbm_quantiles
+-----------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+dataset0           +0.0471  [+0.0369, +0.0573]     +0.0187  [+0.0100, +0.0272]    +0.0329     +0.0187      yes
+pooled_both        +0.0442  [+0.0309, +0.0567]     +0.0289  [+0.0196, +0.0389]    +0.0366     +0.0289      yes
+Each row: knn_random (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+dataset0              0.5231        0.3905             0.4759          0.3719
+pooled_both           0.5165        0.4206             0.4723          0.3917
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels   gain  ci_low  ci_high
+cell                                               
+A        dataset0  dataset0 0.0554  0.0424   0.0673
+B        dataset0     data1 0.0345  0.0245   0.0443
+C           data1  dataset0 0.0462  0.0325   0.0589
+D           data1     data1 0.0180  0.0084   0.0290
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain +0.0227 [+0.0043, +0.0433] - compare with cell D for the gene-population effect.
+
+vs deepset alone (same arms, same genes):
+  dataset0     dataset0 +0.0018  data1 +0.0012  worst +0.0012
+  pooled_both  dataset0 -0.0027  data1 +0.0087  worst -0.0027
+wandb: setting up run jn65tspw
+wandb: Tracking run with wandb version 0.30.0
+wandb: Run data is saved locally in /mnt/sdd/DSA4262/wandb/run-20261002_230259-jn65tspw
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run knn_random_nn__xsrc
+wandb: ⭐️ View project at https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: 🚀 View run at https://wandb.ai/dsa4262-team/dsa4262-project/runs/jn65tspw
+wandb: updating run metadata; uploading artifact knn_random_nn__xsrc-report
+wandb: uploading artifact knn_random_nn__xsrc-report
+wandb: uploading requirements.txt; uploading wandb-summary.json; uploading config.yaml
+wandb: uploading history steps 0-7, summary
+wandb: 
+wandb: Run history:
+wandb:     curve/xsrc/arm/data1_gain ▁█
+wandb:  curve/xsrc/arm/dataset0_gain █▁
+wandb:      curve/xsrc/arm/gain_mean ▁█
+wandb:          curve/xsrc/arm/index ▁█
+wandb:       curve/xsrc/crossed/cell ▁▃▆█
+wandb:    curve/xsrc/crossed/ci_high █▄▆▁
+wandb:     curve/xsrc/crossed/ci_low █▄▆▁
+wandb:       curve/xsrc/crossed/gain █▄▆▁
+wandb:    curve/xsrc/diag/data1_gain ▁
+wandb: curve/xsrc/diag/dataset0_gain ▆▁█▁█▃▃
+wandb:                           +76 ...
+wandb: 
+wandb: Run summary:
+wandb:       vs_deepset/dataset0/data1/gain 0.0012
+wandb:    vs_deepset/dataset0/dataset0/gain 0.00176
+wandb:       vs_deepset/dataset0/gain_worst 0.0012
+wandb:    vs_deepset/pooled_both/data1/gain 0.00871
+wandb: vs_deepset/pooled_both/dataset0/gain -0.00268
+wandb:    vs_deepset/pooled_both/gain_worst -0.00268
+wandb:       xsrc/crossed/A/baseline_pr_auc 0.5125
+wandb:               xsrc/crossed/A/ci_high 0.06733
+wandb:                xsrc/crossed/A/ci_low 0.0424
+wandb:                  xsrc/crossed/A/gain 0.05535
+wandb:                                  +57 ...
+wandb: 
+wandb: 🚀 View run knn_random_nn__xsrc at: https://wandb.ai/dsa4262-team/dsa4262-project/runs/jn65tspw
+wandb: ⭐️ View project at: https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: Synced 4 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20261002_230259-jn65tspw/logs
+  logged to W&B: https://wandb.ai/dsa4262-team/dsa4262-project/runs/jn65tspw
+knn_random: worst +0.0187  mean +0.0329  -> /mnt/sdd/DSA4262/analysis/representation/results/knn_random_nn__xsrc.json

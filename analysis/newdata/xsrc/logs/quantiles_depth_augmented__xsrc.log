@@ -1,0 +1,136 @@
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
+wandb: Currently logged in as: jinthau-siah (dsa4262-team) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Using an existing wandb-core service via WANDB_SERVICE.
+wandb: setting up run xdev3ctl
+wandb: Tracking run with wandb version 0.30.0
+wandb: Run data is saved locally in C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\wandb\run-20261001_141102-xdev3ctl
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run quantiles_depth_augmented__xsrc
+wandb:  View project at https://wandb.ai/dsa4262-team/dsa4262-project
+wandb:  View run at https://wandb.ai/dsa4262-team/dsa4262-project/runs/xdev3ctl
+
+Cross-source fitting: quantiles_depth_augmented (quantiles_v1, train depths 1,3,5,10,full)
+------------------------------------------------------------------------------------------
+  extracting quantiles_v1 at depth [1, 3, 5, 10] from dataset1.json.gz ...
+  dataset0: 121,838 sites, 5,475 positive, 3,852 genes
+  data1: 90,452 sites, 6,550 positive, 3,138 genes
+    fold 0 dataset0     trained on 487,620 rows
+    fold 0 data1        trained on 360,265 rows
+    fold 0 pooled       trained on 847,885 rows
+    fold 0 pooled_both  trained on 1,384,865 rows
+    fold 1 dataset0     trained on 479,575 rows
+    fold 1 data1        trained on 357,005 rows
+    fold 1 pooled       trained on 836,580 rows
+    fold 1 pooled_both  trained on 1,365,720 rows
+    fold 2 dataset0     trained on 492,220 rows
+    fold 2 data1        trained on 368,400 rows
+    fold 2 pooled       trained on 860,620 rows
+    fold 2 pooled_both  trained on 1,409,650 rows
+    fold 3 dataset0     trained on 488,595 rows
+    fold 3 data1        trained on 360,630 rows
+    fold 3 pooled       trained on 849,225 rows
+    fold 3 pooled_both  trained on 1,387,295 rows
+    fold 4 dataset0     trained on 488,750 rows
+    fold 4 data1        trained on 362,740 rows
+    fold 4 pooled       trained on 851,490 rows
+    fold 4 pooled_both  trained on 1,391,070 rows
+
+Cross-source fitting: lightgbm_quantiles (quantiles_v1, train depths full)
+--------------------------------------------------------------------------
+  dataset0: 121,838 sites, 5,475 positive, 3,852 genes
+  data1: 90,452 sites, 6,550 positive, 3,138 genes
+    fold 0 dataset0     trained on 97,524 rows
+    fold 0 data1        trained on 72,053 rows
+    fold 0 pooled       trained on 169,577 rows
+    fold 0 pooled_both  trained on 276,973 rows
+    fold 1 dataset0     trained on 95,915 rows
+    fold 1 data1        trained on 71,401 rows
+    fold 1 pooled       trained on 167,316 rows
+    fold 1 pooled_both  trained on 273,144 rows
+    fold 2 dataset0     trained on 98,444 rows
+    fold 2 data1        trained on 73,680 rows
+    fold 2 pooled       trained on 172,124 rows
+    fold 2 pooled_both  trained on 281,930 rows
+    fold 3 dataset0     trained on 97,719 rows
+    fold 3 data1        trained on 72,126 rows
+    fold 3 pooled       trained on 169,845 rows
+    fold 3 pooled_both  trained on 277,459 rows
+    fold 4 dataset0     trained on 97,750 rows
+    fold 4 data1        trained on 72,548 rows
+    fold 4 pooled       trained on 170,298 rows
+    fold 4 pooled_both  trained on 278,214 rows
+
+Cross-source: quantiles_depth_augmented minus lightgbm_quantiles
+----------------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+dataset0           +0.0084  [+0.0011, +0.0164]     -0.0002  [-0.0056, +0.0054]    +0.0041     -0.0002      yes
+data1              +0.0291  [+0.0221, +0.0360]     +0.0094  [+0.0041, +0.0152]    +0.0192     +0.0094      yes
+pooled             +0.0093  [+0.0027, +0.0151]     +0.0046  [-0.0007, +0.0096]    +0.0069     +0.0046      yes
+pooled_both        +0.0113  [+0.0053, +0.0172]     +0.0026  [-0.0024, +0.0079]    +0.0069     +0.0026      yes
+ensemble           +0.0092  [+0.0023, +0.0152]     -0.0006  [-0.0053, +0.0040]    +0.0043     -0.0006      yes
+Each row: quantiles_depth_augmented and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0029): choose on mean gain; veto if the worse gain is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+dataset0              0.4844        0.3717             0.4759          0.3719
+data1                 0.4464        0.3911             0.4174          0.3817
+pooled                0.4850        0.3935             0.4757          0.3890
+pooled_both           0.4835        0.3943             0.4723          0.3917
+ensemble              0.4796        0.3923             0.4704          0.3930
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels   gain  ci_low  ci_high
+cell                                               
+A        dataset0  dataset0 0.0124  0.0034   0.0216
+B        dataset0     data1 0.0084  0.0026   0.0136
+C           data1  dataset0 0.0112  0.0025   0.0217
+D           data1     data1 0.0014 -0.0049   0.0086
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain -0.0034 [-0.0145, +0.0106] - compare with cell D for the gene-population effect.
+
+report -> C:\Users\SIAHJI~1\AppData\Local\Temp\xsrc\quantiles_depth_augmented__xsrc.json   (1967.6s)
+wandb: updating run metadata; uploading artifact quantiles_depth_augmented__xsrc-report
+wandb: uploading artifact quantiles_depth_augmented__xsrc-report
+wandb: uploading artifact quantiles_depth_augmented__xsrc-report; uploading history steps 0-0, summary, console lines 51-87
+wandb: uploading output.log; uploading wandb-summary.json; uploading config.yaml
+wandb: uploading wandb-summary.json; uploading config.yaml
+wandb: uploading data
+wandb: 
+wandb: Run history:
+wandb: xsrc/crossed/A/baseline_pr_auc ▁
+wandb:         xsrc/crossed/A/ci_high ▁
+wandb:          xsrc/crossed/A/ci_low ▁
+wandb:            xsrc/crossed/A/gain ▁
+wandb:          xsrc/crossed/A/pr_auc ▁
+wandb: xsrc/crossed/B/baseline_pr_auc ▁
+wandb:         xsrc/crossed/B/ci_high ▁
+wandb:          xsrc/crossed/B/ci_low ▁
+wandb:            xsrc/crossed/B/gain ▁
+wandb:          xsrc/crossed/B/pr_auc ▁
+wandb:                           +102 ...
+wandb: 
+wandb: Run summary:
+wandb: xsrc/crossed/A/baseline_pr_auc 0.5125
+wandb:         xsrc/crossed/A/ci_high 0.02162
+wandb:          xsrc/crossed/A/ci_low 0.00344
+wandb:            xsrc/crossed/A/gain 0.01245
+wandb:          xsrc/crossed/A/pr_auc 0.52494
+wandb: xsrc/crossed/B/baseline_pr_auc 0.36517
+wandb:         xsrc/crossed/B/ci_high 0.01356
+wandb:          xsrc/crossed/B/ci_low 0.00255
+wandb:            xsrc/crossed/B/gain 0.00838
+wandb:          xsrc/crossed/B/pr_auc 0.37355
+wandb:                           +102 ...
+wandb: 
+wandb:  View run quantiles_depth_augmented__xsrc at: https://wandb.ai/dsa4262-team/dsa4262-project/runs/xdev3ctl
+wandb:  View project at: https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: Synced 5 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: .\wandb\run-20261001_141102-xdev3ctl\logs
+  logged to W&B: https://wandb.ai/dsa4262-team/dsa4262-project/runs/xdev3ctl

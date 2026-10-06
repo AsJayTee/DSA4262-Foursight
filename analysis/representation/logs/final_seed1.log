@@ -1,0 +1,81 @@
+start baseline
+start fit --model h2gcn --fold 0 --arm pooled_both
+start fit --model h2gcn --fold 1 --arm pooled_both
+start fit --model h2gcn --fold 2 --arm pooled_both
+start fit --model h2gcn --fold 3 --arm pooled_both
+start fit --model h2gcn --fold 4 --arm pooled_both
+done baseline
+start fit --model h2gcn_local --fold 0 --arm pooled_both
+done fit --model h2gcn --fold 1 --arm pooled_both
+start fit --model h2gcn_local --fold 1 --arm pooled_both
+done fit --model h2gcn --fold 3 --arm pooled_both
+start fit --model h2gcn_local --fold 2 --arm pooled_both
+done fit --model h2gcn_local --fold 0 --arm pooled_both
+start fit --model h2gcn_local --fold 3 --arm pooled_both
+done fit --model h2gcn --fold 2 --arm pooled_both
+start fit --model h2gcn_local --fold 4 --arm pooled_both
+done fit --model h2gcn --fold 0 --arm pooled_both
+start fit --model h2gcn_twohead --fold 0 --arm pooled_both
+done fit --model h2gcn --fold 4 --arm pooled_both
+start fit --model h2gcn_twohead --fold 1 --arm pooled_both
+done fit --model h2gcn_local --fold 2 --arm pooled_both
+start fit --model h2gcn_twohead --fold 2 --arm pooled_both
+done fit --model h2gcn_local --fold 1 --arm pooled_both
+start fit --model h2gcn_twohead --fold 3 --arm pooled_both
+done fit --model h2gcn_local --fold 3 --arm pooled_both
+start fit --model h2gcn_twohead --fold 4 --arm pooled_both
+done fit --model h2gcn_local --fold 4 --arm pooled_both
+done fit --model h2gcn_twohead --fold 0 --arm pooled_both
+done fit --model h2gcn_twohead --fold 1 --arm pooled_both
+done fit --model h2gcn_twohead --fold 2 --arm pooled_both
+done fit --model h2gcn_twohead --fold 3 --arm pooled_both
+done fit --model h2gcn_twohead --fold 4 --arm pooled_both
+loaded: dataset0 121,838 sites, data1 90,452
+
+Cross-source: h2gcn (network) minus lightgbm_quantiles
+------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+pooled_both        +0.0871  [+0.0698, +0.1019]     +0.0267  [+0.0153, +0.0379]    +0.0569     +0.0267      yes
+Each row: h2gcn (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): pooled_both.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+pooled_both           0.5594        0.4183             0.4723          0.3917
+h2gcn: worst +0.0267  mean +0.0569  -> /mnt/sdd/DSA4262/analysis/representation/results/h2gcn_nn__xsrc__seed1.json
+
+Cross-source: h2gcn_local (network) minus lightgbm_quantiles
+------------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+pooled_both        +0.0606  [+0.0454, +0.0746]     +0.0283  [+0.0173, +0.0386]    +0.0444     +0.0283      yes
+Each row: h2gcn_local (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): pooled_both.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+pooled_both           0.5329        0.4199             0.4723          0.3917
+h2gcn_local: worst +0.0283  mean +0.0444  -> /mnt/sdd/DSA4262/analysis/representation/results/h2gcn_local_nn__xsrc__seed1.json
+
+Cross-source: h2gcn_twohead (network) minus lightgbm_quantiles
+--------------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+pooled_both        +0.1063  [+0.0900, +0.1219]     +0.0369  [+0.0235, +0.0484]    +0.0716     +0.0369      yes
+Each row: h2gcn_twohead (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): pooled_both.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+pooled_both           0.5785        0.4285             0.4723          0.3917
+h2gcn_twohead: worst +0.0369  mean +0.0716  -> /mnt/sdd/DSA4262/analysis/representation/results/h2gcn_twohead_nn__xsrc__seed1.json

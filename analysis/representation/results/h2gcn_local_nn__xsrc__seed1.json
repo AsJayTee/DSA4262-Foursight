@@ -1,0 +1,177 @@
+{
+  "created": "2026-10-03T09:06:14+00:00",
+  "profile": "standard",
+  "subsample_seed": 4262,
+  "cross_source": {
+    "config": "h2gcn_local (network)",
+    "baseline": "lightgbm_quantiles",
+    "arms": {
+      "pooled_both": {
+        "dataset0": {
+          "n": 121838,
+          "n_positive": 5475,
+          "pr_auc": 0.5328795579608226,
+          "roc_auc": 0.9403219879908946,
+          "baseline_pr_auc": 0.47227920663912526,
+          "gain": 0.06060035132169739,
+          "ci_low": 0.04539987106612356,
+          "ci_high": 0.07460166686603908,
+          "win_rate": 1.0
+        },
+        "data1": {
+          "n": 90452,
+          "n_positive": 6550,
+          "pr_auc": 0.41993278284901187,
+          "roc_auc": 0.844089484806065,
+          "baseline_pr_auc": 0.39167361585367527,
+          "gain": 0.028259166995336593,
+          "ci_low": 0.01731269163212082,
+          "ci_high": 0.03863153568781332,
+          "win_rate": 1.0
+        },
+        "gain_mean": 0.04442975915851699,
+        "gain_worst": 0.028259166995336593,
+        "eligible": true
+      }
+    },
+    "veto": -0.005,
+    "headline_arm": "pooled_both"
+  },
+  "curves": {
+    "series": {
+      "curve/xsrc/diag/dataset0_gain": [
+        0.06060035132169739,
+        -0.05,
+        0.1,
+        -0.05,
+        0.1,
+        -0.005,
+        -0.005
+      ],
+      "curve/xsrc/diag/data1_gain": [
+        0.028259166995336593,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN
+      ],
+      "curve/xsrc/diag/y_equals_x": [
+        NaN,
+        -0.05,
+        0.1,
+        NaN,
+        NaN,
+        NaN,
+        NaN
+      ],
+      "curve/xsrc/diag/veto_data1": [
+        NaN,
+        NaN,
+        NaN,
+        -0.005,
+        -0.005,
+        NaN,
+        NaN
+      ],
+      "curve/xsrc/diag/veto_dataset0": [
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        -0.05,
+        0.1
+      ],
+      "curve/xsrc/transfer/step": [
+        0.0,
+        1.0
+      ],
+      "curve/xsrc/transfer/gain": [
+        0.06060035132169739,
+        0.028259166995336593
+      ],
+      "curve/xsrc/transfer/ci_low": [
+        0.04539987106612356,
+        0.01731269163212082
+      ],
+      "curve/xsrc/transfer/ci_high": [
+        0.07460166686603908,
+        0.03863153568781332
+      ],
+      "curve/xsrc/arm/index": [
+        2.0
+      ],
+      "curve/xsrc/arm/gain_mean": [
+        0.04442975915851699
+      ],
+      "curve/xsrc/arm/dataset0_gain": [
+        0.06060035132169739
+      ],
+      "curve/xsrc/arm/data1_gain": [
+        0.028259166995336593
+      ],
+      "curve/xsrc/path/dataset0_pr_auc": [
+        0.5328795579608226
+      ],
+      "curve/xsrc/path/data1_pr_auc": [
+        0.41993278284901187
+      ]
+    },
+    "pairs": [
+      [
+        "curve/xsrc/diag/dataset0_gain",
+        "curve/xsrc/diag/data1_gain"
+      ],
+      [
+        "curve/xsrc/diag/dataset0_gain",
+        "curve/xsrc/diag/y_equals_x"
+      ],
+      [
+        "curve/xsrc/diag/dataset0_gain",
+        "curve/xsrc/diag/veto_data1"
+      ],
+      [
+        "curve/xsrc/diag/dataset0_gain",
+        "curve/xsrc/diag/veto_dataset0"
+      ],
+      [
+        "curve/xsrc/transfer/step",
+        "curve/xsrc/transfer/gain"
+      ],
+      [
+        "curve/xsrc/transfer/step",
+        "curve/xsrc/transfer/ci_low"
+      ],
+      [
+        "curve/xsrc/transfer/step",
+        "curve/xsrc/transfer/ci_high"
+      ],
+      [
+        "curve/xsrc/arm/index",
+        "curve/xsrc/arm/gain_mean"
+      ],
+      [
+        "curve/xsrc/arm/index",
+        "curve/xsrc/arm/dataset0_gain"
+      ],
+      [
+        "curve/xsrc/arm/index",
+        "curve/xsrc/arm/data1_gain"
+      ],
+      [
+        "curve/xsrc/path/dataset0_pr_auc",
+        "curve/xsrc/path/data1_pr_auc"
+      ]
+    ]
+  },
+  "network": {
+    "model": "h2gcn_local",
+    "minutes": 720.0,
+    "epochs": 300,
+    "genes": 1.0,
+    "recipe": "v3",
+    "seeds": 1
+  }
+}

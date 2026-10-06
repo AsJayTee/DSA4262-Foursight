@@ -1,0 +1,7 @@
+start baseline
+start fit --model h2gcn_local_twohead --fold 0 --arm pooled_both
+start fit --model h2gcn_local_twohead --fold 1 --arm pooled_both
+start fit --model h2gcn_local_twohead --fold 2 --arm pooled_both
+start fit --model h2gcn_local_twohead --fold 3 --arm pooled_both
+done baseline
+start fit --model h2gcn_local_twohead --fold 4 --arm pooled_both

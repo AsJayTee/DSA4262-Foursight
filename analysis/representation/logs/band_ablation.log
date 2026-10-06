@@ -1,0 +1,32 @@
+  dataset0 fold 0 (106s)
+  dataset0 fold 1 (124s)
+  dataset0 fold 2 (99s)
+  dataset0 fold 3 (109s)
+  dataset0 fold 4 (115s)
+  pooled_both fold 0 (104s)
+  pooled_both fold 1 (122s)
+  pooled_both fold 2 (98s)
+  pooled_both fold 3 (110s)
+  pooled_both fold 4 (113s)
+scored on                 dataset0   data1
+trained on  neighbours                    
+dataset0    all             0.5840  0.4042
+            none            0.3464  0.2792
+            only 0-50       0.4965  0.3834
+            only 50-100     0.4998  0.3703
+            only 100-200    0.5392  0.3859
+            only 200-400    0.5551  0.3875
+            drop 0-50       0.5803  0.3998
+            drop 50-100     0.5792  0.4023
+            drop 100-200    0.5771  0.4007
+            drop 200-400    0.5702  0.4048
+pooled_both all             0.5847  0.4244
+            none            0.4219  0.3439
+            only 0-50       0.5087  0.4014
+            only 50-100     0.5073  0.3909
+            only 100-200    0.5386  0.4002
+            only 200-400    0.5462  0.3974
+            drop 0-50       0.5761  0.4159
+            drop 50-100     0.5804  0.4208
+            drop 100-200    0.5763  0.4213
+            drop 200-400    0.5743  0.4252

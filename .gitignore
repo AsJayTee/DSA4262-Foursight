@@ -66,3 +66,7 @@ data0/m6anet_input/
 data0/m6anet_out/
 analysis/m6anet/.venv/
 analysis/m6anet/inference.log
+
+# Per-site labels joined to annotation (analysis/newdata/annotation_context.py):
+# unpublished course data, never committed (AGENTS.md section 5).
+analysis/newdata/annotation_context/site_context.csv.gz

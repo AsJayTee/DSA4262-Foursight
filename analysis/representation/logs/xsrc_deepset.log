@@ -1,0 +1,44 @@
+loaded: dataset0 121,838 sites, data1 90,452, 18,922,588 reads (1634s)
+  dataset0 fold 0: LightGBM with and without the deepset column
+  dataset0 fold 1: LightGBM with and without the deepset column
+  dataset0 fold 2: LightGBM with and without the deepset column
+  dataset0 fold 3: LightGBM with and without the deepset column
+  dataset0 fold 4: LightGBM with and without the deepset column
+  pooled_both fold 0: LightGBM with and without the deepset column
+  pooled_both fold 1: LightGBM with and without the deepset column
+  pooled_both fold 2: LightGBM with and without the deepset column
+  pooled_both fold 3: LightGBM with and without the deepset column
+  pooled_both fold 4: LightGBM with and without the deepset column
+
+Cross-source: quantiles + deepset minus lightgbm_quantiles
+----------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+dataset0           +0.0291  [+0.0222, +0.0362]     +0.0219  [+0.0165, +0.0271]    +0.0255     +0.0219      yes
+pooled_both        +0.0410  [+0.0327, +0.0491]     +0.0302  [+0.0242, +0.0363]    +0.0356     +0.0302      yes
+Each row: quantiles + deepset and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0029): choose on mean gain; veto if the worse gain is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+dataset0              0.5050        0.3938             0.4759          0.3719
+pooled_both           0.5133        0.4219             0.4723          0.3917
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels   gain  ci_low  ci_high
+cell                                               
+A        dataset0  dataset0 0.0273  0.0174   0.0367
+B        dataset0     data1 0.0212  0.0151   0.0269
+C           data1  dataset0 0.0291  0.0197   0.0382
+D           data1     data1 0.0252  0.0187   0.0310
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain +0.0143 [+0.0033, +0.0275] - compare with cell D for the gene-population effect.
+  WANDB_API_KEY not set in .env - continuing without W&B
+
+report -> /mnt/sdd/DSA4262/analysis/representation/results/quantiles_deepset__xsrc.json   (33.6 min)
+{"dataset0": {"gain_mean": 0.0255, "gain_worst": 0.0219}, "pooled_both": {"gain_mean": 0.0356, "gain_worst": 0.0302}}

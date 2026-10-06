@@ -1,0 +1,13 @@
+loaded: dataset0 121,838 sites, data1 90,452
+[h2gcn_local_twohead pooled_both fold 3]
+    epoch 1: loss 1.2654, val_ap 0.1359, minutes 1.55, lr 3.31e-04
+    epoch 2: loss 1.0148, val_ap 0.2778, minutes 2.98, lr 6.60e-04
+    epoch 3: loss 0.9144, val_ap 0.3833, minutes 4.49, lr 9.89e-04
+    epoch 4: loss 0.8419, val_ap 0.4240, minutes 5.83, lr 1.00e-03
+    epoch 5: loss 0.7988, val_ap 0.4346, minutes 7.25, lr 1.00e-03
+    epoch 6: loss 0.7834, val_ap 0.4414, minutes 8.73, lr 1.00e-03
+    epoch 7: loss 0.7697, val_ap 0.4388, minutes 10.13, lr 1.00e-03
+    epoch 8: loss 0.7665, val_ap 0.4465, minutes 11.56, lr 1.00e-03
+    epoch 9: loss 0.7547, val_ap 0.4536, minutes 12.95, lr 1.00e-03
+    epoch 10: loss 0.7472, val_ap 0.4572, minutes 14.41, lr 1.00e-03
+    epoch 11: loss 0.7411, val_ap 0.4488, minutes 15.79, lr 1.00e-03

@@ -1,0 +1,13 @@
+thinned reads to (1, 3, 10) (25s)
+  scored h2gcn_twohead_aux_pooled_both_fold0.pt
+  scored h2gcn_twohead_aux_pooled_both_fold1.pt
+  scored h2gcn_twohead_aux_pooled_both_fold2.pt
+  scored h2gcn_twohead_aux_pooled_both_fold3.pt
+  scored h2gcn_twohead_aux_pooled_both_fold4.pt
+h2gcn_twohead_aux    s0 pooled_both   1 reads  dataset0 0.2994 vs LightGBM 0.1402  +0.1592 [+0.1410, +0.1765]
+h2gcn_twohead_aux    s0 pooled_both   1 reads  data1    0.2482 vs LightGBM 0.1360  +0.1122 [+0.1006, +0.1241]
+h2gcn_twohead_aux    s0 pooled_both   3 reads  dataset0 0.4275 vs LightGBM 0.2213  +0.2062 [+0.1892, +0.2217]
+h2gcn_twohead_aux    s0 pooled_both   3 reads  data1    0.3223 vs LightGBM 0.2001  +0.1222 [+0.1083, +0.1335]
+h2gcn_twohead_aux    s0 pooled_both  10 reads  dataset0 0.5149 vs LightGBM 0.3675  +0.1474 [+0.1328, +0.1621]
+h2gcn_twohead_aux    s0 pooled_both  10 reads  data1    0.3832 vs LightGBM 0.3059  +0.0773 [+0.0650, +0.0893]
+-> /mnt/sdd/DSA4262/analysis/representation/results/depth_rescore.json

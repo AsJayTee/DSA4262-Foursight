@@ -1,0 +1,31 @@
+wandb: [wandb.Api()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
+run  everything_no_crosssite__xsrc ...
+done everything_no_crosssite__xsrc (27 min)
+run  everything_no_flank__xsrc ...
+done everything_no_flank__xsrc (24 min)
+run  everything_no_readcount__xsrc ...
+done everything_no_readcount__xsrc (23 min)
+run  everything_fulldepth__xsrc ...
+done everything_fulldepth__xsrc (10 min)
+wandb: [wandb.Api()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
+skip lightgbm_quantiles__xsrc: already has curves
+skip everything__xsrc: already has curves
+skip quantiles_depth_augmented__xsrc: already has curves
+skip lightgbm_quantiles_flank__xsrc: already has curves
+skip everything_no_crosssite__xsrc: already has curves
+skip quantiles_flank_depth_augmented__xsrc: already has curves
+skip lightgbm_coupling__xsrc: already has curves
+skip everything_no_flank__xsrc: already has curves
+skip crosssite_robust__xsrc: already has curves
+skip final_candidate__xsrc: already has curves
+skip everything_no_readcount__xsrc: already has curves
+skip baseline_logistic__xsrc: already has curves
+skip mlp_quantiles__xsrc: already has curves
+skip quantiles_deepset__xsrc: already has curves
+skip everything_fulldepth__xsrc: already has curves
+wandb: [wandb.Api()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
+wandb: View saved: https://wandb.ai/dsa4262-team/dsa4262-project?nw=5dwkg46igtb
+wandb: View saved: https://wandb.ai/dsa4262-team/dsa4262-project?nw=xxa3k4vzpjj
+Decisions: 13 panels -> https://wandb.ai/dsa4262-team/dsa4262-project?nw=5dwkg46igtb
+History (CV only): 11 panels -> https://wandb.ai/dsa4262-team/dsa4262-project?nw=xxa3k4vzpjj
+batch finished

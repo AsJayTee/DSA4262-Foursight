@@ -1,0 +1,46 @@
+thinned reads to (1, 3, 10) (25s)
+  scored h2gcn_aux_dataset0_fold0.pt
+  scored h2gcn_aux_dataset0_fold1.pt
+  scored h2gcn_aux_dataset0_fold2.pt
+  scored h2gcn_aux_dataset0_fold3.pt
+  scored h2gcn_aux_dataset0_fold4.pt
+  scored h2gcn_aux_pooled_both_fold0.pt
+  scored h2gcn_aux_pooled_both_fold1.pt
+  scored h2gcn_aux_pooled_both_fold2.pt
+  scored h2gcn_aux_pooled_both_fold3.pt
+  scored h2gcn_aux_pooled_both_fold4.pt
+  scored h2gcn_aux_q_pooled_both_fold0.pt
+  scored h2gcn_aux_q_pooled_both_fold1.pt
+  scored h2gcn_aux_q_pooled_both_fold2.pt
+  scored h2gcn_aux_q_pooled_both_fold3.pt
+  scored h2gcn_aux_q_pooled_both_fold4.pt
+  scored h2gcn_aux_qf_pooled_both_fold0.pt
+  scored h2gcn_aux_qf_pooled_both_fold1.pt
+  scored h2gcn_aux_qf_pooled_both_fold2.pt
+  scored h2gcn_aux_qf_pooled_both_fold3.pt
+  scored h2gcn_aux_qf_pooled_both_fold4.pt
+h2gcn_aux            s0 dataset0      1 reads  dataset0 0.2709 vs LightGBM 0.1527  +0.1182 [+0.1064, +0.1301]
+h2gcn_aux            s0 dataset0      1 reads  data1    0.2409 vs LightGBM 0.1522  +0.0886 [+0.0790, +0.0982]
+h2gcn_aux            s0 dataset0      3 reads  dataset0 0.3664 vs LightGBM 0.2458  +0.1206 [+0.1071, +0.1350]
+h2gcn_aux            s0 dataset0      3 reads  data1    0.2904 vs LightGBM 0.2031  +0.0873 [+0.0775, +0.0979]
+h2gcn_aux            s0 dataset0     10 reads  dataset0 0.4687 vs LightGBM 0.3716  +0.0971 [+0.0843, +0.1086]
+h2gcn_aux            s0 dataset0     10 reads  data1    0.3498 vs LightGBM 0.2958  +0.0540 [+0.0441, +0.0637]
+h2gcn_aux            s0 pooled_both   1 reads  dataset0 0.2610 vs LightGBM 0.1402  +0.1208 [+0.1068, +0.1353]
+h2gcn_aux            s0 pooled_both   1 reads  data1    0.2428 vs LightGBM 0.1360  +0.1068 [+0.0953, +0.1194]
+h2gcn_aux            s0 pooled_both   3 reads  dataset0 0.3790 vs LightGBM 0.2213  +0.1577 [+0.1439, +0.1720]
+h2gcn_aux            s0 pooled_both   3 reads  data1    0.2988 vs LightGBM 0.2001  +0.0987 [+0.0880, +0.1099]
+h2gcn_aux            s0 pooled_both  10 reads  dataset0 0.4791 vs LightGBM 0.3675  +0.1116 [+0.0993, +0.1240]
+h2gcn_aux            s0 pooled_both  10 reads  data1    0.3719 vs LightGBM 0.3059  +0.0660 [+0.0556, +0.0769]
+h2gcn_aux_q          s0 pooled_both   1 reads  dataset0 0.2667 vs LightGBM 0.1402  +0.1264 [+0.1108, +0.1419]
+h2gcn_aux_q          s0 pooled_both   1 reads  data1    0.2376 vs LightGBM 0.1360  +0.1016 [+0.0900, +0.1140]
+h2gcn_aux_q          s0 pooled_both   3 reads  dataset0 0.3816 vs LightGBM 0.2213  +0.1603 [+0.1466, +0.1744]
+h2gcn_aux_q          s0 pooled_both   3 reads  data1    0.3049 vs LightGBM 0.2001  +0.1048 [+0.0940, +0.1169]
+h2gcn_aux_q          s0 pooled_both  10 reads  dataset0 0.4606 vs LightGBM 0.3675  +0.0931 [+0.0806, +0.1059]
+h2gcn_aux_q          s0 pooled_both  10 reads  data1    0.3731 vs LightGBM 0.3059  +0.0672 [+0.0566, +0.0777]
+h2gcn_aux_qf         s0 pooled_both   1 reads  dataset0 0.2729 vs LightGBM 0.1402  +0.1326 [+0.1183, +0.1447]
+h2gcn_aux_qf         s0 pooled_both   1 reads  data1    0.2398 vs LightGBM 0.1360  +0.1039 [+0.0926, +0.1163]
+h2gcn_aux_qf         s0 pooled_both   3 reads  dataset0 0.3867 vs LightGBM 0.2213  +0.1655 [+0.1507, +0.1780]
+h2gcn_aux_qf         s0 pooled_both   3 reads  data1    0.3040 vs LightGBM 0.2001  +0.1040 [+0.0925, +0.1153]
+h2gcn_aux_qf         s0 pooled_both  10 reads  dataset0 0.4765 vs LightGBM 0.3675  +0.1090 [+0.0975, +0.1217]
+h2gcn_aux_qf         s0 pooled_both  10 reads  data1    0.3756 vs LightGBM 0.3059  +0.0697 [+0.0601, +0.0795]
+-> /mnt/sdd/DSA4262/analysis/representation/results/depth_rescore.json

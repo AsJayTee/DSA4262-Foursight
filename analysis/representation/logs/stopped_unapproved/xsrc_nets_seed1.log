@@ -1,0 +1,10 @@
+start baseline
+start fit --model h2gcn --fold 0 --arm pooled_both
+start fit --model h2gcn --fold 1 --arm pooled_both
+start fit --model h2gcn --fold 2 --arm pooled_both
+start fit --model h2gcn --fold 3 --arm pooled_both
+start fit --model h2gcn --fold 4 --arm pooled_both
+start fit --model h2gcn_local --fold 0 --arm pooled_both
+start fit --model h2gcn_local --fold 1 --arm pooled_both
+done baseline
+start fit --model h2gcn_local --fold 2 --arm pooled_both

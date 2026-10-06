@@ -1,0 +1,23 @@
+all fitted
+{
+ "h2gcn_twohead_aux_s0": {
+  "best_epoch": 42,
+  "best_val_ap": 0.5138301451175606,
+  "stopped": "patience"
+ },
+ "h2gcn_twohead_aux_s1": {
+  "best_epoch": 38,
+  "best_val_ap": 0.512723406459687,
+  "stopped": "patience"
+ },
+ "h2gcn_aux_s0": {
+  "best_epoch": 33,
+  "best_val_ap": 0.49832836638983763,
+  "stopped": "patience"
+ },
+ "h2gcn_aux_s1": {
+  "best_epoch": 48,
+  "best_val_ap": 0.49662829653848223,
+  "stopped": "patience"
+ }
+}

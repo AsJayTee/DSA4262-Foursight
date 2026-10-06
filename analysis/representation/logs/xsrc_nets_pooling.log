@@ -1,0 +1,152 @@
+start baseline
+start fit --model h2gcn_aux_q --fold 0 --arm pooled_both
+start fit --model h2gcn_aux_q --fold 1 --arm pooled_both
+start fit --model h2gcn_aux_q --fold 2 --arm pooled_both
+start fit --model h2gcn_aux_q --fold 3 --arm pooled_both
+start fit --model h2gcn_aux_q --fold 4 --arm pooled_both
+start fit --model h2gcn_aux_qf --fold 0 --arm pooled_both
+start fit --model h2gcn_aux_qf --fold 1 --arm pooled_both
+start fit --model h2gcn_aux_qf --fold 2 --arm pooled_both
+start fit --model h2gcn_aux_qf --fold 3 --arm pooled_both
+done baseline
+start fit --model h2gcn_aux_qf --fold 4 --arm pooled_both
+done fit --model h2gcn_aux_q --fold 3 --arm pooled_both
+done fit --model h2gcn_aux_qf --fold 3 --arm pooled_both
+done fit --model h2gcn_aux_qf --fold 1 --arm pooled_both
+done fit --model h2gcn_aux_q --fold 0 --arm pooled_both
+done fit --model h2gcn_aux_q --fold 2 --arm pooled_both
+done fit --model h2gcn_aux_qf --fold 4 --arm pooled_both
+done fit --model h2gcn_aux_qf --fold 0 --arm pooled_both
+done fit --model h2gcn_aux_qf --fold 2 --arm pooled_both
+done fit --model h2gcn_aux_q --fold 4 --arm pooled_both
+done fit --model h2gcn_aux_q --fold 1 --arm pooled_both
+loaded: dataset0 121,838 sites, data1 90,452
+
+Cross-source: h2gcn_aux_q (network) minus lightgbm_quantiles
+------------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+pooled_both        +0.0629  [+0.0469, +0.0768]     +0.0346  [+0.0232, +0.0446]    +0.0487     +0.0346      yes
+Each row: h2gcn_aux_q (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): pooled_both.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+pooled_both           0.5352        0.4263             0.4723          0.3917
+
+vs deepset alone (same arms, same genes):
+  pooled_both  dataset0 +0.0160  data1 +0.0144  worst +0.0144
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
+wandb: Currently logged in as: jinthau-siah (dsa4262-team) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run dbia32kr
+wandb: Tracking run with wandb version 0.30.0
+wandb: Run data is saved locally in /mnt/sdd/DSA4262/wandb/run-20261004_030822-dbia32kr
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run h2gcn_aux_q_nn__xsrc
+wandb: ⭐️ View project at https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: 🚀 View run at https://wandb.ai/dsa4262-team/dsa4262-project/runs/dbia32kr
+wandb: updating run metadata; uploading artifact h2gcn_aux_q_nn__xsrc-report
+wandb: uploading artifact h2gcn_aux_q_nn__xsrc-report
+wandb: uploading wandb-metadata.json; uploading requirements.txt; uploading wandb-summary.json; uploading config.yaml
+wandb: uploading requirements.txt; uploading wandb-summary.json; uploading config.yaml
+wandb: uploading wandb-summary.json; uploading config.yaml
+wandb: 
+wandb: Run history:
+wandb:     curve/xsrc/arm/data1_gain ▁
+wandb:  curve/xsrc/arm/dataset0_gain ▁
+wandb:      curve/xsrc/arm/gain_mean ▁
+wandb:          curve/xsrc/arm/index ▁
+wandb:    curve/xsrc/diag/data1_gain ▁
+wandb: curve/xsrc/diag/dataset0_gain ▆▁█▁█▃▃
+wandb:    curve/xsrc/diag/veto_data1 ▁▁
+wandb: curve/xsrc/diag/veto_dataset0 ▁█
+wandb:    curve/xsrc/diag/y_equals_x ▁█
+wandb:  curve/xsrc/path/data1_pr_auc ▁
+wandb:                           +28 ...
+wandb: 
+wandb: Run summary:
+wandb:      vs_deepset/pooled_both/data1/gain 0.01438
+wandb:   vs_deepset/pooled_both/dataset0/gain 0.01597
+wandb:      vs_deepset/pooled_both/gain_worst 0.01438
+wandb:                          xsrc/eligible 1
+wandb:                         xsrc/gain_mean 0.04874
+wandb:                        xsrc/gain_worst 0.03461
+wandb: xsrc/pooled_both/data1/baseline_pr_auc 0.39167
+wandb:         xsrc/pooled_both/data1/ci_high 0.0446
+wandb:          xsrc/pooled_both/data1/ci_low 0.02316
+wandb:            xsrc/pooled_both/data1/gain 0.03461
+wandb:                                    +13 ...
+wandb: 
+wandb: 🚀 View run h2gcn_aux_q_nn__xsrc at: https://wandb.ai/dsa4262-team/dsa4262-project/runs/dbia32kr
+wandb: ⭐️ View project at: https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: Synced 4 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20261004_030822-dbia32kr/logs
+  logged to W&B: https://wandb.ai/dsa4262-team/dsa4262-project/runs/dbia32kr
+h2gcn_aux_q: worst +0.0346  mean +0.0487  -> /mnt/sdd/DSA4262/analysis/representation/results/h2gcn_aux_q_nn__xsrc.json
+
+Cross-source: h2gcn_aux_qf (network) minus lightgbm_quantiles
+-------------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+pooled_both        +0.0681  [+0.0526, +0.0812]     +0.0352  [+0.0232, +0.0445]    +0.0516     +0.0352      yes
+Each row: h2gcn_aux_qf (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): pooled_both.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+pooled_both           0.5403        0.4269             0.4723          0.3917
+
+vs deepset alone (same arms, same genes):
+  pooled_both  dataset0 +0.0212  data1 +0.0150  worst +0.0150
+wandb: setting up run rlg558dv
+wandb: Tracking run with wandb version 0.30.0
+wandb: Run data is saved locally in /mnt/sdd/DSA4262/wandb/run-20261004_031009-rlg558dv
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run h2gcn_aux_qf_nn__xsrc
+wandb: ⭐️ View project at https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: 🚀 View run at https://wandb.ai/dsa4262-team/dsa4262-project/runs/rlg558dv
+wandb: updating run metadata; uploading artifact h2gcn_aux_qf_nn__xsrc-report
+wandb: uploading artifact h2gcn_aux_qf_nn__xsrc-report
+wandb: uploading wandb-metadata.json; uploading requirements.txt; uploading wandb-summary.json; uploading config.yaml
+wandb: uploading wandb-metadata.json; uploading wandb-summary.json; uploading config.yaml
+wandb: uploading history steps 0-7, summary
+wandb: 
+wandb: Run history:
+wandb:     curve/xsrc/arm/data1_gain ▁
+wandb:  curve/xsrc/arm/dataset0_gain ▁
+wandb:      curve/xsrc/arm/gain_mean ▁
+wandb:          curve/xsrc/arm/index ▁
+wandb:    curve/xsrc/diag/data1_gain ▁
+wandb: curve/xsrc/diag/dataset0_gain ▇▁█▁█▃▃
+wandb:    curve/xsrc/diag/veto_data1 ▁▁
+wandb: curve/xsrc/diag/veto_dataset0 ▁█
+wandb:    curve/xsrc/diag/y_equals_x ▁█
+wandb:  curve/xsrc/path/data1_pr_auc ▁
+wandb:                           +28 ...
+wandb: 
+wandb: Run summary:
+wandb:      vs_deepset/pooled_both/data1/gain 0.01498
+wandb:   vs_deepset/pooled_both/dataset0/gain 0.02116
+wandb:      vs_deepset/pooled_both/gain_worst 0.01498
+wandb:                          xsrc/eligible 1
+wandb:                         xsrc/gain_mean 0.05164
+wandb:                        xsrc/gain_worst 0.03522
+wandb: xsrc/pooled_both/data1/baseline_pr_auc 0.39167
+wandb:         xsrc/pooled_both/data1/ci_high 0.0445
+wandb:          xsrc/pooled_both/data1/ci_low 0.02318
+wandb:            xsrc/pooled_both/data1/gain 0.03522
+wandb:                                    +13 ...
+wandb: 
+wandb: 🚀 View run h2gcn_aux_qf_nn__xsrc at: https://wandb.ai/dsa4262-team/dsa4262-project/runs/rlg558dv
+wandb: ⭐️ View project at: https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: Synced 4 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20261004_031009-rlg558dv/logs
+  logged to W&B: https://wandb.ai/dsa4262-team/dsa4262-project/runs/rlg558dv
+h2gcn_aux_qf: worst +0.0352  mean +0.0516  -> /mnt/sdd/DSA4262/analysis/representation/results/h2gcn_aux_qf_nn__xsrc.json
+finished

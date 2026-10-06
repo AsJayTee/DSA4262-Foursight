@@ -1,0 +1,111 @@
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
+wandb: Currently logged in as: jinthau-siah (dsa4262-team) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Using an existing wandb-core service via WANDB_SERVICE.
+wandb: setting up run w5tebjdy
+wandb: Tracking run with wandb version 0.30.0
+wandb: Run data is saved locally in /mnt/sdd/DSA4262/wandb/run-20261002_053620-w5tebjdy
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run baseline_logistic__xsrc
+wandb: ⭐️ View project at https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: 🚀 View run at https://wandb.ai/dsa4262-team/dsa4262-project/runs/w5tebjdy
+
+Cross-source fitting: baseline_logistic (pooled_v1, train depths full)
+----------------------------------------------------------------------
+  extracting pooled_v1 at depth [full] from dataset0.json.gz ...
+  extracting pooled_v1 at depth [full] from dataset1.json.gz ...
+  dataset0: 121,838 sites, 5,475 positive, 3,852 genes
+  data1: 90,452 sites, 6,550 positive, 3,138 genes
+    fold 0 dataset0     trained on 97,524 rows
+    fold 0 data1        trained on 72,053 rows
+    fold 1 dataset0     trained on 95,915 rows
+    fold 1 data1        trained on 71,401 rows
+    fold 2 dataset0     trained on 98,444 rows
+    fold 2 data1        trained on 73,680 rows
+    fold 3 dataset0     trained on 97,719 rows
+    fold 3 data1        trained on 72,126 rows
+    fold 4 dataset0     trained on 97,750 rows
+    fold 4 data1        trained on 72,548 rows
+
+Cross-source fitting: lightgbm_quantiles (quantiles_v1, train depths full)
+--------------------------------------------------------------------------
+  dataset0: 121,838 sites, 5,475 positive, 3,852 genes
+  data1: 90,452 sites, 6,550 positive, 3,138 genes
+    fold 0 dataset0     trained on 97,524 rows
+    fold 0 data1        trained on 72,053 rows
+    fold 1 dataset0     trained on 95,915 rows
+    fold 1 data1        trained on 71,401 rows
+    fold 2 dataset0     trained on 98,444 rows
+    fold 2 data1        trained on 73,680 rows
+    fold 3 dataset0     trained on 97,719 rows
+    fold 3 data1        trained on 72,126 rows
+    fold 4 dataset0     trained on 97,750 rows
+    fold 4 data1        trained on 72,548 rows
+
+Cross-source: baseline_logistic minus lightgbm_quantiles
+--------------------------------------------------------
+            dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                   
+dataset0          -0.0638  [-0.0762, -0.0518]     -0.0495  [-0.0577, -0.0406]    -0.0566     -0.0638   VETOED
+data1             -0.0201  [-0.0314, -0.0080]     -0.0486  [-0.0589, -0.0382]    -0.0344     -0.0486   VETOED
+ensemble          -0.0591  [-0.0718, -0.0480]     -0.0607  [-0.0696, -0.0505]    -0.0599     -0.0607   VETOED
+Each row: baseline_logistic and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0029): choose on mean gain; veto if the worse gain is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+            dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                  
+dataset0             0.4121        0.3224             0.4759          0.3719
+data1                0.3972        0.3331             0.4174          0.3817
+ensemble             0.4113        0.3323             0.4704          0.3930
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels    gain  ci_low  ci_high
+cell                                                
+A        dataset0  dataset0 -0.0736 -0.0896  -0.0595
+B        dataset0     data1 -0.0415 -0.0526  -0.0308
+C           data1  dataset0 -0.0829 -0.0989  -0.0668
+D           data1     data1 -0.0556 -0.0678  -0.0440
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain -0.0383 [-0.0544, -0.0211] - compare with cell D for the gene-population effect.
+
+report -> /mnt/sdd/xsrc_reports/baseline_logistic__xsrc.json   (322.8s)
+wandb: updating run metadata; uploading artifact baseline_logistic__xsrc-report
+wandb: uploading artifact baseline_logistic__xsrc-report
+wandb: uploading output.log; uploading wandb-summary.json; uploading config.yaml
+wandb: uploading history steps 0-6, summary, console lines 32-64
+wandb: 
+wandb: Run history:
+wandb:     curve/xsrc/arm/data1_gain ▇█▁
+wandb:  curve/xsrc/arm/dataset0_gain ▁█▂
+wandb:      curve/xsrc/arm/gain_mean ▂█▁
+wandb:          curve/xsrc/arm/index ▁▆█
+wandb:       curve/xsrc/crossed/cell ▁▃▆█
+wandb:    curve/xsrc/crossed/ci_high ▂█▁▅
+wandb:     curve/xsrc/crossed/ci_low ▂█▁▆
+wandb:       curve/xsrc/crossed/gain ▃█▁▆
+wandb:    curve/xsrc/diag/data1_gain ▁
+wandb: curve/xsrc/diag/dataset0_gain ▁▂█▂█▄▄
+wandb:                           +87 ...
+wandb: 
+wandb: Run summary:
+wandb: xsrc/crossed/A/baseline_pr_auc 0.5125
+wandb:         xsrc/crossed/A/ci_high -0.05952
+wandb:          xsrc/crossed/A/ci_low -0.0896
+wandb:            xsrc/crossed/A/gain -0.07356
+wandb:          xsrc/crossed/A/pr_auc 0.43893
+wandb: xsrc/crossed/B/baseline_pr_auc 0.36517
+wandb:         xsrc/crossed/B/ci_high -0.03081
+wandb:          xsrc/crossed/B/ci_low -0.05255
+wandb:            xsrc/crossed/B/gain -0.04154
+wandb:          xsrc/crossed/B/pr_auc 0.32363
+wandb:                            +68 ...
+wandb: 
+wandb: 🚀 View run baseline_logistic__xsrc at: https://wandb.ai/dsa4262-team/dsa4262-project/runs/w5tebjdy
+wandb: ⭐️ View project at: https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: Synced 5 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20261002_053620-w5tebjdy/logs
+  logged to W&B: https://wandb.ai/dsa4262-team/dsa4262-project/runs/w5tebjdy

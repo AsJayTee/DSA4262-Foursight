@@ -1,0 +1,51 @@
+loaded: dataset0 121,838 sites, data1 90,452
+[h2gcn_local_deep pooled_both fold 2]
+    epoch 1: loss 1.1079, val_ap 0.3248, minutes 3.06, lr 3.31e-04
+    epoch 2: loss 0.9178, val_ap 0.4216, minutes 6.15, lr 6.58e-04
+    epoch 3: loss 0.8451, val_ap 0.4380, minutes 9.3, lr 9.85e-04
+    epoch 4: loss 0.8392, val_ap 0.4389, minutes 12.48, lr 1.00e-03
+    epoch 5: loss 0.8044, val_ap 0.4571, minutes 15.55, lr 1.00e-03
+    epoch 6: loss 0.7904, val_ap 0.4456, minutes 18.59, lr 1.00e-03
+    epoch 7: loss 0.7863, val_ap 0.4190, minutes 21.7, lr 1.00e-03
+    epoch 8: loss 0.7837, val_ap 0.4612, minutes 24.82, lr 1.00e-03
+    epoch 9: loss 0.7717, val_ap 0.4514, minutes 27.97, lr 1.00e-03
+    epoch 10: loss 0.7635, val_ap 0.4722, minutes 31.09, lr 1.00e-03
+    epoch 11: loss 0.7691, val_ap 0.4316, minutes 34.18, lr 1.00e-03
+    epoch 12: loss 0.7470, val_ap 0.4786, minutes 37.3, lr 1.00e-03
+    epoch 13: loss 0.7491, val_ap 0.4543, minutes 40.4, lr 1.00e-03
+    epoch 14: loss 0.7556, val_ap 0.4645, minutes 43.43, lr 1.00e-03
+    epoch 15: loss 0.7523, val_ap 0.4715, minutes 46.5, lr 1.00e-03
+    epoch 16: loss 0.7341, val_ap 0.4702, minutes 49.59, lr 1.00e-03
+    epoch 17: loss 0.7327, val_ap 0.4702, minutes 52.68, lr 1.00e-03
+    epoch 18: loss 0.7193, val_ap 0.4618, minutes 55.75, lr 1.00e-03
+    epoch 19: loss 0.7145, val_ap 0.4664, minutes 58.83, lr 1.00e-03
+    epoch 20: loss 0.7107, val_ap 0.4622, minutes 61.93, lr 1.00e-03
+    epoch 21: loss 0.7057, val_ap 0.4764, minutes 65.01, lr 5.00e-04
+    epoch 22: loss 0.6698, val_ap 0.4842, minutes 68.09, lr 5.00e-04
+    epoch 23: loss 0.6587, val_ap 0.4782, minutes 71.14, lr 5.00e-04
+    epoch 24: loss 0.6599, val_ap 0.4762, minutes 74.25, lr 5.00e-04
+    epoch 25: loss 0.6471, val_ap 0.4785, minutes 77.34, lr 5.00e-04
+    epoch 26: loss 0.6464, val_ap 0.4834, minutes 80.5, lr 5.00e-04
+    epoch 27: loss 0.6424, val_ap 0.4760, minutes 83.62, lr 5.00e-04
+    epoch 28: loss 0.6339, val_ap 0.4753, minutes 86.77, lr 5.00e-04
+    epoch 29: loss 0.6260, val_ap 0.4755, minutes 89.92, lr 5.00e-04
+    epoch 30: loss 0.6294, val_ap 0.4720, minutes 92.95, lr 5.00e-04
+    epoch 31: loss 0.6199, val_ap 0.4716, minutes 96.07, lr 2.50e-04
+    epoch 32: loss 0.5932, val_ap 0.4762, minutes 99.02, lr 2.50e-04
+    epoch 33: loss 0.5755, val_ap 0.4728, minutes 101.98, lr 2.50e-04
+    epoch 34: loss 0.5652, val_ap 0.4739, minutes 104.89, lr 2.50e-04
+    epoch 35: loss 0.5678, val_ap 0.4764, minutes 107.72, lr 2.50e-04
+    epoch 36: loss 0.5587, val_ap 0.4787, minutes 110.49, lr 2.50e-04
+    epoch 37: loss 0.5507, val_ap 0.4802, minutes 113.34, lr 2.50e-04
+    epoch 38: loss 0.5476, val_ap 0.4682, minutes 115.83, lr 2.50e-04
+    epoch 39: loss 0.5413, val_ap 0.4664, minutes 118.42, lr 2.50e-04
+    epoch 40: loss 0.5482, val_ap 0.4640, minutes 121.1, lr 1.25e-04
+    epoch 41: loss 0.5197, val_ap 0.4746, minutes 123.73, lr 1.25e-04
+    epoch 42: loss 0.5130, val_ap 0.4727, minutes 126.3, lr 1.25e-04
+    epoch 43: loss 0.5097, val_ap 0.4768, minutes 128.67, lr 1.25e-04
+    epoch 44: loss 0.5084, val_ap 0.4709, minutes 131.06, lr 1.25e-04
+    epoch 45: loss 0.4980, val_ap 0.4670, minutes 133.44, lr 1.25e-04
+    epoch 46: loss 0.4956, val_ap 0.4635, minutes 135.77, lr 1.25e-04
+    epoch 47: loss 0.4944, val_ap 0.4676, minutes 138.13, lr 1.25e-04
+    stopping: no validation gain in 25 epochs
+[h2gcn_local_deep pooled_both fold 2] done (140.0 min)

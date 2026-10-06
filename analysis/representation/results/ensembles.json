@@ -1,0 +1,1217 @@
+[
+  {
+    "arm": "dataset0",
+    "members": "lightgbm + h2gcn + h2gcn_aux",
+    "dataset0": 0.10282353928799987,
+    "data1": 0.0480901475597062,
+    "worst": 0.0480901475597062,
+    "new_genes": 0.036344490705085886,
+    "data1_pr_auc": 0.41996942922599173
+  },
+  {
+    "arm": "dataset0",
+    "members": "lightgbm + h2gcn + h2gcn_local_deep",
+    "dataset0": 0.09643125625318588,
+    "data1": 0.04589561399810921,
+    "worst": 0.04589561399810921,
+    "new_genes": 0.03560403569768272,
+    "data1_pr_auc": 0.41777489566439474
+  },
+  {
+    "arm": "dataset0",
+    "members": "lightgbm + h2gcn + h2gcn_local",
+    "dataset0": 0.10011168999442627,
+    "data1": 0.04540480070464803,
+    "worst": 0.04540480070464803,
+    "new_genes": 0.03256124711299602,
+    "data1_pr_auc": 0.41728408237093356
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn + h2gcn_aux + deepset",
+    "dataset0": 0.10931837894173074,
+    "data1": 0.04525656281831275,
+    "worst": 0.04525656281831275,
+    "new_genes": 0.03662826763286692,
+    "data1_pr_auc": 0.4171358444845983
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn + h2gcn_local_deep + h2gcn_aux",
+    "dataset0": 0.10104623035880561,
+    "data1": 0.04480779757978337,
+    "worst": 0.04480779757978337,
+    "new_genes": 0.03828924479872975,
+    "data1_pr_auc": 0.4166870792460689
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn + h2gcn_aux",
+    "dataset0": 0.1085778160624093,
+    "data1": 0.04458741121005905,
+    "worst": 0.04458741121005905,
+    "new_genes": 0.03945073292425061,
+    "data1_pr_auc": 0.4164666928763446
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn + h2gcn_local + h2gcn_aux",
+    "dataset0": 0.10475048739031784,
+    "data1": 0.04383224661415197,
+    "worst": 0.04383224661415197,
+    "new_genes": 0.03481433681532864,
+    "data1_pr_auc": 0.4157115282804375
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn + h2gcn_local + deepset",
+    "dataset0": 0.10718638936206598,
+    "data1": 0.04344988546710571,
+    "worst": 0.04344988546710571,
+    "new_genes": 0.03308695018076652,
+    "data1_pr_auc": 0.41532916713339124
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn + h2gcn_local_deep + deepset",
+    "dataset0": 0.10356688105232187,
+    "data1": 0.042877529149767946,
+    "worst": 0.042877529149767946,
+    "new_genes": 0.03512928827149475,
+    "data1_pr_auc": 0.4147568108160535
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn + h2gcn_local + h2gcn_local_deep",
+    "dataset0": 0.09814252785462868,
+    "data1": 0.04265633327057683,
+    "worst": 0.04265633327057683,
+    "new_genes": 0.033800218281756,
+    "data1_pr_auc": 0.41453561493686236
+  },
+  {
+    "arm": "dataset0",
+    "members": "lightgbm + h2gcn + deepset",
+    "dataset0": 0.09483610331799736,
+    "data1": 0.042605742797911406,
+    "worst": 0.042605742797911406,
+    "new_genes": 0.03215347267574703,
+    "data1_pr_auc": 0.41448502446419694
+  },
+  {
+    "arm": "dataset0",
+    "members": "lightgbm + h2gcn_local + h2gcn_aux",
+    "dataset0": 0.07852245242868822,
+    "data1": 0.041375046485666755,
+    "worst": 0.041375046485666755,
+    "new_genes": 0.027479529363086896,
+    "data1_pr_auc": 0.4132543281519523
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn + h2gcn_local",
+    "dataset0": 0.10478992056175557,
+    "data1": 0.04124591179812498,
+    "worst": 0.04124591179812498,
+    "new_genes": 0.034436268360756916,
+    "data1_pr_auc": 0.4131251934644105
+  },
+  {
+    "arm": "dataset0",
+    "members": "lightgbm + h2gcn_local_deep + h2gcn_aux",
+    "dataset0": 0.07543974565623496,
+    "data1": 0.04114568799727819,
+    "worst": 0.04114568799727819,
+    "new_genes": 0.031722692898056015,
+    "data1_pr_auc": 0.4130249696635637
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn + h2gcn_local_deep",
+    "dataset0": 0.0977061594731819,
+    "data1": 0.041097241877206925,
+    "worst": 0.041097241877206925,
+    "new_genes": 0.03856767588556825,
+    "data1_pr_auc": 0.41297652354349246
+  },
+  {
+    "arm": "dataset0",
+    "members": "lightgbm + h2gcn",
+    "dataset0": 0.09173850663176136,
+    "data1": 0.04020548493926879,
+    "worst": 0.04020548493926879,
+    "new_genes": 0.03193039878890902,
+    "data1_pr_auc": 0.4120847666055543
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn + deepset",
+    "dataset0": 0.10573453453149967,
+    "data1": 0.04011483186980874,
+    "worst": 0.04011483186980874,
+    "new_genes": 0.03512691884805785,
+    "data1_pr_auc": 0.4119941135360943
+  },
+  {
+    "arm": "dataset0",
+    "members": "lightgbm + h2gcn_aux + deepset",
+    "dataset0": 0.07596757141921479,
+    "data1": 0.03922095566248557,
+    "worst": 0.03922095566248557,
+    "new_genes": 0.02828595815263374,
+    "data1_pr_auc": 0.4111002373287711
+  },
+  {
+    "arm": "dataset0",
+    "members": "lightgbm + h2gcn_local + h2gcn_local_deep",
+    "dataset0": 0.07351568493478317,
+    "data1": 0.03915700471102168,
+    "worst": 0.03915700471102168,
+    "new_genes": 0.026511926667004138,
+    "data1_pr_auc": 0.4110362863773072
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn_local + h2gcn_aux + deepset",
+    "dataset0": 0.08523462949238131,
+    "data1": 0.038784671723700925,
+    "worst": 0.038784671723700925,
+    "new_genes": 0.02986411630845981,
+    "data1_pr_auc": 0.41066395338998646
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn_local_deep + h2gcn_aux + deepset",
+    "dataset0": 0.08231093451031807,
+    "data1": 0.03815467618482388,
+    "worst": 0.03815467618482388,
+    "new_genes": 0.029883343068151935,
+    "data1_pr_auc": 0.4100339578511094
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn_local + h2gcn_local_deep + h2gcn_aux",
+    "dataset0": 0.07635597791911292,
+    "data1": 0.03770238307490831,
+    "worst": 0.03770238307490831,
+    "new_genes": 0.032468056086303376,
+    "data1_pr_auc": 0.40958166474119384
+  },
+  {
+    "arm": "dataset0",
+    "members": "lightgbm + h2gcn_local + deepset",
+    "dataset0": 0.07260465268558852,
+    "data1": 0.03766606599383632,
+    "worst": 0.03766606599383632,
+    "new_genes": 0.024140794384738318,
+    "data1_pr_auc": 0.40954534766012185
+  },
+  {
+    "arm": "dataset0",
+    "members": "lightgbm + h2gcn_aux",
+    "dataset0": 0.06838373598490449,
+    "data1": 0.03723216915909283,
+    "worst": 0.03723216915909283,
+    "new_genes": 0.026082900936264863,
+    "data1_pr_auc": 0.40911145082537836
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn_local + h2gcn_local_deep + deepset",
+    "dataset0": 0.08015573394440839,
+    "data1": 0.03693002440703114,
+    "worst": 0.03693002440703114,
+    "new_genes": 0.027106097417139097,
+    "data1_pr_auc": 0.40880930607331667
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn_aux + deepset",
+    "dataset0": 0.08108325431183844,
+    "data1": 0.03631517181311644,
+    "worst": 0.03631517181311644,
+    "new_genes": 0.02957915796084648,
+    "data1_pr_auc": 0.408194453479402
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn_local_deep + h2gcn_aux",
+    "dataset0": 0.07134212717345118,
+    "data1": 0.036082946312190056,
+    "worst": 0.036082946312190056,
+    "new_genes": 0.03397960127022637,
+    "data1_pr_auc": 0.4079622279784756
+  },
+  {
+    "arm": "dataset0",
+    "members": "lightgbm + h2gcn_local_deep + deepset",
+    "dataset0": 0.07041716983125251,
+    "data1": 0.035995102342610774,
+    "worst": 0.035995102342610774,
+    "new_genes": 0.02525554746241454,
+    "data1_pr_auc": 0.4078743840088963
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn_local + h2gcn_aux",
+    "dataset0": 0.07652037962292219,
+    "data1": 0.03575753438802637,
+    "worst": 0.03575753438802637,
+    "new_genes": 0.027233820881897408,
+    "data1_pr_auc": 0.4076368160543119
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn_local + deepset",
+    "dataset0": 0.07751835521509726,
+    "data1": 0.03472832746530419,
+    "worst": 0.03472832746530419,
+    "new_genes": 0.024340001518470322,
+    "data1_pr_auc": 0.4066076091315897
+  },
+  {
+    "arm": "dataset0",
+    "members": "lightgbm + h2gcn_local",
+    "dataset0": 0.06404605603763441,
+    "data1": 0.03364497760795182,
+    "worst": 0.03364497760795182,
+    "new_genes": 0.019326232813088984,
+    "data1_pr_auc": 0.40552425927423735
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn_local + h2gcn_local_deep",
+    "dataset0": 0.06786455876447178,
+    "data1": 0.03350037111413523,
+    "worst": 0.03350037111413523,
+    "new_genes": 0.026303574564763343,
+    "data1_pr_auc": 0.40537965278042076
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn_aux",
+    "dataset0": 0.06766464145211376,
+    "data1": 0.0327190436580006,
+    "worst": 0.0327190436580006,
+    "new_genes": 0.028897849845598622,
+    "data1_pr_auc": 0.40459832532428613
+  },
+  {
+    "arm": "dataset0",
+    "members": "lightgbm + h2gcn_local_deep",
+    "dataset0": 0.05849550382952312,
+    "data1": 0.03232312320211006,
+    "worst": 0.03232312320211006,
+    "new_genes": 0.024406729731685117,
+    "data1_pr_auc": 0.4042024048683956
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn_local_deep + deepset",
+    "dataset0": 0.07237454517362102,
+    "data1": 0.03191110651923479,
+    "worst": 0.03191110651923479,
+    "new_genes": 0.024691740804596296,
+    "data1_pr_auc": 0.4037903881855203
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn",
+    "dataset0": 0.0889768514265043,
+    "data1": 0.027854121729238956,
+    "worst": 0.027854121729238956,
+    "new_genes": 0.035926404556962,
+    "data1_pr_auc": 0.3997334033955245
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn_local",
+    "dataset0": 0.06183959908478037,
+    "data1": 0.027289261041618218,
+    "worst": 0.027289261041618218,
+    "new_genes": 0.018891305107176293,
+    "data1_pr_auc": 0.39916854270790375
+  },
+  {
+    "arm": "dataset0",
+    "members": "lightgbm + deepset",
+    "dataset0": 0.047086237511256235,
+    "data1": 0.02639616255071847,
+    "worst": 0.02639616255071847,
+    "new_genes": 0.019156693725254914,
+    "data1_pr_auc": 0.398275444217004
+  },
+  {
+    "arm": "dataset0",
+    "members": "h2gcn_local_deep",
+    "dataset0": 0.042337147609875114,
+    "data1": 0.0207525176812417,
+    "worst": 0.0207525176812417,
+    "new_genes": 0.02108793749756166,
+    "data1_pr_auc": 0.39263179934752723
+  },
+  {
+    "arm": "dataset0",
+    "members": "deepset",
+    "dataset0": 0.04535798282127518,
+    "data1": 0.01745459928214471,
+    "worst": 0.01745459928214471,
+    "new_genes": 0.016242641261581092,
+    "data1_pr_auc": 0.38933388094843024
+  },
+  {
+    "arm": "dataset0",
+    "members": "lightgbm",
+    "dataset0": 0.0,
+    "data1": 0.0,
+    "worst": 0.0,
+    "new_genes": 0.0,
+    "data1_pr_auc": 0.37187928166628553
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_aux + h2gcn_twohead x3 seeds",
+    "dataset0": 0.13232910487718053,
+    "data1": 0.06020978320195103,
+    "worst": 0.06020978320195103,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4518833990556263
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_aux + h2gcn_twohead x3 seeds",
+    "dataset0": 0.12877577917409122,
+    "data1": 0.0592274682709113,
+    "worst": 0.0592274682709113,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.45090108412458657
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_twohead + h2gcn_aux",
+    "dataset0": 0.12908789840654133,
+    "data1": 0.059004376076823906,
+    "worst": 0.059004376076823906,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4506779919304992
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_local + h2gcn_twohead x3 seeds",
+    "dataset0": 0.12920729972185951,
+    "data1": 0.05835021879777852,
+    "worst": 0.05835021879777852,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4500238346514538
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_twohead + h2gcn_aux + h2gcn_twohead x3 seeds",
+    "dataset0": 0.13169084306947654,
+    "data1": 0.05792864689712124,
+    "worst": 0.05792864689712124,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4496022627507965
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local + h2gcn_aux + h2gcn_twohead x3 seeds",
+    "dataset0": 0.11914742971887327,
+    "data1": 0.0576805038782891,
+    "worst": 0.0576805038782891,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4493541197319644
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_aux + h2gcn_twohead x3 seeds",
+    "dataset0": 0.11221701043507137,
+    "data1": 0.05687006251172361,
+    "worst": 0.05687006251172361,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4485436783653989
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_aux + deepset + h2gcn_twohead x3 seeds",
+    "dataset0": 0.12055231933378441,
+    "data1": 0.05676637058993694,
+    "worst": 0.05676637058993694,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4484399864436122
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_local + h2gcn_aux",
+    "dataset0": 0.11452092890889076,
+    "data1": 0.05665003009765501,
+    "worst": 0.05665003009765501,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4483236459513303
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_twohead + h2gcn_aux",
+    "dataset0": 0.12298325001613497,
+    "data1": 0.056552177918083146,
+    "worst": 0.056552177918083146,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4482257937717584
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_local + h2gcn_twohead",
+    "dataset0": 0.1251457480064767,
+    "data1": 0.05644391028689505,
+    "worst": 0.05644391028689505,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4481175261405703
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_aux",
+    "dataset0": 0.11846544384232283,
+    "data1": 0.056075382402433926,
+    "worst": 0.056075382402433926,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4477489982561092
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_aux + deepset",
+    "dataset0": 0.11575292457080932,
+    "data1": 0.05585365237541934,
+    "worst": 0.05585365237541934,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4475272682290946
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn + h2gcn_aux",
+    "dataset0": 0.10798384257266358,
+    "data1": 0.055787005578795346,
+    "worst": 0.055787005578795346,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4474606214324706
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local + h2gcn_twohead + h2gcn_aux",
+    "dataset0": 0.11501590619571134,
+    "data1": 0.055697944783576425,
+    "worst": 0.055697944783576425,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4473715606372517
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + deepset + h2gcn_twohead x3 seeds",
+    "dataset0": 0.12672446149188488,
+    "data1": 0.05568898665397026,
+    "worst": 0.05568898665397026,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.44736260250764553
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_local + h2gcn_twohead x3 seeds",
+    "dataset0": 0.11047802582390909,
+    "data1": 0.05531848122197908,
+    "worst": 0.05531848122197908,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.44699209707565435
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local + h2gcn_twohead x3 seeds",
+    "dataset0": 0.12183297247483882,
+    "data1": 0.05528757698222153,
+    "worst": 0.05528757698222153,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4469611928358968
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn + h2gcn_local",
+    "dataset0": 0.10717982539530202,
+    "data1": 0.05517185478702902,
+    "worst": 0.05517185478702902,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4468454706407043
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_local + deepset",
+    "dataset0": 0.11217391904915941,
+    "data1": 0.05503834480265579,
+    "worst": 0.05503834480265579,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.44671196065633106
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_twohead + h2gcn_aux",
+    "dataset0": 0.10953853210675357,
+    "data1": 0.055017296731756204,
+    "worst": 0.055017296731756204,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4466909125854315
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local + deepset + h2gcn_twohead x3 seeds",
+    "dataset0": 0.11626639656734872,
+    "data1": 0.054854762273290614,
+    "worst": 0.054854762273290614,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4465283781269659
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn + h2gcn_twohead x3 seeds",
+    "dataset0": 0.11647006520019121,
+    "data1": 0.054848907599093,
+    "worst": 0.054848907599093,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.44652252345276827
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_twohead + h2gcn_aux + deepset",
+    "dataset0": 0.11689367941895679,
+    "data1": 0.05480629274371357,
+    "worst": 0.05480629274371357,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.44647990859738884
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local + h2gcn_twohead + h2gcn_twohead x3 seeds",
+    "dataset0": 0.12670728645304974,
+    "data1": 0.0547062132675325,
+    "worst": 0.0547062132675325,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.44637982912120777
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_twohead + deepset",
+    "dataset0": 0.12304823625998607,
+    "data1": 0.05413075306988452,
+    "worst": 0.05413075306988452,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4458043689235598
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_local",
+    "dataset0": 0.1138339489055884,
+    "data1": 0.05395121885821663,
+    "worst": 0.05395121885821663,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4456248347118919
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn + h2gcn_twohead",
+    "dataset0": 0.11392344734082238,
+    "data1": 0.053641180406327926,
+    "worst": 0.053641180406327926,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4453147962600032
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_local + h2gcn_twohead",
+    "dataset0": 0.10698355838433715,
+    "data1": 0.05292188050506852,
+    "worst": 0.05292188050506852,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4445954963587438
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_twohead + deepset + h2gcn_twohead x3 seeds",
+    "dataset0": 0.12467112040864947,
+    "data1": 0.05237175682360051,
+    "worst": 0.05237175682360051,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4440453726772758
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local + h2gcn_twohead + deepset",
+    "dataset0": 0.11175812347665914,
+    "data1": 0.05217780664153343,
+    "worst": 0.05217780664153343,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4438514224952087
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_twohead + h2gcn_twohead x3 seeds",
+    "dataset0": 0.11502418808644077,
+    "data1": 0.05180165819431676,
+    "worst": 0.05180165819431676,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.44347527404799203
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local_deep + h2gcn_aux + h2gcn_twohead x3 seeds",
+    "dataset0": 0.11955589482204365,
+    "data1": 0.051620112369109294,
+    "worst": 0.051620112369109294,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.44329372822278457
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local + h2gcn_twohead",
+    "dataset0": 0.11446794236060953,
+    "data1": 0.0514401017328594,
+    "worst": 0.0514401017328594,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.44311371758653467
+  },
+  {
+    "arm": "pooled_both",
+    "members": "deepset + h2gcn_twohead x3 seeds",
+    "dataset0": 0.11818036918761776,
+    "data1": 0.05117285716156411,
+    "worst": 0.05117285716156411,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4428464730152394
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_twohead x3 seeds",
+    "dataset0": 0.1251868650854865,
+    "data1": 0.05074673686751263,
+    "worst": 0.05074673686751263,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4424203527211879
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_twohead + h2gcn_twohead x3 seeds",
+    "dataset0": 0.12580572037190219,
+    "data1": 0.05057274930805966,
+    "worst": 0.05057274930805966,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.44224636516173493
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_twohead + h2gcn_local_deep + h2gcn_aux",
+    "dataset0": 0.11690146239492905,
+    "data1": 0.05056012510426389,
+    "worst": 0.05056012510426389,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.44223374095793916
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_local_deep + h2gcn_twohead x3 seeds",
+    "dataset0": 0.12738454417220502,
+    "data1": 0.050231402778892764,
+    "worst": 0.050231402778892764,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.44190501863256804
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_local + h2gcn_local_deep",
+    "dataset0": 0.11151633408267381,
+    "data1": 0.050147379973363215,
+    "worst": 0.050147379973363215,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4418209958270385
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local + h2gcn_local_deep + h2gcn_twohead x3 seeds",
+    "dataset0": 0.11610462578230307,
+    "data1": 0.05008237599474136,
+    "worst": 0.05008237599474136,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.44175599184841663
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_local_deep + h2gcn_aux",
+    "dataset0": 0.11411673961507862,
+    "data1": 0.05000264638519658,
+    "worst": 0.05000264638519658,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.44167626223887185
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + deepset + h2gcn_twohead x3 seeds",
+    "dataset0": 0.10097413992855753,
+    "data1": 0.04978371913037499,
+    "worst": 0.04978371913037499,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.44145733498405026
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn + deepset",
+    "dataset0": 0.09785008595093458,
+    "data1": 0.049494708710786706,
+    "worst": 0.049494708710786706,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.441168324564462
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_twohead + h2gcn_local_deep",
+    "dataset0": 0.1252472978263962,
+    "data1": 0.049489272075331436,
+    "worst": 0.049489272075331436,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4411628879290067
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + deepset",
+    "dataset0": 0.10955918944766885,
+    "data1": 0.04927409893716417,
+    "worst": 0.04927409893716417,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.44094771479083944
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_local + h2gcn_aux",
+    "dataset0": 0.0835229037860038,
+    "data1": 0.04901709796234405,
+    "worst": 0.04901709796234405,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4406907138160193
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_local_deep + h2gcn_twohead x3 seeds",
+    "dataset0": 0.10733766019874458,
+    "data1": 0.04883172691067933,
+    "worst": 0.04883172691067933,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4405053427643546
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local + h2gcn_twohead + h2gcn_local_deep",
+    "dataset0": 0.11227926273336108,
+    "data1": 0.04854346703432494,
+    "worst": 0.04854346703432494,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4402170828880002
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_twohead + h2gcn_local_deep + h2gcn_twohead x3 seeds",
+    "dataset0": 0.1269741611375399,
+    "data1": 0.048436166738275,
+    "worst": 0.048436166738275,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.44010978259195027
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_twohead x3 seeds",
+    "dataset0": 0.12765730760194893,
+    "data1": 0.048378504110314524,
+    "worst": 0.048378504110314524,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4400521199639898
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local + h2gcn_aux + deepset",
+    "dataset0": 0.08755969473387393,
+    "data1": 0.04802082623443349,
+    "worst": 0.04802082623443349,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.43969444208810876
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local_deep + deepset + h2gcn_twohead x3 seeds",
+    "dataset0": 0.1161363296371265,
+    "data1": 0.04794677632438038,
+    "worst": 0.04794677632438038,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.43962039217805565
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_twohead + deepset",
+    "dataset0": 0.11162259458709978,
+    "data1": 0.047801059502237786,
+    "worst": 0.047801059502237786,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.43947467535591306
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn + h2gcn_local_deep",
+    "dataset0": 0.10297653891698066,
+    "data1": 0.047629895142021594,
+    "worst": 0.047629895142021594,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.43930351099569687
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_twohead",
+    "dataset0": 0.11943400457002995,
+    "data1": 0.04758389592882312,
+    "worst": 0.04758389592882312,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4392575117824984
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_twohead + deepset",
+    "dataset0": 0.09794223680170377,
+    "data1": 0.04735964070098242,
+    "worst": 0.04735964070098242,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4390332565546577
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_local_deep + deepset",
+    "dataset0": 0.11162018829333564,
+    "data1": 0.047357482712011234,
+    "worst": 0.047357482712011234,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4390310985656865
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_twohead x3 seeds",
+    "dataset0": 0.10147436480160699,
+    "data1": 0.047234284149258954,
+    "worst": 0.047234284149258954,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4389079000029342
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_twohead + h2gcn_local_deep",
+    "dataset0": 0.10504274885517584,
+    "data1": 0.047194498169294996,
+    "worst": 0.047194498169294996,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.43886811402297027
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_twohead + h2gcn_local_deep + deepset",
+    "dataset0": 0.11303905298760308,
+    "data1": 0.04674433238639647,
+    "worst": 0.04674433238639647,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.43841794824007174
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_twohead + h2gcn_twohead x3 seeds",
+    "dataset0": 0.12281966373296427,
+    "data1": 0.04643899617508018,
+    "worst": 0.04643899617508018,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.43811261202875545
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local + h2gcn_aux",
+    "dataset0": 0.08232655867230798,
+    "data1": 0.04566827677845786,
+    "worst": 0.04566827677845786,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.43734189263213313
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local_deep + h2gcn_twohead x3 seeds",
+    "dataset0": 0.11959598425224294,
+    "data1": 0.04545315892711205,
+    "worst": 0.04545315892711205,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4371267747807873
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_aux + deepset",
+    "dataset0": 0.0764216275612628,
+    "data1": 0.044639112033662276,
+    "worst": 0.044639112033662276,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.43631272788733755
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn",
+    "dataset0": 0.092788463048745,
+    "data1": 0.04456978167722275,
+    "worst": 0.04456978167722275,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.436243397530898
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_aux + deepset",
+    "dataset0": 0.08466139928732985,
+    "data1": 0.04452607506809586,
+    "worst": 0.04452607506809586,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.43619969092177113
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_twohead",
+    "dataset0": 0.09631067005823601,
+    "data1": 0.044317836410593725,
+    "worst": 0.044317836410593725,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.435991452264269
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_local_deep + h2gcn_aux",
+    "dataset0": 0.08245589789424179,
+    "data1": 0.04391416077072635,
+    "worst": 0.04391416077072635,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4355877766244016
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_aux",
+    "dataset0": 0.08113588697316376,
+    "data1": 0.043818358417889725,
+    "worst": 0.043818358417889725,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.435491974271565
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_twohead + h2gcn_local_deep",
+    "dataset0": 0.1153217848888003,
+    "data1": 0.04370050890561,
+    "worst": 0.04370050890561,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4353741247592853
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local + h2gcn_local_deep + h2gcn_aux",
+    "dataset0": 0.08748995223200295,
+    "data1": 0.04362134400599954,
+    "worst": 0.04362134400599954,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4352949598596748
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_local + h2gcn_local_deep",
+    "dataset0": 0.08099428616391846,
+    "data1": 0.04302334754976056,
+    "worst": 0.04302334754976056,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.43469696340343583
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_local + deepset",
+    "dataset0": 0.07360900687349359,
+    "data1": 0.04297293765193938,
+    "worst": 0.04297293765193938,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.43464655350561465
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_aux",
+    "dataset0": 0.07082772982576868,
+    "data1": 0.042550324122219096,
+    "worst": 0.042550324122219096,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.43422393997589437
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local_deep + h2gcn_aux + deepset",
+    "dataset0": 0.09028694895721545,
+    "data1": 0.042529459393274405,
+    "worst": 0.042529459393274405,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4342030752469497
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn + h2gcn_local_deep",
+    "dataset0": 0.1095718238072172,
+    "data1": 0.041931050037204654,
+    "worst": 0.041931050037204654,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4336046658908799
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local + h2gcn_local_deep + deepset",
+    "dataset0": 0.08602230645978282,
+    "data1": 0.04183443177941698,
+    "worst": 0.04183443177941698,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.43350804763309225
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_twohead seed 2",
+    "dataset0": 0.10656464173320923,
+    "data1": 0.04069524268423824,
+    "worst": 0.04069524268423824,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4323688585379135
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local + deepset",
+    "dataset0": 0.07552561271305813,
+    "data1": 0.040584163573754384,
+    "worst": 0.040584163573754384,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.43225777942742966
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_local",
+    "dataset0": 0.06668396710379942,
+    "data1": 0.03941005697904204,
+    "worst": 0.03941005697904204,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4310836728327173
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_twohead",
+    "dataset0": 0.10954402103772354,
+    "data1": 0.03939845301145645,
+    "worst": 0.03939845301145645,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4310720688651317
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local_deep + h2gcn_aux",
+    "dataset0": 0.08381976875122932,
+    "data1": 0.0387915984819206,
+    "worst": 0.0387915984819206,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.43046521433559587
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_local_deep + deepset",
+    "dataset0": 0.07327099673677795,
+    "data1": 0.03743279816510059,
+    "worst": 0.03743279816510059,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.42910641401877586
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local + h2gcn_local_deep",
+    "dataset0": 0.07770034342723364,
+    "data1": 0.03728324191768523,
+    "worst": 0.03728324191768523,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4289568577713605
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_twohead seed 1",
+    "dataset0": 0.10626997665395799,
+    "data1": 0.03687292166736239,
+    "worst": 0.03687292166736239,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.42854653752103766
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn",
+    "dataset0": 0.09808195271821285,
+    "data1": 0.03642775412676014,
+    "worst": 0.03642775412676014,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4281013699804354
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local",
+    "dataset0": 0.05753108663243334,
+    "data1": 0.03285032164235174,
+    "worst": 0.03285032164235174,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.424523937496027
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local_deep + deepset",
+    "dataset0": 0.07848952213453075,
+    "data1": 0.03284449747339235,
+    "worst": 0.03284449747339235,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.4245181133270676
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + h2gcn_local_deep",
+    "dataset0": 0.06255550289614475,
+    "data1": 0.030871863802353294,
+    "worst": 0.030871863802353294,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.42254547965602857
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm + deepset",
+    "dataset0": 0.0459369060592123,
+    "data1": 0.028594510395799966,
+    "worst": 0.028594510395799966,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.42026812624947524
+  },
+  {
+    "arm": "pooled_both",
+    "members": "deepset",
+    "dataset0": 0.04690190834678587,
+    "data1": 0.02023175346223649,
+    "worst": 0.02023175346223649,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.41190536931591176
+  },
+  {
+    "arm": "pooled_both",
+    "members": "h2gcn_local_deep",
+    "dataset0": 0.05211904263555989,
+    "data1": 0.016140996594939894,
+    "worst": 0.016140996594939894,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.40781461244861517
+  },
+  {
+    "arm": "pooled_both",
+    "members": "lightgbm",
+    "dataset0": 0.0,
+    "data1": 0.0,
+    "worst": 0.0,
+    "new_genes": NaN,
+    "data1_pr_auc": 0.39167361585367527
+  }
+]

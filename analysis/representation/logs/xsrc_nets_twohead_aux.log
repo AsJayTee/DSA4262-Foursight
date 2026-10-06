@@ -1,0 +1,78 @@
+start baseline
+start fit --model h2gcn_twohead_aux --fold 0 --arm pooled_both
+start fit --model h2gcn_twohead_aux --fold 1 --arm pooled_both
+start fit --model h2gcn_twohead_aux --fold 2 --arm pooled_both
+start fit --model h2gcn_twohead_aux --fold 3 --arm pooled_both
+done baseline
+start fit --model h2gcn_twohead_aux --fold 4 --arm pooled_both
+done fit --model h2gcn_twohead_aux --fold 4 --arm pooled_both
+done fit --model h2gcn_twohead_aux --fold 2 --arm pooled_both
+done fit --model h2gcn_twohead_aux --fold 1 --arm pooled_both
+done fit --model h2gcn_twohead_aux --fold 0 --arm pooled_both
+done fit --model h2gcn_twohead_aux --fold 3 --arm pooled_both
+loaded: dataset0 121,838 sites, data1 90,452
+
+Cross-source: h2gcn_twohead_aux (network) minus lightgbm_quantiles
+------------------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+pooled_both        +0.1136  [+0.0990, +0.1284]     +0.0450  [+0.0345, +0.0557]    +0.0793     +0.0450      yes
+Each row: h2gcn_twohead_aux (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): pooled_both.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+pooled_both           0.5859        0.4366             0.4723          0.3917
+
+vs deepset alone (same arms, same genes):
+  pooled_both  dataset0 +0.0667  data1 +0.0247  worst +0.0247
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
+wandb: Currently logged in as: jinthau-siah (dsa4262-team) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run 9xjxoykn
+wandb: Tracking run with wandb version 0.30.0
+wandb: Run data is saved locally in /mnt/sdd/DSA4262/wandb/run-20261003_142544-9xjxoykn
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run h2gcn_twohead_aux_nn__xsrc
+wandb: ⭐️ View project at https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: 🚀 View run at https://wandb.ai/dsa4262-team/dsa4262-project/runs/9xjxoykn
+wandb: updating run metadata; uploading artifact h2gcn_twohead_aux_nn__xsrc-report
+wandb: uploading artifact h2gcn_twohead_aux_nn__xsrc-report
+wandb: uploading requirements.txt; uploading wandb-summary.json; uploading config.yaml
+wandb: uploading history steps 0-7, summary
+wandb: 
+wandb: Run history:
+wandb:     curve/xsrc/arm/data1_gain ▁
+wandb:  curve/xsrc/arm/dataset0_gain ▁
+wandb:      curve/xsrc/arm/gain_mean ▁
+wandb:          curve/xsrc/arm/index ▁
+wandb:    curve/xsrc/diag/data1_gain ▁
+wandb: curve/xsrc/diag/dataset0_gain █▁▇▁▇▃▃
+wandb:    curve/xsrc/diag/veto_data1 ▁▁
+wandb: curve/xsrc/diag/veto_dataset0 ▁█
+wandb:    curve/xsrc/diag/y_equals_x ▁█
+wandb:  curve/xsrc/path/data1_pr_auc ▁
+wandb:                           +28 ...
+wandb: 
+wandb: Run summary:
+wandb:      vs_deepset/pooled_both/data1/gain 0.02473
+wandb:   vs_deepset/pooled_both/dataset0/gain 0.0667
+wandb:      vs_deepset/pooled_both/gain_worst 0.02473
+wandb:                          xsrc/eligible 1
+wandb:                         xsrc/gain_mean 0.07928
+wandb:                        xsrc/gain_worst 0.04496
+wandb: xsrc/pooled_both/data1/baseline_pr_auc 0.39167
+wandb:         xsrc/pooled_both/data1/ci_high 0.05571
+wandb:          xsrc/pooled_both/data1/ci_low 0.03445
+wandb:            xsrc/pooled_both/data1/gain 0.04496
+wandb:                                    +13 ...
+wandb: 
+wandb: 🚀 View run h2gcn_twohead_aux_nn__xsrc at: https://wandb.ai/dsa4262-team/dsa4262-project/runs/9xjxoykn
+wandb: ⭐️ View project at: https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: Synced 4 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20261003_142544-9xjxoykn/logs
+  logged to W&B: https://wandb.ai/dsa4262-team/dsa4262-project/runs/9xjxoykn
+h2gcn_twohead_aux: worst +0.0450  mean +0.0793  -> /mnt/sdd/DSA4262/analysis/representation/results/h2gcn_twohead_aux_nn__xsrc.json
+finished
