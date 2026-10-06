@@ -1,0 +1,60 @@
+folding 6,278 transcripts with 62 processes ...
+  1,000 folded
+  2,000 folded
+  3,000 folded
+  4,000 folded
+  5,000 folded
+  6,000 folded
+
+dataset0 (cell line 1): positive rate by predicted unpaired probability of the A (quintiles)
+                                  mean   size    lift
+unpaired bin                                         
+(-0.0007030000000000001, 0.26]  0.0451  24216  1.0015
+(0.26, 0.512]                   0.0462  24216  1.0262
+(0.512, 0.733]                  0.0466  24215  1.0355
+(0.733, 0.897]                  0.0458  24216  1.0189
+(0.897, 1.0]                    0.0413  24216  0.9179
+
+data1 (cell line 2): positive rate by predicted unpaired probability of the A (quintiles)
+                                   mean   size    lift
+unpaired bin                                          
+(-0.0007030000000000001, 0.267]  0.0729  18005  1.0050
+(0.267, 0.527]                   0.0768  18004  1.0595
+(0.527, 0.747]                   0.0774  18005  1.0678
+(0.747, 0.905]                   0.0716  18003  0.9875
+(0.905, 1.0]                     0.0638  18004  0.8802
+
+Co-modification beyond the transcript expectation, fold-linked vs unlinked pairs:
+                                                       data   tau       band  linked pairs  unlinked pairs  linked local  unlinked local  linked / unlinked  ci_lo  ci_hi
+                                     dataset0 (cell line 1) 0.100   25-50 nt          8042           48315         2.105           2.095              1.005  0.852  1.174
+                                     dataset0 (cell line 1) 0.100  50-100 nt          6823          102176         1.836           1.881              0.976  0.780  1.183
+                                     dataset0 (cell line 1) 0.100 100-200 nt          6617          197845         1.419           1.469              0.966  0.763  1.223
+                                     dataset0 (cell line 1) 0.100 200-400 nt         11316          344705         1.088           1.117              0.974  0.736  1.183
+                                     dataset0 (cell line 1) 0.300   25-50 nt          4049           52308         1.755           2.127              0.825  0.578  1.067
+                                     dataset0 (cell line 1) 0.300  50-100 nt          3267          105732         1.715           1.883              0.911  0.619  1.196
+                                     dataset0 (cell line 1) 0.300 100-200 nt          2684          201778         1.702           1.464              1.163  0.775  1.524
+                                     dataset0 (cell line 1) 0.300 200-400 nt          3725          352296         0.991           1.118              0.887  0.589  1.223
+dataset0 (cell line 1), both sites >=100 nt from a junction 0.100   25-50 nt          3209           18954         3.001           2.815              1.066  0.881  1.285
+dataset0 (cell line 1), both sites >=100 nt from a junction 0.100  50-100 nt          2612           38155         2.314           2.602              0.889  0.708  1.099
+dataset0 (cell line 1), both sites >=100 nt from a junction 0.100 100-200 nt          2170           68555         1.803           2.032              0.887  0.670  1.115
+dataset0 (cell line 1), both sites >=100 nt from a junction 0.100 200-400 nt          3423          106821         1.547           1.626              0.951  0.735  1.220
+dataset0 (cell line 1), both sites >=100 nt from a junction 0.300   25-50 nt          1630           20533         2.479           2.871              0.863  0.586  1.160
+dataset0 (cell line 1), both sites >=100 nt from a junction 0.300  50-100 nt          1280           39487         2.399           2.589              0.927  0.694  1.239
+dataset0 (cell line 1), both sites >=100 nt from a junction 0.300 100-200 nt           926           69799         2.212           2.022              1.094  0.669  1.597
+dataset0 (cell line 1), both sites >=100 nt from a junction 0.300 200-400 nt          1097          109147         1.507           1.625              0.928  0.581  1.316
+                                        data1 (cell line 2) 0.100   25-50 nt          5814           34356         2.320           1.964              1.182  0.987  1.422
+                                        data1 (cell line 2) 0.100  50-100 nt          4877           73313         2.251           1.692              1.330  1.081  1.645
+                                        data1 (cell line 2) 0.100 100-200 nt          4679          139278         1.439           1.341              1.073  0.802  1.338
+                                        data1 (cell line 2) 0.100 200-400 nt          8099          240306         1.230           1.012              1.215  0.991  1.534
+                                        data1 (cell line 2) 0.300   25-50 nt          2953           37217         1.908           2.021              0.944  0.737  1.161
+                                        data1 (cell line 2) 0.300  50-100 nt          2289           75901         2.229           1.712              1.302  0.969  1.658
+                                        data1 (cell line 2) 0.300 100-200 nt          1873          142084         1.504           1.342              1.121  0.701  1.502
+                                        data1 (cell line 2) 0.300 200-400 nt          2709          245696         1.050           1.019              1.030  0.702  1.419
+   data1 (cell line 2), both sites >=100 nt from a junction 0.100   25-50 nt          2033           11814         3.876           2.823              1.373  1.115  1.676
+   data1 (cell line 2), both sites >=100 nt from a junction 0.100  50-100 nt          1619           23524         3.683           2.492              1.478  1.172  1.884
+   data1 (cell line 2), both sites >=100 nt from a junction 0.100 100-200 nt          1271           39982         2.170           1.943              1.117  0.828  1.433
+   data1 (cell line 2), both sites >=100 nt from a junction 0.100 200-400 nt          1972           59080         1.527           1.456              1.048  0.780  1.258
+   data1 (cell line 2), both sites >=100 nt from a junction 0.300   25-50 nt          1082           12765         2.955           2.963              0.997  0.700  1.328
+   data1 (cell line 2), both sites >=100 nt from a junction 0.300  50-100 nt           766           24377         3.359           2.540              1.322  0.991  1.772
+   data1 (cell line 2), both sites >=100 nt from a junction 0.300 100-200 nt           484           40769         2.157           1.948              1.107  0.689  1.694
+   data1 (cell line 2), both sites >=100 nt from a junction 0.300 200-400 nt           664           60388         0.923           1.464              0.631  0.316  1.032
