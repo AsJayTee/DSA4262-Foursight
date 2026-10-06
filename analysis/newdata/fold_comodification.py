@@ -78,7 +78,15 @@ def read_cdna(wanted: set[str]) -> dict[str, str]:
     return seqs
 
 
-def fold(item: tuple[str, str, list[int]]) -> tuple[str, dict, dict]:
+def init_worker(predictor: str, lp_bin: str) -> None:
+    """Workers get the predictor explicitly. Python 3.14 starts pool workers
+    fresh (forkserver) rather than forking, so a global set in main() is NOT
+    inherited - which silently ran RNAplfold for a "linearpartition" run once."""
+    global PREDICTOR, LP_BIN
+    PREDICTOR, LP_BIN = predictor, lp_bin
+
+
+def fold(item: tuple[str, str, list[int]]) -> tuple[str, str, dict, dict]:
     """RNAplfold one transcript. Returns, for its site positions (0-based A),
     the max pair probability between every two sites' windows, and each A's
     unpaired probability."""
@@ -87,7 +95,7 @@ def fold(item: tuple[str, str, list[int]]) -> tuple[str, dict, dict]:
         pairs, unpaired = fold_linearpartition(seq, sites)
     else:
         pairs, unpaired = fold_rnaplfold(seq)
-    return tid, *site_links(pairs, unpaired, sites)
+    return tid, PREDICTOR, *site_links(pairs, unpaired, sites)
 
 
 def fold_linearpartition(seq: str, sites: list[int]):
@@ -226,8 +234,10 @@ def main() -> None:
     items = [(t, cdna[t], list(map(int, s))) for t, s in by_tx.items() if t in cdna and len(s) >= 1]
     print(f"folding {len(items):,} transcripts with {PREDICTOR}, {args.jobs} processes ...", flush=True)
     links, unpaired = {}, {}
-    with Pool(args.jobs) as pool:
-        for i, (t, L, U) in enumerate(pool.imap_unordered(fold, items, chunksize=4)):
+    with Pool(args.jobs, initializer=init_worker, initargs=(PREDICTOR, LP_BIN)) as pool:
+        for i, (t, used, L, U) in enumerate(pool.imap_unordered(fold, items, chunksize=4)):
+            if used != PREDICTOR:
+                raise SystemExit(f"A worker folded {t} with {used}, not {PREDICTOR} - aborting.")
             links[t] = L
             unpaired.update({(t, s): u for s, u in U.items()})
             if (i + 1) % 1000 == 0:
