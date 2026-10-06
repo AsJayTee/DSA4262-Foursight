@@ -188,6 +188,13 @@ class GraphNet(nn.Module):
             self._aux_logit = self.aux_head(s).squeeze(-1)
         delta = (pos[:, None] - pos[None, :]).abs()
         adj = (gid[:, None] == gid[None, :]) & (delta <= self.window)
+        # Analysis only (band_ablation.py): score a trained network with neighbours
+        # limited to a distance band. Never set during training.
+        if getattr(self, "min_window", 0):
+            adj = adj & (delta > self.min_window)
+        if getattr(self, "drop_band", None):
+            lo, hi = self.drop_band
+            adj = adj & ~((delta > lo) & (delta <= hi))
         adj.fill_diagonal_(False)
         deg = adj.sum(1, keepdim=True).float()
         count = torch.zeros(n_graphs).index_add_(0, gid, torch.ones(len(gid)))[gid].unsqueeze(1)
