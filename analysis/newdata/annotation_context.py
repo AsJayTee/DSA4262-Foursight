@@ -164,7 +164,7 @@ def main() -> None:
             best = (offset, ok, n)
     offset, ok, n = best
     print(f"release {args.release}: {len(cdna):,}/{len(wanted):,} transcripts in cDNA; 7-mer matches "
-          f"{ok / n:.1%} with the site's A at index {-offset + 3} of the 7-mer window", flush=True)
+          f"{ok / n:.1%} with the window starting {-offset} nt before the site (its A is the 7-mer's centre, index 3)", flush=True)
     if ok / n < 0.95:
         raise SystemExit(f"Only {ok / n:.1%} of 7-mers match release {args.release}: wrong release. "
                          "Try another --release.")
