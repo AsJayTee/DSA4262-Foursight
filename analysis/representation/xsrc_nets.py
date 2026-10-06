@@ -78,6 +78,11 @@ GRAPH_VARIANTS = {
     # Richer read pooling on h2gcn_aux (2026-10-04): quantiles; quantiles + modified fraction
     "h2gcn_aux_q": {"window": 50, "transcript": False, "aux": 0.5, "pool": "quantile"},
     "h2gcn_aux_qf": {"window": 50, "transcript": False, "aux": 0.5, "pool": "quantile", "frac": True},
+    # Radius test (2026-10-06): h2gcn_aux with only the neighbour radius changed,
+    # to separate "a wider radius helps" from the transcript node's effect.
+    "h2gcn_aux_r100": {"window": 100, "transcript": False, "aux": 0.5},
+    "h2gcn_aux_r200": {"window": 200, "transcript": False, "aux": 0.5},
+    "h2gcn_aux_r400": {"window": 400, "transcript": False, "aux": 0.5},
 }
 GRAPH_MODELS = {**{k: {"kind": k} for k in graph.KINDS},
                 **{k: {"kind": "h2gcn", **v} for k, v in GRAPH_VARIANTS.items()}}
@@ -85,7 +90,8 @@ GRAPH_MODELS = {**{k: {"kind": k} for k in graph.KINDS},
 MODEL_ARMS = {"h2gcn_twohead": ("pooled_both",), "h2gcn_noisy": ("pooled_both",),
               "h2gcn_noisy2": ("pooled_both",), "h2gcn_local_twohead": ("pooled_both",),
               "h2gcn_twohead_aux": ("pooled_both",), "h2gcn_aux_q": ("pooled_both",),
-              "h2gcn_aux_qf": ("pooled_both",)}
+              "h2gcn_aux_qf": ("pooled_both",), "h2gcn_aux_r100": ("pooled_both",),
+              "h2gcn_aux_r200": ("pooled_both",), "h2gcn_aux_r400": ("pooled_both",)}
 # --arms: restrict every model to some arms (the seed runs train only the arm that ships).
 ARMS_OVERRIDE: tuple | None = None
 # --seed: 0 is the run every W&B row comes from; other seeds change only the
