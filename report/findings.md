@@ -39,6 +39,10 @@ Terms used throughout:
 9. [Leaderboard submission](#9-leaderboard-submission)
 10. [Caveats to state in the report](#10-caveats)
 11. [Suggested report figures](#11-suggested-figures)
+12. [Appendix: full tables](#appendix-full-tables) - every band, cell line,
+    threshold and bin for the clustering-by-distance (A), neighbours-per-radius
+    (B), 400-nt band-use (C), position-on-transcript (D) and RNA-folding (E)
+    analyses, generated from the result files
 
 ---
 
@@ -491,3 +495,340 @@ scores (the model trained on these labels): dataset0 PR AUC 0.665 / ROC AUC
    (section 7).
 8. Gain by neighbour status, and the depth-asymmetry curves (section 8).
 9. data2 dose-response: mean score vs fraction modified.
+
+---
+
+## Appendix: full tables
+
+Generated directly from the result files named under each table (no
+hand-copying). Section numbers refer to the summaries above.
+
+
+### A. Co-modification by distance band (section 5A)
+
+Positive-positive site pairs on the same transcript, relative to the file's overall rate (total), split into the part explained by positive-rich transcripts (transcript-level) and the rest (local). Source: `analysis/newdata/distance_bands.py` -> `distance_bands/bands.csv`.
+
+
+**dataset0 (cell line 1), all sites**
+
+| band | pairs | total enrichment | transcript-level part | local part | local 95% low | local 95% high |
+|---|---|---|---|---|---|---|
+| 1-25 nt | 49209 | 7.447 | 3.383 | 2.201 | 2.041 | 2.376 |
+| 25-50 nt | 56749 | 6.946 | 3.309 | 2.099 | 1.901 | 2.258 |
+| 50-100 nt | 109632 | 6.143 | 3.271 | 1.878 | 1.757 | 1.987 |
+| 100-200 nt | 205612 | 4.771 | 3.258 | 1.464 | 1.388 | 1.556 |
+| 200-400 nt | 357940 | 3.539 | 3.178 | 1.114 | 1.051 | 1.178 |
+| 400-800 nt | 528014 | 2.381 | 2.974 | 0.801 | 0.747 | 0.858 |
+| 800-1600 nt | 535586 | 1.726 | 2.765 | 0.624 | 0.536 | 0.705 |
+
+**data1 (cell line 2), all sites**
+
+| band | pairs | total enrichment | transcript-level part | local part | local 95% low | local 95% high |
+|---|---|---|---|---|---|---|
+| 1-25 nt | 35186 | 4.534 | 2.127 | 2.132 | 1.964 | 2.293 |
+| 25-50 nt | 40576 | 4.072 | 2.039 | 1.997 | 1.847 | 2.160 |
+| 50-100 nt | 78864 | 3.536 | 2.044 | 1.730 | 1.627 | 1.825 |
+| 100-200 nt | 145148 | 2.712 | 2.022 | 1.341 | 1.278 | 1.399 |
+| 200-400 nt | 250421 | 1.956 | 1.923 | 1.017 | 0.970 | 1.061 |
+| 400-800 nt | 358084 | 1.340 | 1.821 | 0.736 | 0.689 | 0.783 |
+| 800-1600 nt | 335991 | 1.178 | 1.665 | 0.708 | 0.646 | 0.774 |
+
+**shared sites, cell line 1 labels**
+
+| band | pairs | total enrichment | transcript-level part | local part | local 95% low | local 95% high |
+|---|---|---|---|---|---|---|
+| 1-25 nt | 26511 | 6.961 | 3.058 | 2.276 | 2.044 | 2.492 |
+| 25-50 nt | 30688 | 6.409 | 2.884 | 2.222 | 2.003 | 2.467 |
+| 50-100 nt | 59260 | 5.621 | 2.949 | 1.906 | 1.757 | 2.029 |
+| 100-200 nt | 108948 | 3.960 | 2.926 | 1.353 | 1.264 | 1.430 |
+| 200-400 nt | 185689 | 2.810 | 2.852 | 0.985 | 0.915 | 1.047 |
+| 400-800 nt | 259816 | 1.921 | 2.680 | 0.717 | 0.654 | 0.787 |
+| 800-1600 nt | 232755 | 1.656 | 2.519 | 0.657 | 0.554 | 0.761 |
+
+**shared sites, cell line 2 labels**
+
+| band | pairs | total enrichment | transcript-level part | local part | local 95% low | local 95% high |
+|---|---|---|---|---|---|---|
+| 1-25 nt | 26511 | 4.428 | 2.153 | 2.056 | 1.866 | 2.211 |
+| 25-50 nt | 30688 | 4.070 | 2.055 | 1.981 | 1.805 | 2.134 |
+| 50-100 nt | 59260 | 3.478 | 2.053 | 1.694 | 1.588 | 1.793 |
+| 100-200 nt | 108948 | 2.626 | 2.021 | 1.299 | 1.238 | 1.363 |
+| 200-400 nt | 185689 | 1.871 | 1.917 | 0.976 | 0.920 | 1.025 |
+| 400-800 nt | 259816 | 1.315 | 1.789 | 0.735 | 0.687 | 0.780 |
+| 800-1600 nt | 232755 | 1.072 | 1.564 | 0.686 | 0.611 | 0.774 |
+
+### B. Neighbours within each radius (section 5B)
+
+Other candidate sites on the same transcript within the radius. Source: `distance_bands/neighbours.csv`.
+
+| data | radius | no neighbours | 1 neighbour | 2+ neighbours | median | mean |
+|---|---|---|---|---|---|---|
+| dataset0 | 25 | 42% | 38% | 21% | 1.00 | 0.84 |
+| dataset0 | 50 | 17% | 29% | 54% | 2.00 | 1.77 |
+| dataset0 | 100 | 4% | 11% | 85% | 3.00 | 3.57 |
+| dataset0 | 200 | 1% | 2% | 97% | 7.00 | 6.94 |
+| dataset0 | 400 | 0% | 0% | 99% | 13.00 | 12.81 |
+| data1 | 25 | 43% | 37% | 19% | 1.00 | 0.81 |
+| data1 | 50 | 19% | 30% | 51% | 2.00 | 1.70 |
+| data1 | 100 | 5% | 12% | 83% | 3.00 | 3.44 |
+| data1 | 200 | 1% | 3% | 96% | 6.00 | 6.63 |
+| data1 | 400 | 0% | 0% | 99% | 12.00 | 12.14 |
+
+### C. What the trained 400-nt model uses (section 5C)
+
+`h2gcn_aux_r400` (seed 0) rescored with neighbours restricted at prediction time: `all` as trained; `none`; `only a-b` keeps only neighbours a < d <= b nt away; `drop a-b` removes them. Out of fold, both training arms. Source: `analysis/representation/band_ablation.py` -> `results/band_ablation.csv`.
+
+| trained on | neighbours | PR AUC on dataset0 | PR AUC on data1 |
+|---|---|---|---|
+| dataset0 | all | 0.5840 | 0.4042 |
+| dataset0 | none | 0.3464 | 0.2792 |
+| dataset0 | only 0-50 | 0.4965 | 0.3834 |
+| dataset0 | only 50-100 | 0.4998 | 0.3703 |
+| dataset0 | only 100-200 | 0.5392 | 0.3859 |
+| dataset0 | only 200-400 | 0.5551 | 0.3875 |
+| dataset0 | drop 0-50 | 0.5803 | 0.3998 |
+| dataset0 | drop 50-100 | 0.5792 | 0.4023 |
+| dataset0 | drop 100-200 | 0.5771 | 0.4007 |
+| dataset0 | drop 200-400 | 0.5702 | 0.4048 |
+| pooled_both | all | 0.5847 | 0.4244 |
+| pooled_both | none | 0.4219 | 0.3439 |
+| pooled_both | only 0-50 | 0.5087 | 0.4014 |
+| pooled_both | only 50-100 | 0.5073 | 0.3909 |
+| pooled_both | only 100-200 | 0.5386 | 0.4002 |
+| pooled_both | only 200-400 | 0.5462 | 0.3974 |
+| pooled_both | drop 0-50 | 0.5761 | 0.4159 |
+| pooled_both | drop 50-100 | 0.5804 | 0.4208 |
+| pooled_both | drop 100-200 | 0.5763 | 0.4213 |
+| pooled_both | drop 200-400 | 0.5743 | 0.4252 |
+
+### D. Position on the transcript (section 6)
+
+Positive rate, lift relative to each cell line's average, and number of sites, per bin. Ensembl 91 transcript coordinates. Source: `analysis/newdata/annotation_context.py` -> `annotation_context/*.csv`.
+
+
+**Distance from the modified A to the nearest exon-exon junction (nt)**
+
+| bin | positive rate (cell line 2) | positive rate (cell line 1) | lift vs file rate (cell line 2) | lift vs file rate (cell line 1) | sites (cell line 2) | sites (cell line 1) |
+|---|---|---|---|---|---|---|
+| [0, 25) | 0.020 | 0.005 | 0.279 | 0.101 | 19569 | 24350 |
+| [25, 50) | 0.030 | 0.006 | 0.411 | 0.129 | 16704 | 21045 |
+| [50, 100) | 0.052 | 0.026 | 0.723 | 0.585 | 13779 | 17468 |
+| [100, 200) | 0.157 | 0.117 | 2.166 | 2.595 | 8185 | 9948 |
+| [200, 400) | 0.175 | 0.129 | 2.413 | 2.872 | 9116 | 11623 |
+| [400, 1000000000) | 0.091 | 0.054 | 1.250 | 1.192 | 19110 | 33196 |
+
+**Exon the site sits in**
+
+| bin | positive rate (cell line 2) | positive rate (cell line 1) | lift vs file rate (cell line 2) | lift vs file rate (cell line 1) | sites (cell line 2) | sites (cell line 1) |
+|---|---|---|---|---|---|---|
+| first | 0.042 | 0.045 | 0.572 | 1.002 | 4237 | 4351 |
+| internal | 0.030 | 0.011 | 0.414 | 0.254 | 42366 | 54120 |
+| last | 0.120 | 0.073 | 1.654 | 1.624 | 39860 | 59159 |
+| single | 0.191 | 0.223 | 2.626 | 4.961 | 1878 | 1552 |
+
+**Length of that exon (nt)**
+
+| bin | positive rate (cell line 2) | positive rate (cell line 1) | lift vs file rate (cell line 2) | lift vs file rate (cell line 1) | sites (cell line 2) | sites (cell line 1) |
+|---|---|---|---|---|---|---|
+| [0, 200) | 0.024 | 0.004 | 0.336 | 0.080 | 37374 | 46906 |
+| [200, 400) | 0.063 | 0.034 | 0.869 | 0.765 | 11094 | 13125 |
+| [400, 800) | 0.148 | 0.111 | 2.037 | 2.464 | 11142 | 12563 |
+| [800, 1600) | 0.125 | 0.090 | 1.717 | 1.993 | 13254 | 18187 |
+| [1600, 1000000000) | 0.109 | 0.065 | 1.495 | 1.438 | 15477 | 28401 |
+
+**Transcript region**
+
+| bin | positive rate (cell line 2) | positive rate (cell line 1) | lift vs file rate (cell line 2) | lift vs file rate (cell line 1) | sites (cell line 2) | sites (cell line 1) |
+|---|---|---|---|---|---|---|
+| 3'UTR | 0.110 | 0.064 | 1.511 | 1.414 | 31455 | 47989 |
+| 5'UTR | 0.046 | 0.042 | 0.631 | 0.930 | 2489 | 2680 |
+| CDS | 0.052 | 0.031 | 0.713 | 0.701 | 48848 | 62590 |
+| noncoding | 0.090 | 0.058 | 1.236 | 1.285 | 5549 | 5923 |
+
+**Distance to the stop codon (nt; negative = coding sequence)**
+
+| bin | positive rate (cell line 2) | positive rate (cell line 1) | lift vs file rate (cell line 2) | lift vs file rate (cell line 1) | sites (cell line 2) | sites (cell line 1) |
+|---|---|---|---|---|---|---|
+| [-1000, -900) | 0.033 | 0.030 | 0.456 | 0.678 | 2056 | 2625 |
+| [-900, -800) | 0.042 | 0.027 | 0.576 | 0.603 | 2414 | 3024 |
+| [-800, -700) | 0.037 | 0.018 | 0.504 | 0.401 | 2735 | 3496 |
+| [-700, -600) | 0.032 | 0.023 | 0.447 | 0.521 | 3208 | 4182 |
+| [-600, -500) | 0.031 | 0.020 | 0.428 | 0.455 | 3793 | 4945 |
+| [-500, -400) | 0.041 | 0.023 | 0.563 | 0.520 | 4501 | 5608 |
+| [-400, -300) | 0.052 | 0.026 | 0.712 | 0.588 | 5029 | 6280 |
+| [-300, -200) | 0.055 | 0.031 | 0.756 | 0.689 | 5703 | 6909 |
+| [-200, -100) | 0.057 | 0.039 | 0.788 | 0.870 | 6047 | 7493 |
+| [-100, 0) | 0.112 | 0.073 | 1.544 | 1.625 | 6164 | 7764 |
+| [0, 100) | 0.175 | 0.121 | 2.404 | 2.682 | 6015 | 7419 |
+| [100, 200) | 0.170 | 0.118 | 2.346 | 2.626 | 4409 | 5635 |
+| [200, 300) | 0.124 | 0.088 | 1.704 | 1.960 | 3363 | 4531 |
+| [300, 400) | 0.097 | 0.064 | 1.338 | 1.413 | 2686 | 3795 |
+| [400, 500) | 0.103 | 0.057 | 1.412 | 1.261 | 2282 | 3212 |
+| [500, 600) | 0.067 | 0.039 | 0.919 | 0.858 | 1888 | 2853 |
+| [600, 700) | 0.062 | 0.043 | 0.848 | 0.962 | 1624 | 2499 |
+| [700, 800) | 0.060 | 0.031 | 0.823 | 0.694 | 1356 | 2181 |
+| [800, 900) | 0.065 | 0.031 | 0.898 | 0.694 | 1197 | 1925 |
+| [900, 1000) | 0.057 | 0.028 | 0.788 | 0.622 | 926 | 1646 |
+
+### E. RNA folding test, every threshold and stratum (section 7)
+
+Co-modification of fold-linked vs unlinked site pairs at the same distance, each relative to the within-transcript expectation; `linked / unlinked` with a 95% interval from resampling transcripts. tau = minimum predicted pairing probability between the two sites' +-5 nt windows. Sources: `analysis/newdata/fold_comodification.py` -> `fold_comodification/` (RNAplfold, W 480, L 400) and `fold_comodification_linearpartition/` (LinearPartition -V, global).
+
+
+**RNAplfold - dataset0 (cell line 1)**
+
+| tau | band | linked pairs | unlinked pairs | linked local | unlinked local | linked / unlinked | 95% low | 95% high |
+|---|---|---|---|---|---|---|---|---|
+| 0.100 | 25-50 nt | 8042 | 48315 | 2.105 | 2.095 | 1.005 | 0.852 | 1.174 |
+| 0.100 | 50-100 nt | 6823 | 102176 | 1.836 | 1.881 | 0.976 | 0.780 | 1.183 |
+| 0.100 | 100-200 nt | 6617 | 197845 | 1.419 | 1.469 | 0.966 | 0.763 | 1.223 |
+| 0.100 | 200-400 nt | 11316 | 344705 | 1.088 | 1.117 | 0.974 | 0.736 | 1.183 |
+| 0.300 | 25-50 nt | 4049 | 52308 | 1.755 | 2.127 | 0.825 | 0.578 | 1.067 |
+| 0.300 | 50-100 nt | 3267 | 105732 | 1.715 | 1.883 | 0.911 | 0.619 | 1.196 |
+| 0.300 | 100-200 nt | 2684 | 201778 | 1.702 | 1.464 | 1.163 | 0.775 | 1.524 |
+| 0.300 | 200-400 nt | 3725 | 352296 | 0.991 | 1.118 | 0.887 | 0.589 | 1.223 |
+
+**RNAplfold - dataset0 (cell line 1), both sites >=100 nt from a junction**
+
+| tau | band | linked pairs | unlinked pairs | linked local | unlinked local | linked / unlinked | 95% low | 95% high |
+|---|---|---|---|---|---|---|---|---|
+| 0.100 | 25-50 nt | 3209 | 18954 | 3.001 | 2.815 | 1.066 | 0.881 | 1.285 |
+| 0.100 | 50-100 nt | 2612 | 38155 | 2.314 | 2.602 | 0.889 | 0.708 | 1.099 |
+| 0.100 | 100-200 nt | 2170 | 68555 | 1.803 | 2.032 | 0.887 | 0.670 | 1.115 |
+| 0.100 | 200-400 nt | 3423 | 106821 | 1.547 | 1.626 | 0.951 | 0.735 | 1.220 |
+| 0.300 | 25-50 nt | 1630 | 20533 | 2.479 | 2.871 | 0.863 | 0.586 | 1.160 |
+| 0.300 | 50-100 nt | 1280 | 39487 | 2.399 | 2.589 | 0.927 | 0.694 | 1.239 |
+| 0.300 | 100-200 nt | 926 | 69799 | 2.212 | 2.022 | 1.094 | 0.669 | 1.597 |
+| 0.300 | 200-400 nt | 1097 | 109147 | 1.507 | 1.625 | 0.928 | 0.581 | 1.316 |
+
+**RNAplfold - data1 (cell line 2)**
+
+| tau | band | linked pairs | unlinked pairs | linked local | unlinked local | linked / unlinked | 95% low | 95% high |
+|---|---|---|---|---|---|---|---|---|
+| 0.100 | 25-50 nt | 5814 | 34356 | 2.320 | 1.964 | 1.182 | 0.987 | 1.422 |
+| 0.100 | 50-100 nt | 4877 | 73313 | 2.251 | 1.692 | 1.330 | 1.081 | 1.645 |
+| 0.100 | 100-200 nt | 4679 | 139278 | 1.439 | 1.341 | 1.073 | 0.802 | 1.338 |
+| 0.100 | 200-400 nt | 8099 | 240306 | 1.230 | 1.012 | 1.215 | 0.991 | 1.534 |
+| 0.300 | 25-50 nt | 2953 | 37217 | 1.908 | 2.021 | 0.944 | 0.737 | 1.161 |
+| 0.300 | 50-100 nt | 2289 | 75901 | 2.229 | 1.712 | 1.302 | 0.969 | 1.658 |
+| 0.300 | 100-200 nt | 1873 | 142084 | 1.504 | 1.342 | 1.121 | 0.701 | 1.502 |
+| 0.300 | 200-400 nt | 2709 | 245696 | 1.050 | 1.019 | 1.030 | 0.702 | 1.419 |
+
+**RNAplfold - data1 (cell line 2), both sites >=100 nt from a junction**
+
+| tau | band | linked pairs | unlinked pairs | linked local | unlinked local | linked / unlinked | 95% low | 95% high |
+|---|---|---|---|---|---|---|---|---|
+| 0.100 | 25-50 nt | 2033 | 11814 | 3.876 | 2.823 | 1.373 | 1.115 | 1.676 |
+| 0.100 | 50-100 nt | 1619 | 23524 | 3.683 | 2.492 | 1.478 | 1.172 | 1.884 |
+| 0.100 | 100-200 nt | 1271 | 39982 | 2.170 | 1.943 | 1.117 | 0.828 | 1.433 |
+| 0.100 | 200-400 nt | 1972 | 59080 | 1.527 | 1.456 | 1.048 | 0.780 | 1.258 |
+| 0.300 | 25-50 nt | 1082 | 12765 | 2.955 | 2.963 | 0.997 | 0.700 | 1.328 |
+| 0.300 | 50-100 nt | 766 | 24377 | 3.359 | 2.540 | 1.322 | 0.991 | 1.772 |
+| 0.300 | 100-200 nt | 484 | 40769 | 2.157 | 1.948 | 1.107 | 0.689 | 1.694 |
+| 0.300 | 200-400 nt | 664 | 60388 | 0.923 | 1.464 | 0.631 | 0.316 | 1.032 |
+
+**RNAplfold - positive rate by predicted unpaired probability of the A (quintiles)**
+
+
+cell line 1
+
+| unpaired bin | positive rate | sites | lift |
+|---|---|---|---|
+| (-0.0007030000000000001, 0.26] | 0.0451 | 24216 | 1.0015 |
+| (0.26, 0.512] | 0.0462 | 24216 | 1.0262 |
+| (0.512, 0.733] | 0.0466 | 24215 | 1.0355 |
+| (0.733, 0.897] | 0.0458 | 24216 | 1.0189 |
+| (0.897, 1.0] | 0.0413 | 24216 | 0.9179 |
+
+cell line 2
+
+| unpaired bin | positive rate | sites | lift |
+|---|---|---|---|
+| (-0.0007030000000000001, 0.267] | 0.0729 | 18005 | 1.0050 |
+| (0.267, 0.527] | 0.0768 | 18004 | 1.0595 |
+| (0.527, 0.747] | 0.0774 | 18005 | 1.0678 |
+| (0.747, 0.905] | 0.0716 | 18003 | 0.9875 |
+| (0.905, 1.0] | 0.0638 | 18004 | 0.8802 |
+
+**LinearPartition - dataset0 (cell line 1)**
+
+| tau | band | linked pairs | unlinked pairs | linked local | unlinked local | linked / unlinked | 95% low | 95% high |
+|---|---|---|---|---|---|---|---|---|
+| 0.100 | 25-50 nt | 5462 | 50895 | 1.988 | 2.110 | 0.942 | 0.723 | 1.155 |
+| 0.100 | 50-100 nt | 3962 | 105037 | 2.178 | 1.864 | 1.169 | 0.941 | 1.464 |
+| 0.100 | 100-200 nt | 2737 | 201725 | 1.490 | 1.467 | 1.015 | 0.672 | 1.428 |
+| 0.100 | 200-400 nt | 2058 | 353963 | 1.222 | 1.116 | 1.095 | 0.561 | 1.593 |
+| 0.100 | 400-800 nt | 1253 | 524465 | 1.015 | 0.800 | 1.269 | 0.530 | 2.007 |
+| 0.300 | 25-50 nt | 3890 | 52467 | 1.956 | 2.108 | 0.928 | 0.691 | 1.164 |
+| 0.300 | 50-100 nt | 2830 | 106169 | 2.055 | 1.872 | 1.098 | 0.797 | 1.468 |
+| 0.300 | 100-200 nt | 1960 | 202502 | 1.565 | 1.467 | 1.067 | 0.550 | 1.528 |
+| 0.300 | 200-400 nt | 1431 | 354590 | 1.522 | 1.115 | 1.365 | 0.718 | 2.177 |
+| 0.300 | 400-800 nt | 876 | 524842 | 0.593 | 0.801 | 0.741 | 0.000 | 1.369 |
+
+**LinearPartition - dataset0 (cell line 1), both sites >=100 nt from a junction**
+
+| tau | band | linked pairs | unlinked pairs | linked local | unlinked local | linked / unlinked | 95% low | 95% high |
+|---|---|---|---|---|---|---|---|---|
+| 0.100 | 25-50 nt | 2214 | 19949 | 2.990 | 2.825 | 1.058 | 0.818 | 1.326 |
+| 0.100 | 50-100 nt | 1536 | 39231 | 2.447 | 2.589 | 0.945 | 0.708 | 1.206 |
+| 0.100 | 100-200 nt | 923 | 69802 | 1.613 | 2.030 | 0.795 | 0.454 | 1.163 |
+| 0.100 | 200-400 nt | 579 | 109665 | 1.714 | 1.623 | 1.056 | 0.542 | 1.676 |
+| 0.100 | 400-800 nt | 284 | 141802 | 1.004 | 1.159 | 0.867 | 0.000 | 1.829 |
+| 0.300 | 25-50 nt | 1548 | 20615 | 2.863 | 2.840 | 1.008 | 0.738 | 1.353 |
+| 0.300 | 50-100 nt | 1077 | 39690 | 2.533 | 2.584 | 0.980 | 0.662 | 1.342 |
+| 0.300 | 100-200 nt | 653 | 70072 | 1.630 | 2.028 | 0.804 | 0.366 | 1.452 |
+| 0.300 | 200-400 nt | 403 | 109841 | 2.226 | 1.621 | 1.373 | 0.552 | 2.187 |
+| 0.300 | 400-800 nt | 199 | 141887 | 0.484 | 1.159 | 0.418 | 0.000 | 1.551 |
+
+**LinearPartition - data1 (cell line 2)**
+
+| tau | band | linked pairs | unlinked pairs | linked local | unlinked local | linked / unlinked | 95% low | 95% high |
+|---|---|---|---|---|---|---|---|---|
+| 0.100 | 25-50 nt | 3930 | 36240 | 2.288 | 1.982 | 1.154 | 0.941 | 1.363 |
+| 0.100 | 50-100 nt | 2832 | 75358 | 2.293 | 1.704 | 1.346 | 1.089 | 1.673 |
+| 0.100 | 100-200 nt | 2000 | 141957 | 1.384 | 1.344 | 1.030 | 0.705 | 1.409 |
+| 0.100 | 200-400 nt | 1562 | 246843 | 1.214 | 1.018 | 1.192 | 0.623 | 1.752 |
+| 0.100 | 400-800 nt | 895 | 354798 | 1.443 | 0.734 | 1.965 | 0.893 | 3.319 |
+| 0.300 | 25-50 nt | 2842 | 37328 | 2.148 | 2.002 | 1.073 | 0.808 | 1.333 |
+| 0.300 | 50-100 nt | 2046 | 76144 | 2.358 | 1.709 | 1.380 | 1.052 | 1.816 |
+| 0.300 | 100-200 nt | 1385 | 142572 | 1.461 | 1.343 | 1.088 | 0.630 | 1.580 |
+| 0.300 | 200-400 nt | 1114 | 247291 | 1.164 | 1.019 | 1.143 | 0.496 | 1.821 |
+| 0.300 | 400-800 nt | 616 | 355077 | 1.493 | 0.735 | 2.033 | 0.597 | 3.897 |
+
+**LinearPartition - data1 (cell line 2), both sites >=100 nt from a junction**
+
+| tau | band | linked pairs | unlinked pairs | linked local | unlinked local | linked / unlinked | 95% low | 95% high |
+|---|---|---|---|---|---|---|---|---|
+| 0.100 | 25-50 nt | 1402 | 12445 | 3.987 | 2.854 | 1.397 | 1.096 | 1.704 |
+| 0.100 | 50-100 nt | 929 | 24214 | 3.303 | 2.534 | 1.303 | 0.968 | 1.734 |
+| 0.100 | 100-200 nt | 547 | 40706 | 1.694 | 1.955 | 0.866 | 0.531 | 1.259 |
+| 0.100 | 200-400 nt | 349 | 60703 | 1.381 | 1.459 | 0.947 | 0.267 | 1.709 |
+| 0.100 | 400-800 nt | 144 | 74185 | 1.275 | 1.034 | 1.234 | 0.000 | 2.620 |
+| 0.300 | 25-50 nt | 1001 | 12846 | 3.647 | 2.911 | 1.253 | 0.856 | 1.607 |
+| 0.300 | 50-100 nt | 683 | 24460 | 3.465 | 2.539 | 1.364 | 0.895 | 1.843 |
+| 0.300 | 100-200 nt | 355 | 40898 | 1.488 | 1.956 | 0.761 | 0.385 | 1.327 |
+| 0.300 | 200-400 nt | 243 | 60809 | 1.469 | 1.458 | 1.007 | 0.145 | 1.954 |
+| 0.300 | 400-800 nt | 86 | 74243 | 0.801 | 1.034 | 0.774 | 0.000 | 2.859 |
+
+**LinearPartition - positive rate by predicted unpaired probability of the A (quintiles)**
+
+
+cell line 1
+
+| unpaired bin | positive rate | sites | lift |
+|---|---|---|---|
+| (-0.0159, 0.083] | 0.0488 | 24219 | 1.0858 |
+| (0.083, 0.42] | 0.0438 | 24213 | 0.9740 |
+| (0.42, 0.852] | 0.0429 | 24215 | 0.9547 |
+| (0.852, 0.986] | 0.0425 | 24216 | 0.9436 |
+| (0.986, 1.0] | 0.0469 | 24216 | 1.0418 |
+
+cell line 2
+
+| unpaired bin | positive rate | sites | lift |
+|---|---|---|---|
+| (-0.0159, 0.0846] | 0.0709 | 18005 | 0.9774 |
+| (0.0846, 0.44] | 0.0758 | 18004 | 1.0449 |
+| (0.44, 0.87] | 0.0713 | 18004 | 0.9829 |
+| (0.87, 0.988] | 0.0735 | 18005 | 1.0134 |
+| (0.988, 1.0] | 0.0712 | 18003 | 0.9814 |
