@@ -1,0 +1,61 @@
+ trained on scored on                              configuration  pr_auc                             vs  change  ci_low  ci_high
+   dataset0  dataset0                                 as trained  0.5436                     as trained  0.0000  0.0000   0.0000
+   dataset0  dataset0                                       none  0.5095                     as trained -0.0341 -0.0438  -0.0238
+   dataset0  dataset0 a: neighbours' reads from same-5-mer sites  0.4008                     as trained -0.1429 -0.1555  -0.1288
+   dataset0  dataset0            b: neighbours' 7-mer randomised  0.3196                     as trained -0.2240 -0.2408  -0.2083
+   dataset0  dataset0               c: neighbours = random sites  0.3636                     as trained -0.1800 -0.1936  -0.1613
+   dataset0  dataset0 d: neighbours' transcript baseline removed  0.5092                     as trained -0.0344 -0.0429  -0.0244
+   dataset0  dataset0              site 1 reads, neighbours full  0.3987  site 1 reads, neighbours full  0.0000  0.0000   0.0000
+   dataset0  dataset0           site 1 reads, neighbours 1 reads  0.2709  site 1 reads, neighbours full -0.1278 -0.1421  -0.1156
+   dataset0  dataset0                site 1 reads, no neighbours  0.2428  site 1 reads, neighbours full -0.1559 -0.1715  -0.1418
+   dataset0  dataset0              site 3 reads, neighbours full  0.4502  site 3 reads, neighbours full  0.0000  0.0000   0.0000
+   dataset0  dataset0           site 3 reads, neighbours 3 reads  0.3664  site 3 reads, neighbours full -0.0838 -0.0942  -0.0747
+   dataset0  dataset0                site 3 reads, no neighbours  0.3322  site 3 reads, neighbours full -0.1181 -0.1317  -0.1061
+   dataset0  dataset0             site 10 reads, neighbours full  0.4980 site 10 reads, neighbours full  0.0000  0.0000   0.0000
+   dataset0  dataset0         site 10 reads, neighbours 10 reads  0.4687 site 10 reads, neighbours full -0.0293 -0.0357  -0.0226
+   dataset0  dataset0               site 10 reads, no neighbours  0.4343 site 10 reads, neighbours full -0.0637 -0.0755  -0.0521
+   dataset0     data1                                 as trained  0.4046                     as trained  0.0000  0.0000   0.0000
+   dataset0     data1                                       none  0.3832                     as trained -0.0214 -0.0276  -0.0153
+   dataset0     data1 a: neighbours' reads from same-5-mer sites  0.2962                     as trained -0.1084 -0.1176  -0.0983
+   dataset0     data1            b: neighbours' 7-mer randomised  0.2734                     as trained -0.1312 -0.1441  -0.1196
+   dataset0     data1               c: neighbours = random sites  0.2859                     as trained -0.1187 -0.1305  -0.1076
+   dataset0     data1 d: neighbours' transcript baseline removed  0.3696                     as trained -0.0350 -0.0418  -0.0285
+   dataset0     data1              site 1 reads, neighbours full  0.3384  site 1 reads, neighbours full  0.0000  0.0000   0.0000
+   dataset0     data1           site 1 reads, neighbours 1 reads  0.2409  site 1 reads, neighbours full -0.0976 -0.1074  -0.0896
+   dataset0     data1                site 1 reads, no neighbours  0.2235  site 1 reads, neighbours full -0.1149 -0.1267  -0.1048
+   dataset0     data1              site 3 reads, neighbours full  0.3563  site 3 reads, neighbours full  0.0000  0.0000   0.0000
+   dataset0     data1           site 3 reads, neighbours 3 reads  0.2904  site 3 reads, neighbours full -0.0658 -0.0727  -0.0587
+   dataset0     data1                site 3 reads, no neighbours  0.2699  site 3 reads, neighbours full -0.0863 -0.0953  -0.0772
+   dataset0     data1             site 10 reads, neighbours full  0.3775 site 10 reads, neighbours full  0.0000  0.0000   0.0000
+   dataset0     data1         site 10 reads, neighbours 10 reads  0.3498 site 10 reads, neighbours full -0.0277 -0.0324  -0.0237
+   dataset0     data1               site 10 reads, no neighbours  0.3260 site 10 reads, neighbours full -0.0515 -0.0592  -0.0442
+pooled_both  dataset0                                 as trained  0.5534                     as trained  0.0000  0.0000   0.0000
+pooled_both  dataset0                                       none  0.5125                     as trained -0.0409 -0.0502  -0.0323
+pooled_both  dataset0 a: neighbours' reads from same-5-mer sites  0.4131                     as trained -0.1403 -0.1541  -0.1266
+pooled_both  dataset0            b: neighbours' 7-mer randomised  0.2857                     as trained -0.2677 -0.2835  -0.2517
+pooled_both  dataset0               c: neighbours = random sites  0.3746                     as trained -0.1788 -0.1927  -0.1626
+pooled_both  dataset0 d: neighbours' transcript baseline removed  0.5110                     as trained -0.0424 -0.0549  -0.0299
+pooled_both  dataset0              site 1 reads, neighbours full  0.4351  site 1 reads, neighbours full  0.0000  0.0000   0.0000
+pooled_both  dataset0           site 1 reads, neighbours 1 reads  0.2610  site 1 reads, neighbours full -0.1741 -0.1878  -0.1583
+pooled_both  dataset0                site 1 reads, no neighbours  0.2382  site 1 reads, neighbours full -0.1969 -0.2114  -0.1816
+pooled_both  dataset0              site 3 reads, neighbours full  0.4720  site 3 reads, neighbours full  0.0000  0.0000   0.0000
+pooled_both  dataset0           site 3 reads, neighbours 3 reads  0.3790  site 3 reads, neighbours full -0.0930 -0.1042  -0.0822
+pooled_both  dataset0                site 3 reads, no neighbours  0.3255  site 3 reads, neighbours full -0.1466 -0.1596  -0.1311
+pooled_both  dataset0             site 10 reads, neighbours full  0.5114 site 10 reads, neighbours full  0.0000  0.0000   0.0000
+pooled_both  dataset0         site 10 reads, neighbours 10 reads  0.4791 site 10 reads, neighbours full -0.0323 -0.0412  -0.0243
+pooled_both  dataset0               site 10 reads, no neighbours  0.4296 site 10 reads, neighbours full -0.0817 -0.0925  -0.0711
+pooled_both     data1                                 as trained  0.4355                     as trained  0.0000  0.0000   0.0000
+pooled_both     data1                                       none  0.4050                     as trained -0.0304 -0.0379  -0.0225
+pooled_both     data1 a: neighbours' reads from same-5-mer sites  0.3227                     as trained -0.1128 -0.1233  -0.1032
+pooled_both     data1            b: neighbours' 7-mer randomised  0.2729                     as trained -0.1626 -0.1769  -0.1498
+pooled_both     data1               c: neighbours = random sites  0.3099                     as trained -0.1256 -0.1371  -0.1143
+pooled_both     data1 d: neighbours' transcript baseline removed  0.3876                     as trained -0.0479 -0.0569  -0.0388
+pooled_both     data1              site 1 reads, neighbours full  0.3668  site 1 reads, neighbours full  0.0000  0.0000   0.0000
+pooled_both     data1           site 1 reads, neighbours 1 reads  0.2428  site 1 reads, neighbours full -0.1240 -0.1362  -0.1142
+pooled_both     data1                site 1 reads, no neighbours  0.2251  site 1 reads, neighbours full -0.1417 -0.1566  -0.1299
+pooled_both     data1              site 3 reads, neighbours full  0.3809  site 3 reads, neighbours full  0.0000  0.0000   0.0000
+pooled_both     data1           site 3 reads, neighbours 3 reads  0.2988  site 3 reads, neighbours full -0.0821 -0.0899  -0.0741
+pooled_both     data1                site 3 reads, no neighbours  0.2690  site 3 reads, neighbours full -0.1118 -0.1240  -0.1010
+pooled_both     data1             site 10 reads, neighbours full  0.4076 site 10 reads, neighbours full  0.0000  0.0000   0.0000
+pooled_both     data1         site 10 reads, neighbours 10 reads  0.3719 site 10 reads, neighbours full -0.0357 -0.0414  -0.0308
+pooled_both     data1               site 10 reads, no neighbours  0.3379 site 10 reads, neighbours full -0.0697 -0.0785  -0.0607

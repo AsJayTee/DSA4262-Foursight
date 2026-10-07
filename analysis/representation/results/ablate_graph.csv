@@ -1,0 +1,61 @@
+trained on,scored on,configuration,pr_auc,vs,change,ci_low,ci_high
+dataset0,dataset0,as trained,0.5436054112222499,as trained,0.0,0.0,0.0
+dataset0,dataset0,none,0.5094621772727136,as trained,-0.034143233949536334,-0.04381488464382814,-0.02376650684693773
+dataset0,dataset0,a: neighbours' reads from same-5-mer sites,0.4007533371914388,as trained,-0.14285207403081113,-0.1554905851834232,-0.12882420583976276
+dataset0,dataset0,b: neighbours' 7-mer randomised,0.31958059310681003,as trained,-0.2240248181154399,-0.240822457172735,-0.2083316677635345
+dataset0,dataset0,c: neighbours = random sites,0.36356458449083645,as trained,-0.18004082673141347,-0.19362430571819816,-0.16134600444122682
+dataset0,dataset0,d: neighbours' transcript baseline removed,0.5091579873949238,as trained,-0.03444742382732613,-0.04286280330250376,-0.02437092411004508
+dataset0,dataset0,"site 1 reads, neighbours full",0.398685347001811,"site 1 reads, neighbours full",0.0,0.0,0.0
+dataset0,dataset0,"site 1 reads, neighbours 1 reads",0.27086432594785076,"site 1 reads, neighbours full",-0.12782102105396026,-0.14212054569957236,-0.11559440509330103
+dataset0,dataset0,"site 1 reads, no neighbours",0.24283367418357213,"site 1 reads, neighbours full",-0.1558516728182389,-0.17154298234667067,-0.14175100910720692
+dataset0,dataset0,"site 3 reads, neighbours full",0.4502348067389796,"site 3 reads, neighbours full",0.0,0.0,0.0
+dataset0,dataset0,"site 3 reads, neighbours 3 reads",0.3663932126284711,"site 3 reads, neighbours full",-0.08384159411050851,-0.09421133920765706,-0.07470989199613758
+dataset0,dataset0,"site 3 reads, no neighbours",0.3321511344379345,"site 3 reads, neighbours full",-0.1180836723010451,-0.13174328847060457,-0.10606070608470503
+dataset0,dataset0,"site 10 reads, neighbours full",0.4979908676767748,"site 10 reads, neighbours full",0.0,0.0,0.0
+dataset0,dataset0,"site 10 reads, neighbours 10 reads",0.46871557665710195,"site 10 reads, neighbours full",-0.029275291019672856,-0.035663182032666614,-0.022576138688976257
+dataset0,dataset0,"site 10 reads, no neighbours",0.43427274633159796,"site 10 reads, neighbours full",-0.06371812134517685,-0.0755352959204625,-0.052116021754967545
+dataset0,data1,as trained,0.40459832532428613,as trained,0.0,0.0,0.0
+dataset0,data1,none,0.38316294279031765,as trained,-0.021435382533968483,-0.027612745399745658,-0.015335511175941723
+dataset0,data1,a: neighbours' reads from same-5-mer sites,0.2962248511580047,as trained,-0.10837347416628146,-0.11758383410032061,-0.09826067733394045
+dataset0,data1,b: neighbours' 7-mer randomised,0.27336592683122496,as trained,-0.13123239849306118,-0.14413259377408508,-0.11961776265869686
+dataset0,data1,c: neighbours = random sites,0.2858706807580091,as trained,-0.11872764456627705,-0.13046657548958834,-0.10756912789887343
+dataset0,data1,d: neighbours' transcript baseline removed,0.3695883272740528,as trained,-0.03500999805023336,-0.04178562050401296,-0.028512835672148584
+dataset0,data1,"site 1 reads, neighbours full",0.3384215414510227,"site 1 reads, neighbours full",0.0,0.0,0.0
+dataset0,data1,"site 1 reads, neighbours 1 reads",0.24085274435645987,"site 1 reads, neighbours full",-0.09756879709456284,-0.10738766907428328,-0.08964212111087864
+dataset0,data1,"site 1 reads, no neighbours",0.22354924142036828,"site 1 reads, neighbours full",-0.11487230003065443,-0.12667516203832213,-0.10481987041835464
+dataset0,data1,"site 3 reads, neighbours full",0.35627113808600547,"site 3 reads, neighbours full",0.0,0.0,0.0
+dataset0,data1,"site 3 reads, neighbours 3 reads",0.29044222211430304,"site 3 reads, neighbours full",-0.06582891597170243,-0.07266456921652262,-0.058674834079065256
+dataset0,data1,"site 3 reads, no neighbours",0.26994591617063957,"site 3 reads, neighbours full",-0.0863252219153659,-0.09532001072191522,-0.0772148398784573
+dataset0,data1,"site 10 reads, neighbours full",0.37753820972681656,"site 10 reads, neighbours full",0.0,0.0,0.0
+dataset0,data1,"site 10 reads, neighbours 10 reads",0.3498473352354011,"site 10 reads, neighbours full",-0.02769087449141544,-0.0323931788827705,-0.02367363318246434
+dataset0,data1,"site 10 reads, no neighbours",0.3260251883165853,"site 10 reads, neighbours full",-0.051513021410231286,-0.059175728817725246,-0.044167679590256165
+pooled_both,dataset0,as trained,0.553415093612289,as trained,0.0,0.0,0.0
+pooled_both,dataset0,none,0.5125167843317799,as trained,-0.04089830928050908,-0.0501535239796927,-0.03233368345457786
+pooled_both,dataset0,a: neighbours' reads from same-5-mer sites,0.41306680946027763,as trained,-0.1403482841520114,-0.15409989099391544,-0.12658886580813164
+pooled_both,dataset0,b: neighbours' 7-mer randomised,0.28567155072433936,as trained,-0.26774354288794966,-0.2834613260758318,-0.2517133101749315
+pooled_both,dataset0,c: neighbours = random sites,0.37456522897255834,as trained,-0.17884986463973068,-0.19265924622710315,-0.1625560736914075
+pooled_both,dataset0,d: neighbours' transcript baseline removed,0.5109774811178569,as trained,-0.04243761249443212,-0.05487850980966445,-0.029897391670323265
+pooled_both,dataset0,"site 1 reads, neighbours full",0.43514702168452657,"site 1 reads, neighbours full",0.0,0.0,0.0
+pooled_both,dataset0,"site 1 reads, neighbours 1 reads",0.2609991931386847,"site 1 reads, neighbours full",-0.17414782854584188,-0.18778384414492005,-0.1582815160155295
+pooled_both,dataset0,"site 1 reads, no neighbours",0.23821437188821618,"site 1 reads, neighbours full",-0.1969326497963104,-0.21137192068289237,-0.18158892912711294
+pooled_both,dataset0,"site 3 reads, neighbours full",0.472030690838396,"site 3 reads, neighbours full",0.0,0.0,0.0
+pooled_both,dataset0,"site 3 reads, neighbours 3 reads",0.37900942351955763,"site 3 reads, neighbours full",-0.09302126731883836,-0.10415732442231668,-0.08218760214912024
+pooled_both,dataset0,"site 3 reads, no neighbours",0.3254568064991687,"site 3 reads, neighbours full",-0.1465738843392273,-0.15956540347794665,-0.13107515398102115
+pooled_both,dataset0,"site 10 reads, neighbours full",0.5113828202770965,"site 10 reads, neighbours full",0.0,0.0,0.0
+pooled_both,dataset0,"site 10 reads, neighbours 10 reads",0.47910250948491395,"site 10 reads, neighbours full",-0.03228031079218252,-0.04124451821865785,-0.024282573545682952
+pooled_both,dataset0,"site 10 reads, no neighbours",0.4296478801046956,"site 10 reads, neighbours full",-0.08173494017240085,-0.09248214022832617,-0.0711116540222389
+pooled_both,data1,as trained,0.435491974271565,as trained,0.0,0.0,0.0
+pooled_both,data1,none,0.4050446581592704,as trained,-0.03044731611229462,-0.03793430371342511,-0.022548386247478142
+pooled_both,data1,a: neighbours' reads from same-5-mer sites,0.3226638810239792,as trained,-0.1128280932475858,-0.12328385814886175,-0.10321151002619867
+pooled_both,data1,b: neighbours' 7-mer randomised,0.27292244364072926,as trained,-0.16256953063083573,-0.17690581821924947,-0.14982785293250675
+pooled_both,data1,c: neighbours = random sites,0.30985688393162314,as trained,-0.12563509033994186,-0.13706414015293336,-0.11425219434066723
+pooled_both,data1,d: neighbours' transcript baseline removed,0.38762680604240296,as trained,-0.047865168229162036,-0.05691217886403729,-0.038847431661891384
+pooled_both,data1,"site 1 reads, neighbours full",0.36681102930680876,"site 1 reads, neighbours full",0.0,0.0,0.0
+pooled_both,data1,"site 1 reads, neighbours 1 reads",0.24277276795626096,"site 1 reads, neighbours full",-0.1240382613505478,-0.13621904545228347,-0.11416255564842359
+pooled_both,data1,"site 1 reads, no neighbours",0.2250880340240763,"site 1 reads, neighbours full",-0.14172299528273247,-0.15657383119323798,-0.1299418387927543
+pooled_both,data1,"site 3 reads, neighbours full",0.3808801991226051,"site 3 reads, neighbours full",0.0,0.0,0.0
+pooled_both,data1,"site 3 reads, neighbours 3 reads",0.2987606759959326,"site 3 reads, neighbours full",-0.08211952312667253,-0.08987266559310389,-0.07410498365848743
+pooled_both,data1,"site 3 reads, no neighbours",0.2690321967019325,"site 3 reads, neighbours full",-0.11184800242067261,-0.12395995025728822,-0.10102582391240941
+pooled_both,data1,"site 10 reads, neighbours full",0.40758192523656256,"site 10 reads, neighbours full",0.0,0.0,0.0
+pooled_both,data1,"site 10 reads, neighbours 10 reads",0.3718724161477166,"site 10 reads, neighbours full",-0.03570950908884596,-0.041424931262581385,-0.030803010823559716
+pooled_both,data1,"site 10 reads, no neighbours",0.337874156091201,"site 10 reads, neighbours full",-0.06970776914536159,-0.07853696632968815,-0.06067637602371441
