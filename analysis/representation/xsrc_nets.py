@@ -212,6 +212,12 @@ def fit_one(model_name: str, bundle, arm: str, fold: int, args, log) -> np.ndarr
             w = graph.comod_band_weights(bundle.position[ref], bundle.graph_id[ref], bundle.y_own[ref])
             model.band_w = torch.tensor(w, dtype=torch.float32)
             log(f"    band weights {np.round(w, 3).tolist()} (bands {graph.FK_BANDS})")
+        if GRAPH_MODELS[model_name].get("nbr") == "kernel" or GRAPH_MODELS[model_name].get("scalar"):
+            # The kernel's decay scale, fitted to cell line 1's TRAINING labels only.
+            ref = fit_rows & (bundle.file == 0)
+            lam = graph.comod_decay_scale(bundle.position[ref], bundle.graph_id[ref], bundle.y_own[ref])
+            model.kernel_nt = torch.tensor(lam, dtype=torch.float32)
+            log(f"    kernel decay scale {lam:.1f} nt (fitted to cell line 1 training labels)")
         graph.train(model, graph.graphs_of(np.flatnonzero(fit_rows), bundle.graph_id, bundle.position),
                     graph.graphs_of(np.flatnonzero(val_rows), bundle.graph_id, bundle.position),
                     *graph_args, target, bundle.y_own, args.minutes, args.epochs, seed, log)

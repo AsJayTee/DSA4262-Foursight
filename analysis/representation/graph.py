@@ -73,13 +73,28 @@ QUANTILES = (0.10, 0.25, 0.50, 0.75, 0.90)
 # label co-modification curve (~2.2x < 25 nt -> ~1.0x by 200-400 nt, both cell lines).
 FK_BANDS = ((0, 30), (30, 75), (75, 150))
 FK_RADIUS = 150
-KERNEL_NT = 90.0
+KERNEL_NT = 90.0   # starting value only: every model overwrites it with comod_decay_scale() on training labels
 
 
-def comod_band_weights(position, graph_id, labels, bands=FK_BANDS) -> np.ndarray:
-    """Frozen band weights from TRAINING labels: w_b = max(log local co-modification
-    ratio, 0) per band (positive pairs over the within-transcript expectation
-    k(k-1)/(n(n-1)), as distance_bands.py), normalised to sum to 1."""
+FIT_BANDS = ((0, 25), (25, 50), (50, 100), (100, 200), (200, 400))
+
+
+def comod_decay_scale(position, graph_id, labels, bands=FIT_BANDS) -> float:
+    """Decay scale lambda (nt) of the kernel exp(-d / lambda), fitted to TRAINING
+    labels: excess co-modification (local ratio - 1, as comod_band_weights) per
+    band, then log(excess) ~ a - d_mid / lambda by least squares weighted by each
+    band's expected pair count. Clipped to [20, 400] nt."""
+    both, expected = _band_pair_counts(position, graph_id, labels, bands)
+    excess = both / np.maximum(expected, 1e-9) - 1
+    mid = np.array([(lo + hi) / 2 for lo, hi in bands], dtype=float)
+    ok = (excess > 0) & (expected > 0)
+    if ok.sum() < 2:
+        return KERNEL_NT
+    slope, _ = np.polyfit(mid[ok], np.log(excess[ok]), 1, w=np.sqrt(expected[ok]))
+    return float(np.clip(-1 / slope, 20, 400)) if slope < 0 else 400.0
+
+
+def _band_pair_counts(position, graph_id, labels, bands):
     both = np.zeros(len(bands))
     expected = np.zeros(len(bands))
     order = np.argsort(graph_id, kind="stable")
@@ -97,6 +112,14 @@ def comod_band_weights(position, graph_id, labels, bands=FK_BANDS) -> np.ndarray
             sel = (d > lo) & (d <= hi)
             both[b] += bb[sel].sum()
             expected[b] += sel.sum() * frac
+    return both, expected
+
+
+def comod_band_weights(position, graph_id, labels, bands=FK_BANDS) -> np.ndarray:
+    """Frozen band weights from TRAINING labels: w_b = max(log local co-modification
+    ratio, 0) per band (positive pairs over the within-transcript expectation
+    k(k-1)/(n(n-1)), as distance_bands.py), normalised to sum to 1."""
+    both, expected = _band_pair_counts(position, graph_id, labels, bands)
     w = np.maximum(np.log(np.where(expected > 0, both / np.maximum(expected, 1e-9), 1.0)), 0)
     return (w / w.sum()) if w.sum() > 0 else np.ones(len(bands)) / len(bands)
 
@@ -183,6 +206,9 @@ class GraphNet(nn.Module):
             if nbr == "bands":
                 # Only here: a buffer on every h2gcn would break loading saved networks.
                 self.register_buffer("band_w", torch.ones(len(FK_BANDS)) / len(FK_BANDS))
+            if nbr == "kernel" or scalar:
+                # Decay scale of exp(-d / lambda), set from training labels (comod_decay_scale).
+                self.register_buffer("kernel_nt", torch.tensor(KERNEL_NT))
             if residual:
                 self.gate_params = nn.Parameter(torch.zeros(3))      # a, b, c of sigmoid(a log n + b |s| + c)
             if scalar:
@@ -330,7 +356,7 @@ class GraphNet(nn.Module):
         A = adj.float()
         has = (A.sum(1, keepdim=True) > 0).float()
         if self.nbr == "kernel" or self.scalar:
-            kern = A * torch.exp(-delta.float() / KERNEL_NT)
+            kern = A * torch.exp(-delta.float() / self.kernel_nt)
             W = kern / kern.sum(1, keepdim=True).clamp(min=1e-9)
         elif self.nbr == "bands":
             w = self.band_w.flip(0) if self.band_shuffle else self.band_w
