@@ -3,7 +3,7 @@
 A record of what the project found, with the numbers, so the report can be
 written from it. Every result says **where it came from** (script and output
 file), so any number can be regenerated or checked. Recorded 2026-10-03 to
-2026-10-07; the analyses ran on the Ronin machine and on a laptop.
+2026-10-08; the analyses ran on the Ronin machine and on a laptop.
 
 > **Read this first: the two labelled files are different cell lines.**
 > dataset0 and data1 (the course's second labelled release) come from
@@ -39,7 +39,8 @@ Terms used throughout:
 9. [Leaderboard submission](#9-leaderboard-submission)
 10. [Caveats to state in the report](#10-caveats)
 11. [Suggested report figures](#11-suggested-figures)
-12. [Appendix: full tables](#appendix-full-tables) - every band, cell line,
+12. [Final batch (8 Oct): designs and literature motivation](#12-final-batch-8-oct-designs-and-literature-motivation)
+13. [Appendix: full tables](#appendix-full-tables) - every band, cell line,
     threshold and bin for the clustering-by-distance (A), neighbours-per-radius
     (B), 400-nt band-use (C), position-on-transcript (D) and RNA-folding (E)
     analyses, generated from the result files
@@ -495,6 +496,154 @@ scores (the model trained on these labels): dataset0 PR AUC 0.665 / ROC AUC
    (section 7).
 8. Gain by neighbour status, and the depth-asymmetry curves (section 8).
 9. data2 dose-response: mean score vs fraction modified.
+
+---
+
+## 12. Final batch (8 Oct): designs and literature motivation
+
+**Status: designs and motivation only. Results pending**
+(results/day_summary.md and the confound analyses, once the batch finishes).
+
+**The question.** Section 8 shows the graph network works by corroboration:
+a site gains when nearby sites look modified. Section 5 shows that only about
+100 nt of context carries over to an unseen cell line. Two possibilities
+remain:
+
+- an architecture that builds in "nearby sites corroborate, and the effect
+  fades with distance" transfers better than a free neighbour mean;
+- a more expressive network (a graph transformer) does better still.
+
+This batch tests both and adds controls for confounds. Every design keeps
+the own-reads auxiliary head (weight 0.5). Every design is compared to
+`h2gcn_aux` trained on the same seeds. The ranking rule is unchanged (0032:
+the worse of the two cross-source gains).
+
+### 12A. Designs, what each tests, and its control
+
+| Design | What it changes | What it tests | Control (what a null result means) |
+|---|---|---|---|
+| `fk_band` | Neighbour message = weighted sum of mean neighbours in 0-30, 30-75 and 75-150 nt bands. The weights are fixed, not learned: per band, max(log co-modification ratio, 0) from **cell line 1 training labels** of each fold. | Does imposing the measured distance profile transfer better than letting the network learn it? | `fk_band_shuffled`: the same bands with the weights reversed. If it matches `fk_band`, the profile itself carries nothing. |
+| `fk_kernel` | Neighbours weighted by exp(-d/λ) within 150 nt, row-normalised. λ is **fitted per fold** to the decay of co-modification in cell line 1 training labels: 101.5-122.1 nt. | A smooth, data-set decay instead of a hard 50-nt cutoff. | `h2gcn_aux` (hard 50 nt) and `h2gcn_aux_r100` (hard 100 nt), all trained on the same seeds. |
+| `res_gate` | Score = own-reads score + g × (neighbour correction) × has-neighbour, with g = sigmoid(a·log reads + b·\|own score\| + c). Edge dropout 0.3 and node dropout 0.15 in training. Same kernel as `fk_kernel`. | "Safe" corroboration: neighbours can only adjust the own-reads score, more when the site has few reads or an uncertain score. This targets the lone-site and partial-transcript risk (section 10). | `res_nogate` (g = 1: is the depth gate needed?); `res_nodrop` (gate, no dropout: does dropout help sites with few neighbours?). |
+| `scalar_msg` | Neighbours pass only their own-reads **scores** (kernel-weighted mean, max within 75 nt, mean log reads), not learned embeddings. A small MLP turns these into a correction to the site's own score. | Is corroboration just "neighbours look modified"? If so, a one-number message should suffice and generalise at least as well. | `scalar_random`: the same model, but the scores come from unrelated sites. A gain that survives this is not corroboration. |
+| `gps` | GraphGPS-style layer: the local 50-nt message passing plus global attention over every site on the transcript, with a learned distance bias. | Does a more expressive, modern architecture (transformer-style, long-range) help? Prediction from sections 5 and 8: it helps cell line 1 and not the unseen cell line. | `h2gcn_aux` on the same seeds. |
+
+Confound analyses run alongside:
+
+- **Gain by neighbour count** (0 / 1 / 2-3 / 4+ within 50 nt) and **by
+  transcript size** (quartiles of sites per transcript). Having neighbours
+  depends on expression (positions need enough reads to be reported). The
+  question is whether section 8's neighbour effect is really a coverage
+  effect. A ROC AUC gain column is added.
+- **Band ablation with 0-10 and 10-20 nt split out.** Nanopore signal from
+  one m6A spreads about ±10 nt (DeepRM, below). So a very close "neighbour"
+  may partly re-measure the scored site's own modification rather than
+  corroborate it. The earlier coarse-band table is kept as
+  `band_ablation_v1.csv`.
+
+Order: seed 0 of every design and control; then seeds 1 and 2 of the main
+designs plus `h2gcn_aux` and `h2gcn_aux_r100`. Each design gets three seeds
+against matched baselines, which matters because the seed spread is
+0.002-0.005 PR AUC (section 10). Source: analysis/representation/run_day.py,
+xsrc_nets.py (`GRAPH_VARIANTS`), graph.py (`forward_v2`,
+`comod_band_weights`, `comod_decay_scale`).
+
+**A finding from setting up the batch.** The decay scale fitted to the
+labels differs by cell line:
+
+- cell line 1 training labels: 101.5-122.1 nt across the 5 folds;
+- cell line 2 labels: about 59 nt (computed for reference only; no model
+  uses cell line 2 labels to set λ).
+
+Co-modification fades about twice as fast in cell line 2. This is another
+way the wider context is cell-line-specific (section 5).
+
+### 12B. Literature motivation (each claim checked against the paper, 8 Oct)
+
+**Biology: m6A sites cluster, and the clustering fades with distance.**
+
+- **m6Aiso**: *Single-molecule m6A detection empowered by endogenous
+  labeling unveils complexities across RNA isoforms*, Molecular Cell 2025,
+  doi:10.1016/j.molcel.2025.01.014 (Jinkai Wang's group, Sun Yat-sen
+  University; preprint bioRxiv 10.1101/2024.01.30.577990).
+  - Single-molecule linkage between m6A sites is "relatively weak but
+    nonnegligible" below 200 bp. It decreases gradually with distance and
+    is not recognisable beyond 1 kb.
+  - 39.1% of m6A sites cluster with another within 50 bp on the same gene,
+    and 44.5% on the same isoform.
+  - Motivates: a distance-decaying neighbour weight (`fk_kernel`,
+    `res_gate`) and our own measured profile (section 5A: 2.2× below 25 nt,
+    falling to 1.0× by 200-400 nt).
+  - *Earlier notes cited this as "Guo et al. 2025". The first author is not
+    confirmed, so cite it by title and DOI until someone checks the
+    published author list.*
+- **DeepRM**: Kang, Hwang & Baek, *Comprehensive discovery of m6A sites in
+  the human transcriptome at single-molecule resolution*, Nat Commun 2025,
+  doi:10.1038/s41467-025-67417-w.
+  - "4819 pairs of significantly co-occurring m6A sites across the HEK293T
+    transcriptome".
+  - In their example, the pair co-occurs on 40.0% of reads against 21.8%
+    expected (positive co-occurrence on the same molecule).
+  - Motivates: corroboration has a molecular basis. Modified sites tend to
+    be modified together on the same molecule.
+
+**Biology: why about 100 nt is shared between cell lines.** Explains
+section 6. *These are not used as model inputs*: the data has no
+annotation, and annotation was ruled out as an input.
+
+- **Uzonyi et al.**, Mol Cell 2023, 83(2):237-251,
+  doi:10.1016/j.molcel.2022.12.026. The exon junction complex excludes m6A
+  within about 100 nt of splice junctions.
+- **He et al.**, Science 2023, doi:10.1126/science.abj9090. Exon junction
+  complexes suppress m6A. Their range covers average-length internal exons,
+  not long internal or terminal exons. That matches the stop-codon and
+  last-exon enrichment in section 6.
+- **Luo et al.**, Nat Commun 2023, 14:4172,
+  doi:10.1038/s41467-023-39897-1. The exon-intron boundary represses 12-34%
+  of m6A at adjacent exons, over about 100 nt.
+- Reading: the main rule shaping m6A placement is gene structure on a scale
+  of about 100 nt, and it is shared across cell types. That fits a ~100-nt
+  context transferring between cell lines while wider context does not.
+  This is correlation, not mechanism (section 10).
+
+**Signal: why very close neighbours are a confound.**
+
+- **DeepRM** (above): "modification-dependent variations in electric
+  current and base quality were observed over a wide range of up to ±10 nts
+  from m6A". "Electric current signatures from two m6As within a 20-nt
+  window will overlap and therefore interfere with each other."
+  - Motivates: the 0-10 / 10-20 nt split in the band ablation.
+- **Nanocompore**: Leger et al., Nat Commun 2021,
+  doi:10.1038/s41467-021-27393-3. About 5 nucleotides sit in the R9 pore's
+  reader head at once, so one modification shifts the current of several
+  consecutive k-mers.
+  - This is why each site's 9 features cover three overlapping 5-mers.
+
+**Machine learning: where each design comes from.** These are standard
+papers, identified from memory; claims about their methods are from the
+papers' own titles and abstracts.
+
+| Paper | Idea | Used in |
+|---|---|---|
+| H2GCN: Zhu et al., *Beyond Homophily in Graph Neural Networks*, NeurIPS 2020 | Keep the node's own embedding separate from its neighbours' | The base architecture (sections 2, 8) |
+| GraphGPS: Rampášek et al., *Recipe for a General, Powerful, Scalable Graph Transformer*, NeurIPS 2022 | Local message passing + global attention in each layer | `gps` |
+| SchNet: Schütt et al., NeurIPS 2017 | Continuous filters as a function of distance | Distance-weighted messages (`fk_kernel`) and the learned distance bias in `gps` |
+| C&S: Huang et al., *Combining Label Propagation and Simple Models Out-performs GNNs*, ICLR 2021 | A base predictor, then propagate its errors and predictions over the graph | `res_gate` (correct the own-reads score), `scalar_msg` (propagate scores, not embeddings) |
+| DropEdge: Rong et al., ICLR 2020; GRAND (DropNode): Feng et al., NeurIPS 2020 | Randomly remove edges and nodes in training | Dropout in `res_gate`; `res_nodrop` is the control |
+| GPR-GNN: Chien et al., ICLR 2021; ACM-GCN: Luan et al., NeurIPS 2022 | Learned weighting of neighbour information, per node and channel | The depth gate in `res_gate` |
+| PNA: Corso et al., NeurIPS 2020 | Several aggregators instead of one mean | Per-band means in `fk_band` |
+| Gulrajani & Lopez-Paz, *In Search of Lost Domain Generalization*, ICLR 2021; V-REx: Krueger et al., ICML 2021; group DRO: Sagawa et al., ICLR 2020 | Domain-generalisation methods rarely beat plain training under a fair model selection rule; select on the worst domain | Why designs are ranked on the worse of two gains (0032), and why we change inductive bias rather than add DG penalties |
+
+**What the batch can conclude** (to fill in when results land):
+
+- If `fk_band` or `fk_kernel` beats `h2gcn_aux` on the unseen cell line
+  and its control does not, the measured distance profile is a transferable
+  prior.
+- If `scalar_msg` matches `h2gcn_aux` and `scalar_random` falls to
+  deepset level, corroboration is fully captured by one score per neighbour.
+- If `gps` gains on cell line 1 but not on the unseen cell line, more
+  capacity buys cell-line-specific context, as predicted. Null results are
+  reported as results.
 
 ---
 
