@@ -83,6 +83,25 @@ GRAPH_VARIANTS = {
     "h2gcn_aux_r100": {"window": 100, "transcript": False, "aux": 0.5},
     "h2gcn_aux_r200": {"window": 200, "transcript": False, "aux": 0.5},
     "h2gcn_aux_r400": {"window": 400, "transcript": False, "aux": 0.5},
+    # Constrained corroboration and a GraphGPS control (2026-10-08), all on h2gcn_aux.
+    # A: neighbour bands weighted by cell line 1's co-modification curve, frozen;
+    #    its control reverses the weights across distances.
+    "fk_band": {"transcript": False, "aux": 0.5, "nbr": "bands"},
+    "fk_band_shuffled": {"transcript": False, "aux": 0.5, "nbr": "bands", "band_shuffle": True},
+    # A2: one exponential distance kernel (90 nt), up to 150 nt.
+    "fk_kernel": {"transcript": False, "aux": 0.5, "nbr": "kernel"},
+    # B: logit = read-only score + depth/confidence gate x neighbour correction (exactly
+    #    the read-only score when isolated), trained with edge and site dropout.
+    "res_gate": {"transcript": False, "aux": 0.5, "nbr": "kernel", "residual": True,
+                 "edge_drop": 0.3, "node_drop": 0.15},
+    "res_nogate": {"transcript": False, "aux": 0.5, "nbr": "kernel", "residual": True, "gate": False,
+                   "edge_drop": 0.3, "node_drop": 0.15},
+    "res_nodrop": {"transcript": False, "aux": 0.5, "nbr": "kernel", "residual": True},
+    # C: neighbours pass only (read-only score, log depth); control: messages from other sites.
+    "scalar_msg": {"transcript": False, "aux": 0.5, "scalar": True},
+    "scalar_random": {"transcript": False, "aux": 0.5, "scalar": True, "scalar_shuffle": True},
+    # GraphGPS-style control: local channels + global attention over the whole transcript.
+    "gps": {"window": 50, "transcript": False, "aux": 0.5, "gps": True},
 }
 GRAPH_MODELS = {**{k: {"kind": k} for k in graph.KINDS},
                 **{k: {"kind": "h2gcn", **v} for k, v in GRAPH_VARIANTS.items()}}
@@ -187,6 +206,12 @@ def fit_one(model_name: str, bundle, arm: str, fold: int, args, log) -> np.ndarr
         model = graph.GraphNet(**GRAPH_MODELS[model_name])
         model.obs = (bundle.y_own, bundle.y_other, bundle.file)
         model.unweighted = model_name == "h2gcn_noisy2"
+        if GRAPH_MODELS[model_name].get("nbr") == "bands":
+            # Frozen from cell line 1's TRAINING labels only - never the held-out fold.
+            ref = fit_rows & (bundle.file == 0)
+            w = graph.comod_band_weights(bundle.position[ref], bundle.graph_id[ref], bundle.y_own[ref])
+            model.band_w = torch.tensor(w, dtype=torch.float32)
+            log(f"    band weights {np.round(w, 3).tolist()} (bands {graph.FK_BANDS})")
         graph.train(model, graph.graphs_of(np.flatnonzero(fit_rows), bundle.graph_id, bundle.position),
                     graph.graphs_of(np.flatnonzero(val_rows), bundle.graph_id, bundle.position),
                     *graph_args, target, bundle.y_own, args.minutes, args.epochs, seed, log)

@@ -33,7 +33,9 @@ import graph
 import xsrc_nets as X
 
 MODEL = "h2gcn_aux_r400"
-BANDS = [(0, 50), (50, 100), (100, 200), (200, 400)]
+# 0-10 and 10-20 split out (2026-10-08): nanopore signal from one m6A spreads ~+-10 nt,
+# so a very close neighbour may partly re-measure the scored site itself.
+BANDS = [(0, 10), (10, 20), (20, 50), (50, 100), (100, 200), (200, 400)]
 
 
 def configs():

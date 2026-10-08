@@ -69,6 +69,36 @@ TRAIN_SITES = 1024    # sites per training batch
 SCORE_BUDGET = 400_000  # sites x widest site, per scoring batch
 QUADRATIC_BUDGET = 20_000_000  # sites x widest site^2, for the k-NN reader
 QUANTILES = (0.10, 0.25, 0.50, 0.75, 0.90)
+# Constrained corroboration (2026-10-08): distance bands and kernel, from the
+# label co-modification curve (~2.2x < 25 nt -> ~1.0x by 200-400 nt, both cell lines).
+FK_BANDS = ((0, 30), (30, 75), (75, 150))
+FK_RADIUS = 150
+KERNEL_NT = 90.0
+
+
+def comod_band_weights(position, graph_id, labels, bands=FK_BANDS) -> np.ndarray:
+    """Frozen band weights from TRAINING labels: w_b = max(log local co-modification
+    ratio, 0) per band (positive pairs over the within-transcript expectation
+    k(k-1)/(n(n-1)), as distance_bands.py), normalised to sum to 1."""
+    both = np.zeros(len(bands))
+    expected = np.zeros(len(bands))
+    order = np.argsort(graph_id, kind="stable")
+    g, p, y = graph_id[order], position[order], labels[order]
+    cuts = np.flatnonzero(np.diff(g)) + 1
+    for pp, yy in zip(np.split(p, cuts), np.split(y, cuts)):
+        n, k = len(pp), int(yy.sum())
+        if n < 2:
+            continue
+        iu = np.triu_indices(n, 1)
+        d = np.abs(pp[:, None] - pp[None, :])[iu]
+        bb = (yy[:, None] * yy[None, :])[iu]
+        frac = k * (k - 1) / (n * (n - 1))
+        for b, (lo, hi) in enumerate(bands):
+            sel = (d > lo) & (d <= hi)
+            both[b] += bb[sel].sum()
+            expected[b] += sel.sum() * frac
+    w = np.maximum(np.log(np.where(expected > 0, both / np.maximum(expected, 1e-9), 1.0)), 0)
+    return (w / w.sum()) if w.sum() > 0 else np.ones(len(bands)) / len(bands)
 
 
 def masked_quantiles(h: torch.Tensor, mask: torch.Tensor, levels=QUANTILES) -> torch.Tensor:
@@ -93,7 +123,9 @@ class GraphNet(nn.Module):
     def __init__(self, kind: str, width: int = 64, d: int = 64, layers: int = 2, heads: int = 4,
                  window: int = WINDOW, local: bool = True, transcript: bool = True,
                  output: str = "single", reader: str = "mean", deep: int = 0, aux: float = 0.0,
-                 pool: str = "meansd", frac: bool = False):
+                 pool: str = "meansd", frac: bool = False, nbr: str = "mean", band_shuffle: bool = False,
+                 residual: bool = False, gate: bool = True, edge_drop: float = 0.0, node_drop: float = 0.0,
+                 scalar: bool = False, scalar_shuffle: bool = False, gps: bool = False):
         super().__init__()
         if kind not in KINDS or output not in OUTPUTS or reader not in ("mean", "knn"):
             raise ValueError(f"kind {KINDS}, output {OUTPUTS}, reader mean|knn")
@@ -139,8 +171,30 @@ class GraphNet(nn.Module):
             self.layers = nn.ModuleList([nn.Linear(d, d) for _ in range(layers)])
             self.head = nn.Linear(d, 1)
         elif kind == "h2gcn":
-            n_in = d * (1 + local + transcript) + local
+            # Constrained-corroboration designs and the GraphGPS control (2026-10-08);
+            # every option defaults off, leaving the recorded models unchanged.
+            self.v2 = nbr != "mean" or residual or scalar or gps or edge_drop or node_drop
+            self.nbr, self.band_shuffle = nbr, band_shuffle
+            self.residual, self.gate_on = residual, gate
+            self.edge_drop, self.node_drop = edge_drop, node_drop
+            self.scalar, self.scalar_shuffle, self.gps = scalar, scalar_shuffle, gps
+            if self.v2 and not aux:
+                raise ValueError("the constrained designs need the auxiliary read-only head (aux > 0)")
+            if nbr == "bands":
+                # Only here: a buffer on every h2gcn would break loading saved networks.
+                self.register_buffer("band_w", torch.ones(len(FK_BANDS)) / len(FK_BANDS))
+            if residual:
+                self.gate_params = nn.Parameter(torch.zeros(3))      # a, b, c of sigmoid(a log n + b |s| + c)
+            if scalar:
+                self.c_mlp = mlp([6, 16, 1], last_activation=False)
+            n_in = d * (1 + local + transcript) + local + (d if gps else 0)
             self.layers = nn.ModuleList([nn.Linear(n_in, d) for _ in range(layers)])
+            if gps:
+                self.gq = nn.ModuleList([nn.Linear(d, d) for _ in range(layers)])
+                self.gk = nn.ModuleList([nn.Linear(d, d) for _ in range(layers)])
+                self.gv = nn.ModuleList([nn.Linear(d, d) for _ in range(layers)])
+                self.go = nn.ModuleList([nn.Linear(d, d) for _ in range(layers)])
+                self.gdist = nn.ModuleList([mlp([1, 16, heads], last_activation=False) for _ in range(layers)])
             self.head = nn.Linear(d * (layers + 1), 2 if output == "twohead" else 1)
             if output == "noisy":
                 # Per labelling (0 = dataset0, 1 = data1): P(called positive |
@@ -182,6 +236,8 @@ class GraphNet(nn.Module):
         return self.site_in(torch.cat([pooled, log_count(mask), kmer], -1))
 
     def forward(self, reads, mask, kmer, gid, pos, n_graphs):
+        if getattr(self, "v2", False):
+            return self.forward_v2(reads, mask, kmer, gid, pos, n_graphs)
         s = self.sites(reads, mask, kmer)
         if self.aux:
             # Read by loss(); the shipped score never uses it.
@@ -243,6 +299,80 @@ class GraphNet(nn.Module):
             s = s + self.ff[i](self.norm2[i](s))
         return self.head(s).squeeze(-1)
 
+
+    def forward_v2(self, reads, mask, kmer, gid, pos, n_graphs):
+        """Constrained corroboration (designs A, A2, B, C) and the GraphGPS control.
+
+        nbr="bands"   neighbour mean = sum over FK_BANDS of w_b x (mean within band b),
+                      w_b FROZEN from cell line 1's training labels (set_band_weights)
+        nbr="kernel"  neighbour mean weighted exp(-d / KERNEL_NT), up to FK_RADIUS
+        residual      logit = s + g x delta x has_neighbour, s = the read-only score,
+                      g = sigmoid(a log n + b |s| + c): isolated sites score exactly s
+        scalar        neighbours pass only (read-only score, log depth), never vectors
+        gps           GraphGPS-style: an extra channel of global multi-head attention
+                      over every site of the transcript, with a learned distance bias
+        """
+        s = self.sites(reads, mask, kmer)
+        s_score = self.aux_head(s).squeeze(-1)
+        self._aux_logit = s_score
+        logn = torch.log1p(mask.sum(1).float())
+        n = len(s)
+        delta = (pos[:, None] - pos[None, :]).abs()
+        same = gid[:, None] == gid[None, :]
+        eye = torch.eye(n, dtype=torch.bool)
+        radius = FK_RADIUS if (self.nbr != "mean" or self.scalar) else self.window
+        adj = same & (delta <= radius) & ~eye
+        if self.training and (self.edge_drop or self.node_drop):
+            # Simulate partial transcripts: drop edges, and isolate whole sites.
+            adj = adj & (torch.rand(n, n) >= self.edge_drop)
+            iso = torch.rand(n) < self.node_drop
+            adj = adj & ~iso[:, None] & ~iso[None, :]
+        A = adj.float()
+        has = (A.sum(1, keepdim=True) > 0).float()
+        if self.nbr == "kernel" or self.scalar:
+            kern = A * torch.exp(-delta.float() / KERNEL_NT)
+            W = kern / kern.sum(1, keepdim=True).clamp(min=1e-9)
+        elif self.nbr == "bands":
+            w = self.band_w.flip(0) if self.band_shuffle else self.band_w
+            W = torch.zeros(n, n)
+            for b, (lo, hi) in enumerate(FK_BANDS):
+                Ab = A * ((delta > lo) & (delta <= hi)).float()
+                W = W + w[b] * Ab / Ab.sum(1, keepdim=True).clamp(min=1)
+        else:
+            W = A / A.sum(1, keepdim=True).clamp(min=1)
+
+        if self.scalar:
+            if self.scalar_shuffle:
+                # Control: every message comes from another (fixed) site - neighbours' real scores are gone.
+                src = (torch.arange(n) + n // 2) % n
+                ms, ml = s_score[src], logn[src]
+            else:
+                ms, ml = s_score, logn
+            near = adj & (delta <= 75)
+            mx = torch.where(near, ms[None, :].expand(n, n), torch.full((n, n), -1e9)).max(1).values
+            mx = torch.where(near.any(1), mx, torch.zeros_like(mx))
+            feats = torch.stack([s_score, logn, W @ ms, mx, W @ ml, has.squeeze(1)], -1)
+            return s_score + self.c_mlp(feats).squeeze(-1)
+
+        outs = [s]
+        logd = torch.log1p(delta.float()).unsqueeze(-1)
+        for i, layer in enumerate(self.layers):
+            parts = [s, W @ s, has]
+            if self.gps:
+                h, dh = self.heads, s.shape[1] // self.heads
+                q, k, v = (f[i](s).view(n, h, dh) for f in (self.gq, self.gk, self.gv))
+                sc = torch.einsum("ihd,jhd->hij", q, k) / dh ** 0.5 + self.gdist[i](logd).permute(2, 0, 1)
+                sc = sc.masked_fill(~same, float("-inf"))           # every site of the transcript
+                att = torch.einsum("hij,jhd->ihd", torch.softmax(sc, -1), v).reshape(n, -1)
+                parts.append(self.go[i](att))
+            s = F.relu(layer(torch.cat(parts, -1)))
+            outs.append(s)
+        delta_logit = self.head(torch.cat(outs, -1)).squeeze(-1)
+        if not self.residual:
+            return delta_logit
+        a, b, c = self.gate_params
+        g = torch.sigmoid(a * logn + b * s_score.abs() + c) if self.gate_on else torch.ones_like(logn)
+        return s_score + g * delta_logit * has.squeeze(1)
 
     def predict_logit(self, *inputs):
         """The one score a site ships with."""

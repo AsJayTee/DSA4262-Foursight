@@ -43,6 +43,16 @@ def neighbour_status(index: pd.MultiIndex, y: np.ndarray, radius: int = 50) -> n
     return out
 
 
+def neighbour_count(index: pd.MultiIndex, radius: int) -> np.ndarray:
+    frame = pd.DataFrame({"t": index.get_level_values(0), "p": index.get_level_values(1)})
+    out = np.empty(len(frame), dtype=object)
+    for _, g in frame.groupby("t"):
+        p = g.p.to_numpy()
+        k = ((np.abs(p[:, None] - p[None, :]) <= radius).sum(1) - 1)
+        out[g.index] = np.select([k == 0, k == 1, k <= 3], ["0", "1", "2-3"], "4+")
+    return out
+
+
 def main() -> None:
     sources, bundle = X.load(1.0)
     n0 = len(sources["dataset0"])
@@ -59,6 +69,11 @@ def main() -> None:
                 "own read count": pd.cut(bundle.reads.counts[sl], DEPTH_BINS, right=False).astype(str),
                 "exon junction": np.where(c.dist_junction.to_numpy() >= 100, ">= 100 nt", "< 100 nt"),
                 "region": c.region.fillna("unknown").to_numpy(),
+                # Coverage confound (2026-10-08): having neighbours depends on how many
+                # positions passed the read threshold, i.e. on expression.
+                "neighbours within 50 nt": neighbour_count(s.index, 50),
+                "sites on the transcript": pd.qcut(pd.Series(s.index.get_level_values(0)).map(
+                    pd.Series(s.index.get_level_values(0)).value_counts()), 4, duplicates="drop").astype(str).to_numpy(),
             }
             for kind, labels in strata.items():
                 for level in pd.unique(labels):
@@ -66,7 +81,11 @@ def main() -> None:
                     if m.sum() < 500 or s.y[m].sum() < 20:
                         continue
                     g = xs.paired_gain(s.y[m], graphnet[arm][src][m], deepset[arm][src][m], s.genes[m], n=300)
+                    from sklearn.metrics import roc_auc_score
+                    roc_gain = (roc_auc_score(s.y[m], graphnet[arm][src][m])
+                                - roc_auc_score(s.y[m], deepset[arm][src][m]))
                     rows.append({"trained on": arm, "scored on": src, "stratum": kind, "level": level,
+                                 "ROC gain": roc_gain,
                                  "sites": int(m.sum()), "positive %": 100 * s.y[m].mean(),
                                  "graph PR AUC": g["pr_auc"], "deepset PR AUC": g["baseline_pr_auc"],
                                  "gain": g["gain"], "ci_low": g["ci_low"], "ci_high": g["ci_high"]})
