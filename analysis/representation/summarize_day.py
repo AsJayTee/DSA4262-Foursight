@@ -18,7 +18,7 @@ import pandas as pd
 import common
 
 MODELS = ["h2gcn_aux", "h2gcn_aux_r100", "fk_band", "fk_band_shuffled", "fk_kernel", "res_gate",
-          "res_nogate", "res_nodrop", "scalar_msg", "scalar_random", "gps"]
+          "res_nogate", "res_nodrop", "scalar_msg", "scalar_random", "scalar_drop", "gps", "h2gcn_twohead_aux"]
 
 
 def read(model: str, seed: int):

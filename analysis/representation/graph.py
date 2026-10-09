@@ -77,6 +77,8 @@ KERNEL_NT = 90.0   # starting value only: every model overwrites it with comod_d
 
 
 FIT_BANDS = ((0, 25), (25, 50), (50, 100), (100, 200), (200, 400))
+# probe_day.py: where gps's global attention goes (the first band is the site itself).
+ATT_BANDS = ((-1, 0), (0, 50), (50, 150), (150, 400), (400, 10**9))
 
 
 def comod_decay_scale(position, graph_id, labels, bands=FIT_BANDS) -> float:
@@ -378,7 +380,10 @@ class GraphNet(nn.Module):
             mx = torch.where(near, ms[None, :].expand(n, n), torch.full((n, n), -1e9)).max(1).values
             mx = torch.where(near.any(1), mx, torch.zeros_like(mx))
             feats = torch.stack([s_score, logn, W @ ms, mx, W @ ml, has.squeeze(1)], -1)
-            return s_score + self.c_mlp(feats).squeeze(-1)
+            corr = self.c_mlp(feats).squeeze(-1)
+            if getattr(self, "capture", None) is not None:      # probe_day.py only
+                self.capture.append({"feats": feats.detach().numpy(), "corr": corr.detach().numpy()})
+            return s_score + corr
 
         outs = [s]
         logd = torch.log1p(delta.float()).unsqueeze(-1)
@@ -389,7 +394,15 @@ class GraphNet(nn.Module):
                 q, k, v = (f[i](s).view(n, h, dh) for f in (self.gq, self.gk, self.gv))
                 sc = torch.einsum("ihd,jhd->hij", q, k) / dh ** 0.5 + self.gdist[i](logd).permute(2, 0, 1)
                 sc = sc.masked_fill(~same, float("-inf"))           # every site of the transcript
-                att = torch.einsum("hij,jhd->ihd", torch.softmax(sc, -1), v).reshape(n, -1)
+                if getattr(self, "gps_radius", None) is not None:  # probe_day.py: attention cut to |d| <= r
+                    sc = sc.masked_fill(delta[None] > self.gps_radius, float("-inf"))
+                p_att = torch.softmax(sc, -1)
+                if getattr(self, "att_stats", None) is not None:   # probe_day.py: attention mass by distance
+                    for b, (lo, hi) in enumerate(ATT_BANDS):
+                        band = ((delta > lo) & (delta <= hi)).float()
+                        self.att_stats[i, b] += float((p_att * band).sum(-1).mean(0).sum())
+                    self.att_stats[i, -1] += n
+                att = torch.einsum("hij,jhd->ihd", p_att, v).reshape(n, -1)
                 parts.append(self.go[i](att))
             s = F.relu(layer(torch.cat(parts, -1)))
             outs.append(s)
@@ -398,6 +411,9 @@ class GraphNet(nn.Module):
             return delta_logit
         a, b, c = self.gate_params
         g = torch.sigmoid(a * logn + b * s_score.abs() + c) if self.gate_on else torch.ones_like(logn)
+        if getattr(self, "capture", None) is not None:          # probe_day.py only
+            self.capture.append({k: x.detach().numpy() for k, x in (
+                ("s", s_score), ("logn", logn), ("g", g), ("correction", delta_logit), ("has", has.squeeze(1)))})
         return s_score + g * delta_logit * has.squeeze(1)
 
     def predict_logit(self, *inputs):

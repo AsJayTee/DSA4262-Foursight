@@ -100,6 +100,8 @@ GRAPH_VARIANTS = {
     # C: neighbours pass only (read-only score, log depth); control: messages from other sites.
     "scalar_msg": {"transcript": False, "aux": 0.5, "scalar": True},
     "scalar_random": {"transcript": False, "aux": 0.5, "scalar": True, "scalar_shuffle": True},
+    # C + B's active ingredient (2026-10-09): scalar messages trained with neighbour dropout.
+    "scalar_drop": {"transcript": False, "aux": 0.5, "scalar": True, "edge_drop": 0.3, "node_drop": 0.15},
     # GraphGPS-style control: local channels + global attention over the whole transcript.
     "gps": {"window": 50, "transcript": False, "aux": 0.5, "gps": True},
 }
@@ -190,10 +192,12 @@ def load(genes: float):
 
 def fit_one(model_name: str, bundle, arm: str, fold: int, args, log) -> np.ndarray:
     held = bundle.folds == fold
-    train = ~held & ((bundle.file == 0) if arm == "dataset0" else True)
+    # data1 (2026-10-09, fit stage only): cell line 2 alone - the within-cell-line
+    # reference for the premise test (data1_arm_eval.py), never a shipping arm.
+    train = ~held & ((bundle.file == 0) if arm == "dataset0" else (bundle.file == 1) if arm == "data1" else True)
     v = np.array([common._unit(f"4262:val:{g}") for g in bundle.genes])
     fit_rows, val_rows = train & (v >= 0.1), train & (v < 0.1)
-    target = bundle.y_own if arm == "dataset0" else bundle.y_both
+    target = bundle.y_own if arm in ("dataset0", "data1") else bundle.y_both
     std = common.Standardiser.fit(bundle.reads, fit_rows)
     values = std(bundle.reads.values)
     seed = 4262 + fold + 1000 * SEED
@@ -207,14 +211,14 @@ def fit_one(model_name: str, bundle, arm: str, fold: int, args, log) -> np.ndarr
         model.obs = (bundle.y_own, bundle.y_other, bundle.file)
         model.unweighted = model_name == "h2gcn_noisy2"
         if GRAPH_MODELS[model_name].get("nbr") == "bands":
-            # Frozen from cell line 1's TRAINING labels only - never the held-out fold.
-            ref = fit_rows & (bundle.file == 0)
+            # Frozen from the arm's TRAINING labels (cell line 1; cell line 2 for data1) - never the held-out fold.
+            ref = fit_rows & (bundle.file == (1 if arm == "data1" else 0))
             w = graph.comod_band_weights(bundle.position[ref], bundle.graph_id[ref], bundle.y_own[ref])
             model.band_w = torch.tensor(w, dtype=torch.float32)
             log(f"    band weights {np.round(w, 3).tolist()} (bands {graph.FK_BANDS})")
         if GRAPH_MODELS[model_name].get("nbr") == "kernel" or GRAPH_MODELS[model_name].get("scalar"):
-            # The kernel's decay scale, fitted to cell line 1's TRAINING labels only.
-            ref = fit_rows & (bundle.file == 0)
+            # The kernel's decay scale, fitted to the arm's TRAINING labels only (cell line 1; 2 for data1).
+            ref = fit_rows & (bundle.file == (1 if arm == "data1" else 0))
             lam = graph.comod_decay_scale(bundle.position[ref], bundle.graph_id[ref], bundle.y_own[ref])
             model.kernel_nt = torch.tensor(lam, dtype=torch.float32)
             log(f"    kernel decay scale {lam:.1f} nt (fitted to cell line 1 training labels)")
@@ -327,7 +331,7 @@ def main() -> None:
     ap.add_argument("stage", choices=("fit", "baseline", "combine", "all"))
     ap.add_argument("--model", help="one model or a comma-separated list (default: all)")
     ap.add_argument("--fold", type=int)
-    ap.add_argument("--arm", choices=ARMS)
+    ap.add_argument("--arm", choices=ARMS + ("data1",), help="data1: fit stage only")
     ap.add_argument("--arms", help="comma-separated: restrict every model to these arms")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--minutes", type=float, default=240.0, help="safety cap per network")
