@@ -1008,6 +1008,83 @@ discordant site between the two files. Not run.
 
 Source: results/discordant_sites.csv.
 
+### 12E. Inside the designs: scoring-only probes (9 Oct)
+
+`analysis/representation/probe_day.py` uses the seed-0 fold models on every
+held-out site, with no retraining.
+
+**1. Why `gps` fails to transfer: confirmed directly.** It was rescored with
+its whole-transcript attention cut to nearby sites. Its local channels were
+untouched.
+
+| `gps` trained on cell line 1, attention limited to | Cell line 1 PR AUC | Cell line 2 PR AUC |
+|---|---|---|
+| whole transcript (as trained) | 0.569 | 0.403 |
+| 150 nt | 0.530 (-0.039) | 0.388 (-0.015) |
+| 50 nt | 0.477 (-0.092) | 0.372 (-0.031) |
+| reference: `h2gcn_aux` | 0.544 | 0.405 |
+
+- **Cutting the long-range attention costs the training cell line 2.6-3×
+  more than the unseen one.** The same holds when trained on both lines:
+  cell line 1 drops by 0.048 / 0.100, cell line 2 by 0.024 / 0.053. (The
+  network never saw cut attention in training, so both drops are inflated.
+  The asymmetry is the evidence.)
+- **Where the attention goes:** about half of `gps`'s attention lands beyond
+  150 nt, and 31% beyond 400 nt. The site itself gets 9-21%, 0-50 nt 14-15%,
+  and 50-150 nt 15-20%. That is the range where nearby sites no longer
+  co-modify (section 5A), so `gps` is reading transcript-wide context, whose
+  meaning differs by cell line (3.3× vs 2.0× transcript-level enrichment).
+- Even with full attention, `gps` only matches `h2gcn_aux` on cell line 2
+  (0.403 vs 0.405).
+
+Source: results/probe_gps.csv, probe_gps_attention.csv.
+
+**2. What `res_gate`'s gate learned.** The gate is
+g = sigmoid(a·log reads + b·|own score| + c), across 5 folds × 3 seeds:
+
+- **Trained on cell line 1 only:** a = -0.004 ± 0.017, b = -0.032 ± 0.023.
+  The gate stayed at a constant ~0.50-0.52 and learned nothing. That fits
+  `res_nogate` ≈ `res_gate`.
+- **Trained on both cell lines:** a = -0.12 ± 0.02, b = -0.18 ± 0.03. It
+  learned the intended direction: neighbours get more weight when a site has
+  fewer reads or a less certain own score.
+  - by read count, 20-30 → 100+ reads: g falls from 0.36 to 0.31;
+  - by own-score certainty, lowest → highest fifth: g falls from 0.39 to
+    0.26.
+- The effect is modest because every training site has at least 20 reads.
+  The gate has never seen the 1-3-read regime of SG-NEx.
+
+Source: results/probe_gate_params.csv; per-site values in
+.cache/representation/probe_gate.csv.gz (contains labels, so not in git).
+
+**3. The corroboration curve (`scalar_msg`).** This is the correction, in
+logits, added to a site's own score as one neighbour summary varies. The
+other inputs stay at their real values, averaged over held-out sites that
+have neighbours (partial dependence). The x-axis is the summary's quantile.
+
+| Neighbour summary, quantile | 2% | 14% | 26% | 50% | 74% | 86% | 98% |
+|---|---|---|---|---|---|---|---|
+| Distance-weighted mean neighbour score, trained on cell line 1 | -2.71 | -1.90 | -1.55 | -1.00 | -0.37 | +0.18 | +1.83 |
+| The same, trained on both | -0.73 | -0.46 | -0.34 | -0.14 | +0.11 | +0.38 | +1.26 |
+| Best neighbour score within 75 nt, trained on cell line 1 | -0.97 | -1.14 | -1.17 | -1.14 | -0.93 | -0.44 | +0.57 |
+| The same, trained on both | +0.12 | -0.07 | -0.15 | -0.21 | -0.16 | +0.11 | +0.91 |
+
+- **Corroboration is monotone.** The more modified the neighbours look, the
+  higher the site's score, over a range of 3-4.5 logits. Most of the work
+  is *lowering* sites whose neighbours look unmodified, which is most sites.
+- **One clearly modified close neighbour matters only at the top.** The
+  best-neighbour curve is flat until about the 75th percentile, then rises.
+- **Size of the effect:** +1.8 logits turns a site at probability 0.20 into
+  0.61.
+- **The model trained on both lines uses a gentler curve.** That fits
+  corroboration being partly cell-line-specific in strength.
+- This is a figure for the report and for the "why this score" view of the
+  Task 2 platform.
+
+Source: results/probe_scalar_curve.csv (25 points per curve). The inputs
+are correlated, so a partial-dependence curve illustrates the effect; it is
+not a controlled experiment.
+
 **Implications.**
 
 - **What to ship (updated 12D).** `res_gate` alone does not beat the

@@ -1,0 +1,101 @@
+trained on,varied,quantile,value (logit),mean correction (logit)
+dataset0,best neighbour score within 75 nt,0.02,-5.356085628509521,-0.9664713
+dataset0,best neighbour score within 75 nt,0.06,-4.004333707809448,-1.080813
+dataset0,best neighbour score within 75 nt,0.1,-3.353304176330566,-1.1226052
+dataset0,best neighbour score within 75 nt,0.13999999999999999,-2.9157434730529785,-1.1448739
+dataset0,best neighbour score within 75 nt,0.18,-2.5805805950164795,-1.158663
+dataset0,best neighbour score within 75 nt,0.22,-2.305231893539429,-1.1677463
+dataset0,best neighbour score within 75 nt,0.26,-2.0727388582229613,-1.1728442
+dataset0,best neighbour score within 75 nt,0.30000000000000004,-1.8625760221481322,-1.1750629
+dataset0,best neighbour score within 75 nt,0.34,-1.6754154968261719,-1.174573
+dataset0,best neighbour score within 75 nt,0.38,-1.485735957145691,-1.1714739
+dataset0,best neighbour score within 75 nt,0.42000000000000004,-1.296657561302185,-1.1657436
+dataset0,best neighbour score within 75 nt,0.46,-1.099237195253372,-1.1558396
+dataset0,best neighbour score within 75 nt,0.5,-0.8896019756793976,-1.1406529
+dataset0,best neighbour score within 75 nt,0.54,-0.6598245873451232,-1.1177695
+dataset0,best neighbour score within 75 nt,0.5800000000000001,-0.40649014449119514,-1.0851719
+dataset0,best neighbour score within 75 nt,0.62,-0.20499714255332946,-1.054659
+dataset0,best neighbour score within 75 nt,0.66,0.006179105490446091,-1.0133603
+dataset0,best neighbour score within 75 nt,0.7000000000000001,0.14028284549713135,-0.9814172
+dataset0,best neighbour score within 75 nt,0.74,0.33329002693295495,-0.9257816
+dataset0,best neighbour score within 75 nt,0.78,0.7195936336517339,-0.8099348
+dataset0,best neighbour score within 75 nt,0.8200000000000001,1.1811547541618348,-0.6477939
+dataset0,best neighbour score within 75 nt,0.86,1.7235648307800298,-0.43508568
+dataset0,best neighbour score within 75 nt,0.9,2.3647788524627686,-0.17165908
+dataset0,best neighbour score within 75 nt,0.9400000000000001,3.1353826808929446,0.14855729
+dataset0,best neighbour score within 75 nt,0.98,4.162891124725343,0.5714631
+dataset0,neighbour mean score,0.02,-5.236138326644897,-2.7050624
+dataset0,neighbour mean score,0.06,-4.416682134628296,-2.2814984
+dataset0,neighbour mean score,0.1,-4.031415643692016,-2.0645928
+dataset0,neighbour mean score,0.13999999999999999,-3.759423793792725,-1.9039271
+dataset0,neighbour mean score,0.18,-3.5449518289566044,-1.772311
+dataset0,neighbour mean score,0.22,-3.362276553153992,-1.6562569
+dataset0,neighbour mean score,0.26,-3.2005227184295655,-1.5502341
+dataset0,neighbour mean score,0.30000000000000004,-3.0521140003204343,-1.4502524
+dataset0,neighbour mean score,0.34,-2.9175150756835935,-1.3575737
+dataset0,neighbour mean score,0.38,-2.7888036346435547,-1.2676048
+dataset0,neighbour mean score,0.42000000000000004,-2.6638988847732543,-1.179431
+dataset0,neighbour mean score,0.46,-2.540028056144714,-1.0912428
+dataset0,neighbour mean score,0.5,-2.4143176555633543,-1.000909
+dataset0,neighbour mean score,0.54,-2.2897241945266726,-0.9107911
+dataset0,neighbour mean score,0.5800000000000001,-2.1606586666107175,-0.8170481
+dataset0,neighbour mean score,0.62,-2.0278741931915283,-0.7200278
+dataset0,neighbour mean score,0.66,-1.8831848707199093,-0.61405087
+dataset0,neighbour mean score,0.7000000000000001,-1.727324376106262,-0.49963364
+dataset0,neighbour mean score,0.74,-1.5519613456726076,-0.37051612
+dataset0,neighbour mean score,0.78,-1.3548191785812376,-0.22505799
+dataset0,neighbour mean score,0.8200000000000001,-1.1127248013019557,-0.04568668
+dataset0,neighbour mean score,0.86,-0.8041960628032683,0.18395291
+dataset0,neighbour mean score,0.9,-0.37741952240467086,0.5047885
+dataset0,neighbour mean score,0.9400000000000001,0.2520287997722631,0.98817015
+dataset0,neighbour mean score,0.98,1.4761283836364698,1.8313345
+pooled_both,best neighbour score within 75 nt,0.02,-2.7107801322937015,0.11543654
+pooled_both,best neighbour score within 75 nt,0.06,-2.145764430046081,0.009542812
+pooled_both,best neighbour score within 75 nt,0.1,-1.869271402359009,-0.040841006
+pooled_both,best neighbour score within 75 nt,0.13999999999999999,-1.6759788055419924,-0.074742705
+pooled_both,best neighbour score within 75 nt,0.18,-1.5092062759399414,-0.10260379
+pooled_both,best neighbour score within 75 nt,0.22,-1.3606223750114441,-0.12608477
+pooled_both,best neighbour score within 75 nt,0.26,-1.215696593761444,-0.14721677
+pooled_both,best neighbour score within 75 nt,0.30000000000000004,-1.0755305624008176,-0.16524531
+pooled_both,best neighbour score within 75 nt,0.34,-0.94129994225502,-0.17986293
+pooled_both,best neighbour score within 75 nt,0.38,-0.8092089712619781,-0.1911961
+pooled_both,best neighbour score within 75 nt,0.42000000000000004,-0.6770471684932708,-0.19953416
+pooled_both,best neighbour score within 75 nt,0.46,-0.538261743664741,-0.20465465
+pooled_both,best neighbour score within 75 nt,0.5,-0.39597864747047423,-0.20663695
+pooled_both,best neighbour score within 75 nt,0.54,-0.2767849718928337,-0.20614295
+pooled_both,best neighbour score within 75 nt,0.5800000000000001,-0.13822956156730634,-0.2027626
+pooled_both,best neighbour score within 75 nt,0.62,-0.018403708934783936,-0.19921517
+pooled_both,best neighbour score within 75 nt,0.66,0.10878557667136193,-0.19192313
+pooled_both,best neighbour score within 75 nt,0.7000000000000001,0.23074517250061036,-0.1790334
+pooled_both,best neighbour score within 75 nt,0.74,0.4226128751039503,-0.15508676
+pooled_both,best neighbour score within 75 nt,0.78,0.7176081395149234,-0.10877277
+pooled_both,best neighbour score within 75 nt,0.8200000000000001,1.097854308605195,-0.02980842
+pooled_both,best neighbour score within 75 nt,0.86,1.5959432907104498,0.10967845
+pooled_both,best neighbour score within 75 nt,0.9,2.2101556444168082,0.32249236
+pooled_both,best neighbour score within 75 nt,0.9400000000000001,2.916855197906495,0.58343244
+pooled_both,best neighbour score within 75 nt,0.98,3.777659606933594,0.91114455
+pooled_both,neighbour mean score,0.02,-2.5696391057968144,-0.72698367
+pooled_both,neighbour mean score,0.06,-2.2287514982223513,-0.58232063
+pooled_both,neighbour mean score,0.1,-2.06256609916687,-0.5092557
+pooled_both,neighbour mean score,0.13999999999999999,-1.9439242725372317,-0.4558796
+pooled_both,neighbour mean score,0.18,-1.846659993171692,-0.4114193
+pooled_both,neighbour mean score,0.22,-1.7630306987762452,-0.37265378
+pooled_both,neighbour mean score,0.26,-1.6871544966697691,-0.33707693
+pooled_both,neighbour mean score,0.30000000000000004,-1.6171763086318969,-0.30391765
+pooled_both,neighbour mean score,0.34,-1.5512241473197936,-0.272336
+pooled_both,neighbour mean score,0.38,-1.4871070470809937,-0.24144296
+pooled_both,neighbour mean score,0.42000000000000004,-1.4219271264076234,-0.20980935
+pooled_both,neighbour mean score,0.46,-1.3563586478233336,-0.17786634
+pooled_both,neighbour mean score,0.5,-1.2885821342468262,-0.14475922
+pooled_both,neighbour mean score,0.54,-1.2187286915779114,-0.110444926
+pooled_both,neighbour mean score,0.5800000000000001,-1.1462350845336915,-0.07467435
+pooled_both,neighbour mean score,0.62,-1.0686269652843474,-0.036247186
+pooled_both,neighbour mean score,0.66,-0.980508731842041,0.0073846206
+pooled_both,neighbour mean score,0.7000000000000001,-0.8844672977924345,0.05516041
+pooled_both,neighbour mean score,0.74,-0.7712705552577973,0.1117361
+pooled_both,neighbour mean score,0.78,-0.6373678379058837,0.17901997
+pooled_both,neighbour mean score,0.8200000000000001,-0.46894315326213826,0.26493865
+pooled_both,neighbour mean score,0.86,-0.2409457796812054,0.38393262
+pooled_both,neighbour mean score,0.9,0.07387932896614066,0.5537267
+pooled_both,neighbour mean score,0.9400000000000001,0.5532744560241704,0.8202955
+pooled_both,neighbour mean score,0.98,1.5110788116455058,1.2622273
