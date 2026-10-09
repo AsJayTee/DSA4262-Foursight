@@ -40,7 +40,8 @@ Terms used throughout:
 10. [Caveats to state in the report](#10-caveats)
 11. [Suggested report figures](#11-suggested-figures)
 12. [Final batch (8 Oct): designs, literature motivation, results](#12-final-batch-8-oct-designs-literature-motivation-results)
-13. [Appendix: full tables](#appendix-full-tables) - every band, cell line,
+13. [Where the data comes from, and public data beyond the course](#13-where-the-data-comes-from-and-public-data-beyond-the-course)
+14. [Appendix: full tables](#appendix-full-tables) - every band, cell line,
     threshold and bin for the clustering-by-distance (A), neighbours-per-radius
     (B), 400-nt band-use (C), position-on-transcript (D) and RNA-folding (E)
     analyses, generated from the result files
@@ -116,8 +117,24 @@ inductively (Hamilton et al. 2017) on held-out genes.
 Ensembling two *different* designs gave +0.014 over the best single network;
 three seeds of one design gave only +0.009 (data1 gain +0.048 vs +0.039).
 
-**Against m6Anet** (pretrained HCT116_RNA002; it was likely trained on data
-overlapping dataset0's cell line, so its numbers are its best case):
+**Against m6Anet** (pretrained HCT116_RNA002). **Checked 9 Oct:** m6Anet was
+trained on exactly dataset0's setting:
+- **Same cell line and labels:** SG-NEx HCT116 direct RNA (replicate 2
+  run 1; ENA PRJEB44348) with HCT116 m6ACE-seq labels. Every m6ACE-seq
+  site counts as modified; other positions with the same 5-mer are
+  unmodified.
+- **Same pipeline:** at least 20 reads per site, DRACH motifs only,
+  nanopolish eventalign features. The course data is in m6Anet's own
+  format.
+- **The same source sample:** dataset0 itself comes from SG-NEx HCT116
+  replicate 3 run 1 (docs/test-data-assumptions.md).
+
+So on dataset0, pretrained m6Anet has seen the same cell line's labels,
+almost certainly for many of the same sites. Its dataset0 number is
+optimistic, and data1 is the fair comparison. m6Anet's own published
+cross-cell-line test (HEK293T, m6ACE-seq + miCLIP labels): ROC AUC 0.83,
+PR AUC 0.35 (Hendra et al., Nat Methods 2022, doi:10.1038/s41592-022-01666-1).
+That is close to its data1 result here (0.819 / 0.356).
 
 | | m6Anet PR AUC | m6Anet ROC AUC | our held-out PR AUC |
 |---|---|---|---|
@@ -557,8 +574,29 @@ labels differs by cell line:
 - cell line 2 labels: about 59 nt (computed for reference only; no model
   uses cell line 2 labels to set λ).
 
-Co-modification fades about twice as fast in cell line 2. This is another
-way the wider context is cell-line-specific (section 5).
+~~Co-modification fades about twice as fast in cell line 2.~~ **Retracted
+after checking (9 Oct): the difference is not robust.**
+`analysis/newdata/decay_scale_check.py`, with 1,000 transcript resamples,
+gives:
+
+| Labels | Sites | Positive % | λ (nt) | 95% interval |
+|---|---|---|---|---|
+| Cell line 1, all sites | 121,838 | 4.5 | 112.7 | 81.5-143.7 |
+| Cell line 2, all sites | 90,810 | 7.3 | 58.8 | 38.2-122.8 |
+| Shared sites, cell line 1 labels | 67,320 | 4.9 | 100.7 | 40.2-123.4 |
+| Shared sites, cell line 2 labels | 67,320 | 7.2 | 102.6 | 42.6-126.0 |
+| Cell line 2 thinned to 4.49% positives (50 draws) | 90,810 | 4.5 | 72.8 | 36.2-114.8 |
+
+- The intervals overlap heavily.
+- On the sites both files share, the two cell lines' labels give the
+  same scale (101 vs 103 nt).
+- The short 59 nt comes from cell line 2's *other* sites, not from its
+  labels decaying faster on the same positions.
+
+Report it as: the decay scale is about 100 nt in both cell lines, with
+wide uncertainty. That is consistent with section 5A (local
+co-modification is shared between cell lines) and with the ~100 nt
+exon-junction zone (12B). Source: analysis/newdata/decay_scale/decay_scale.csv.
 
 ### 12B. Literature motivation (each claim checked against the paper, 8 Oct)
 
@@ -747,6 +785,63 @@ Source: analysis/representation/results/day_summary.md (from
    context. A stronger, modern architecture is not the route to better
    cross-cell-line prediction.
 
+**Why the graph transformer failed: what the evidence says so far.**
+`gps` is the fifth time a more flexible or longer-range use of context has
+helped cell line 1 and not cell line 2:
+
+| Model | What it adds | Cell line 1 | Unseen cell line | Source |
+|---|---|---|---|---|
+| GAT | Learned attention over neighbours | +0.044 | ~0 | section 3 |
+| `h2gcn_transcript` | Transcript-wide mean | gain | +0.002 over deepset | section 3 |
+| `everything` (LightGBM) | Hand-made neighbour features | +0.065 | +0.016 | section 3 |
+| Radius 400 nt | Wider neighbourhood | +0.112 | +0.032 | section 5 |
+| `gps` | Attention over the whole transcript | +0.100 | +0.028 | 12C |
+
+A useful single number is the **cell-line gap**: for the model trained on
+both cell lines, its gain on cell line 1 minus its gain on cell line 2. It
+measures how much of what a model learns is specific to one cell line.
+
+| Model | Cell-line gap |
+|---|---|
+| `scalar_msg` | 0.021 |
+| `h2gcn_aux` | 0.034 |
+| `fk_kernel` | 0.044 |
+| `fk_band` | 0.045 |
+| `h2gcn_aux_r100` | 0.045 |
+| `res_gate` | 0.048 |
+| `gps` | **0.062** (largest) |
+
+The radius test shows the same rise with reach: 0.017 at 50 nt, 0.029 at
+100-200 nt, 0.045 at 400 nt.
+
+The working explanation:
+- **Local co-modification is shared** between cell lines (about 2.2× below
+  25 nt in both, section 5A).
+- **Transcript-level enrichment is not shared**: 3.3× in cell line 1 vs
+  2.0× in cell line 2. *Which* transcripts are heavily modified depends on
+  the cell type.
+- **Attention over the whole transcript lets `gps` learn cell line 1's
+  transcript-level pattern**, which scores well on cell line 1 and misleads
+  on cell line 2.
+- This is a failure of what the model is free to learn, not of
+  optimisation: all 30 `gps` networks converged, and its cell line 1 gain is
+  the second-highest of any design.
+
+**Not yet tested directly.** The explanation fits every row above, but no
+experiment has isolated it. Three checks would need the `gps` weights on
+Ronin, scoring only, with no retraining:
+1. switch the global attention off at scoring time. Prediction: cell line 1
+   falls, cell line 2 holds or rises;
+2. measure how much attention goes beyond 150 nt;
+3. give each site another transcript's distant context. Prediction: this
+   hurts cell line 1 more than cell line 2.
+
+Related ML literature, not checked against the papers:
+- tuned message-passing networks match graph transformers on long-range
+  benchmarks (Tönshoff et al., "Where Did the Gap Go?", 2023);
+- out-of-distribution graph benchmarks find more expressive models do not
+  generalise better (GOOD, Gui et al., NeurIPS 2022).
+
 **Confound 1: neighbour count and transcript size**
 (`gain_decomposition.py`). Gain is `h2gcn_aux` over `deepset` (the same
 read encoder, no graph). The first table is in PR AUC with 95% gene-bootstrap
@@ -818,6 +913,82 @@ results/band_ablation_v1.csv.
   - limited to ~100-150 nt to transfer (sections 5 and 12C finding 5);
   - best exploited by constraining the model (findings 1-3, 6), not by
     adding capacity (finding 7).
+
+---
+
+## 13. Where the data comes from, and public data beyond the course
+
+**dataset0 is SG-NEx HCT116 direct RNA, replicate 3 run 1, exactly.**
+`analysis/newdata/sgnex_source_match.py` compared every course site, with
+its read count, against the `data.readcount` file of all 22
+m6Anet-processed runs in the public SG-NEx bucket (`s3://sg-nex-data`, no
+credentials). For HCT116 replicate 3 run 1:
+- 100% of dataset0's sites are present;
+- 100% have an identical read count.
+
+Every other run has the sites (94-100% present) but only 0.1-3.5% identical
+read counts. Labels: HCT116 m6ACE-seq (docs/project-requirements.md).
+
+**data1 does not come from any processed SG-NEx run.**
+- No run matches more than 1.4% of its read counts.
+- That rules out A549, H9, HEYA8, HCT116, HepG2, K562 and MCF7 as processed
+  in the bucket.
+- The course says only that it is a different cell line. A natural guess
+  is HEK293T: it is the other line with public m6ACE-seq labels, and
+  m6Anet's own test line. This is **unconfirmed**; course staff could be
+  asked.
+
+**What m6Anet trained and tested on** (Hendra et al., Nat Methods 2022,
+doi:10.1038/s41592-022-01666-1; full text checked 9 Oct):
+
+| | m6Anet |
+|---|---|
+| Training reads | SG-NEx HCT116 direct RNA, replicate 2 run 1 (ENA PRJEB44348) |
+| Training labels | HCT116 m6ACE-seq; every m6ACE-seq site counts as modified; other positions with the same 5-mer are unmodified |
+| Site rule | DRACH 5-mers only (66 of them); 20 reads sampled per site; modified sites oversampled to balance classes |
+| Split | 5-fold by gene (75/25); cross-cell-line tests on 500 genes shared by both lines |
+| Test 1: HEK293T (ENA PRJEB40872, includes METTL3 knock-out) | m6ACE-seq + miCLIP labels; ROC AUC 0.83, PR AUC 0.35 (all 18 DRACH motifs) |
+| Test 2: synthetic "curlcake" RNA (GEO GSE124309) | Read-level ROC AUC 0.90, PR AUC 0.91; site-level ROC AUC > 0.98 at ≥ 50% modified |
+| Test 3: Arabidopsis (VIR mutant, ENA PRJEB32782) | Trained and tested across species; no numbers in the text |
+
+Consequences for our report:
+- Pretrained m6Anet's dataset0 score (0.503) is not a held-out number. Its
+  data1 score (0.356 PR AUC, 0.819 ROC AUC) is the fair comparison, and it
+  closely matches the paper's own HEK293T result (0.35 / 0.83).
+- **Our model beats m6Anet on m6Anet's own home ground (dataset0) and on
+  an unseen cell line (data1).**
+
+**Public data for testing generalisation beyond the course data:**
+
+1. **Other SG-NEx cell lines, already processed (easy):** A549, H9, HEYA8,
+   HepG2, K562 and MCF7, in exactly our input format.
+   - They have no single-base m6A labels.
+   - We can still test whether predictions behave biologically in every
+     line: the post-stop-codon peak, exclusion within ~100 nt of junctions,
+     and agreement between replicates.
+   - Overlaps with Task 2.
+2. **Other HCT116 runs (easy, labelled):** replicate 3 run 4 and replicate
+   4 run 3 are the same cell line, so dataset0's m6ACE-seq labels apply.
+   - Scoring them with the fold models on held-out genes gives "new
+     sequencing run, same biology". That is probably what an HCT116 test
+     file looks like.
+   - It also tests real depth variation rather than our subsampling.
+3. **HEK293T (hard, best-labelled line):**
+   - Labels: m6ACE-seq, miCLIP, miCLIP2, m6A-SAC-seq and GLORI (absolute
+     single-base levels; Liu et al., Nat Biotech 2023). GLORI is
+     reportedly among the most accurate assays.
+   - Direct RNA reads: ENA PRJEB40872, wild type and METTL3 knock-out.
+   - Not processed in SG-NEx: it needs basecalling, alignment, nanopolish
+     eventalign and m6Anet dataprep from raw signal. Roughly a day of Ronin
+     compute plus setup.
+   - The METTL3 knock-out gives a label-free test: scores at the same sites
+     should collapse when the enzyme that writes m6A is gone.
+4. **Synthetic curlcake RNA** (GEO GSE124309): fully known modification
+   status, like data2. Also needs processing from raw signal.
+
+Accessions are as given in the m6Anet paper. The specific claims about
+GLORI and other assays come from search summaries and were not checked
+against the papers.
 
 ---
 
