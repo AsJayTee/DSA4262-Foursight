@@ -39,7 +39,7 @@ Terms used throughout:
 9. [Leaderboard submission](#9-leaderboard-submission)
 10. [Caveats to state in the report](#10-caveats)
 11. [Suggested report figures](#11-suggested-figures)
-12. [Final batch (8 Oct): designs and literature motivation](#12-final-batch-8-oct-designs-and-literature-motivation)
+12. [Final batch (8 Oct): designs, literature motivation, results](#12-final-batch-8-oct-designs-literature-motivation-results)
 13. [Appendix: full tables](#appendix-full-tables) - every band, cell line,
     threshold and bin for the clustering-by-distance (A), neighbours-per-radius
     (B), 400-nt band-use (C), position-on-transcript (D) and RNA-folding (E)
@@ -499,10 +499,12 @@ scores (the model trained on these labels): dataset0 PR AUC 0.665 / ROC AUC
 
 ---
 
-## 12. Final batch (8 Oct): designs and literature motivation
+## 12. Final batch (8 Oct): designs, literature motivation, results
 
-**Status: designs and motivation only. Results pending**
-(results/day_summary.md and the confound analyses, once the batch finishes).
+**Status: complete.** The batch ran on Ronin from 04:53 to 22:41 UTC on
+8 Oct. All networks converged (convergence.py: 0 undertrained). Results are
+in 12C. The headline: constrained corroboration transfers better between
+cell lines; a graph transformer does not.
 
 **The question.** Section 8 shows the graph network works by corroboration:
 a site gains when nearby sites look modified. Section 5 shows that only about
@@ -634,7 +636,8 @@ papers' own titles and abstracts.
 | PNA: Corso et al., NeurIPS 2020 | Several aggregators instead of one mean | Per-band means in `fk_band` |
 | Gulrajani & Lopez-Paz, *In Search of Lost Domain Generalization*, ICLR 2021; V-REx: Krueger et al., ICML 2021; group DRO: Sagawa et al., ICLR 2020 | Domain-generalisation methods rarely beat plain training under a fair model selection rule; select on the worst domain | Why designs are ranked on the worse of two gains (0032), and why we change inductive bias rather than add DG penalties |
 
-**What the batch can conclude** (to fill in when results land):
+**What the batch could conclude** (written before the results; see 12C for
+what happened):
 
 - If `fk_band` or `fk_kernel` beats `h2gcn_aux` on the unseen cell line
   and its control does not, the measured distance profile is a transferable
@@ -644,6 +647,177 @@ papers' own titles and abstracts.
 - If `gps` gains on cell line 1 but not on the unseen cell line, more
   capacity buys cell-line-specific context, as predicted. Null results are
   reported as results.
+
+### 12C. Results
+
+**The designs in plain terms.** All share the same read encoder, which turns
+a site's bag of reads into a vector and an "own-reads" score: how modified
+the site looks from its own reads alone.
+
+- `h2gcn_aux` (current design, the reference): each site averages the
+  learned vectors of every neighbour within 50 nt, equally weighted, and
+  combines that with its own vector.
+- `h2gcn_aux_r100`: the same, with a 100 nt radius.
+- `fk_band`: neighbours out to 150 nt, averaged separately in three distance
+  bands (0-30, 30-75, 75-150 nt). The bands are mixed with fixed weights
+  measured from the training labels.
+- `fk_kernel`: neighbours out to 150 nt, weighted smoothly by distance,
+  exp(-d/λ), with λ (~100-120 nt) fitted to the training labels.
+- `res_gate` ("residual + gate"): the own-reads score is the starting
+  answer. The neighbours (weighted as in `fk_kernel`) may only add a
+  correction to it. A learned gate decides how much of the correction to
+  apply, using the site's read count and how confident the own-reads score
+  is. In training, 30% of neighbour links and 15% of neighbour sites are
+  dropped at random, so the model cannot rely on any one neighbour.
+- `scalar_msg` ("scalar messages"): neighbours pass only one number each,
+  their own-reads score (plus read counts), not a learned vector. A small
+  network combines the site's own score with three summaries:
+  - the distance-weighted mean of neighbour scores;
+  - the highest neighbour score within 75 nt;
+  - the neighbours' read counts.
+
+  This is corroboration in its barest form: "do the sites near me look
+  modified?"
+- `gps`: a graph transformer (GraphGPS-style). `h2gcn_aux` plus attention
+  over every site on the transcript, with a learned distance bias. It has
+  the most capacity and the longest reach.
+
+**Main table.** PR AUC gain over quantiles + LightGBM, mean ± SD over seeds 0-2
+(n = 1 for controls). The matched difference is from `h2gcn_aux` on the same
+seeds; positive = better. Seed SD is 0.001-0.005 for most designs (up to
+0.011 for `h2gcn_aux_r100`), so 3-seed differences above ~0.01 are real.
+
+| Model | Unseen cell line (train 1 → score 2) | data1 new genes | Both → cell line 2 | Both → cell line 1 | Matched diff: unseen | Matched diff: cell line 1 |
+|---|---|---|---|---|---|---|
+| `h2gcn_aux` | +0.0332 ± 0.0029 | +0.0260 ± 0.0040 | +0.0421 ± 0.0025 | +0.0763 ± 0.0052 | - | - |
+| `h2gcn_aux_r100` | +0.0372 ± 0.0048 | +0.0445 ± 0.0086 | +0.0425 ± 0.0069 | +0.0873 ± 0.0112 | +0.0040 | +0.0111 |
+| `fk_band` | +0.0447 ± 0.0011 | +0.0530 ± 0.0047 | +0.0454 ± 0.0039 | +0.0908 ± 0.0041 | +0.0115 | +0.0145 |
+| `fk_band_shuffled` | +0.0408 | +0.0550 | +0.0436 | +0.0918 | +0.0081 | +0.0107 |
+| `fk_kernel` | +0.0430 ± 0.0035 | +0.0450 ± 0.0032 | +0.0519 ± 0.0051 | +0.0956 ± 0.0076 | +0.0097 | +0.0194 |
+| **`res_gate`** | **+0.0505 ± 0.0011** | +0.0530 ± 0.0071 | +0.0534 ± 0.0050 | **+0.1017 ± 0.0074** | +0.0173 | +0.0255 |
+| `res_nogate` | +0.0479 | +0.0453 | +0.0585 | +0.1076 | +0.0152 | +0.0265 |
+| `res_nodrop` | +0.0393 | +0.0404 | +0.0497 | +0.1022 | +0.0066 | +0.0211 |
+| **`scalar_msg`** | **+0.0550 ± 0.0020** | +0.0518 ± 0.0046 | **+0.0542 ± 0.0015** | +0.0752 ± 0.0003 | **+0.0218** | -0.0011 |
+| `scalar_random` | +0.0147 | +0.0164 | +0.0278 | +0.0570 | -0.0180 | -0.0242 |
+| `gps` | +0.0281 ± 0.0028 | +0.0207 ± 0.0046 | +0.0383 ± 0.0049 | +0.1001 ± 0.0028 | -0.0051 | +0.0238 |
+
+Source: analysis/representation/results/day_summary.md (from
+`summarize_day.py`), per-run `results/<model>_nn__xsrc[__seedN].json`.
+
+**Findings.**
+
+1. **Constraining how neighbours are used transfers better than a free
+   neighbour mean.** Every constrained design beats `h2gcn_aux` on the
+   unseen cell line: by +0.010 to +0.022, against a seed SD of about
+   0.003. The worst column (the 0032 rule) improves from +0.026
+   (`h2gcn_aux`) to +0.045 (`fk_kernel`), +0.045 (`fk_band`), +0.050
+   (`res_gate`) and +0.052 (`scalar_msg`).
+2. **`res_gate` is the best all-rounder.** It is top or near-top in every
+   column: +0.051 on the unseen cell line, +0.102 on cell line 1.
+3. **`scalar_msg` transfers best but adds nothing on the training cell
+   line.** It gains +0.022 over `h2gcn_aux` on the unseen cell line and
+   -0.001 on cell line 1. When neighbours can pass only "how modified do I
+   look", the model learns what transfers and nothing that does not. It
+   also has the smallest seed spread (SD 0.0003-0.0046).
+4. **Corroboration, tested directly.** `scalar_random` feeds the same model
+   scores from unrelated sites, and the gain collapses: unseen cell line
+   +0.055 → +0.015 (-0.040). The neighbours' own-reads scores are the
+   information. This complements section 8 (gain ~0 within
+   neighbour-status groups) with an intervention.
+5. **The measured distance profile is not what matters.** Reversing the
+   band weights (`fk_band_shuffled`) keeps most of the gain (+0.041 vs
+   +0.045 unseen; n = 1). The gain comes from reaching 150 nt with
+   distance-separated averages, not from the specific weights.
+   - A smooth kernel (`fk_kernel`) and fixed bands (`fk_band`) perform
+     about the same.
+   - Both beat a hard 100-nt radius (`h2gcn_aux_r100`, +0.004).
+6. **Neighbour dropout is the active ingredient of `res_gate`; the gate
+   adds little.** Unseen cell line, n = 1 for each control:
+   - without dropout (`res_nodrop`): +0.051 → +0.039;
+   - without the depth gate (`res_nogate`): +0.048.
+
+   Dropping neighbours in training stops the model leaning on any single
+   one (DropEdge / DropNode, 12B). That also makes it more robust where
+   neighbours are missing (section 10, partial transcripts).
+7. **More capacity does not transfer (the negative result).** `gps` gains
+   +0.024 over `h2gcn_aux` on cell line 1, the second-best gain there.
+   On the unseen cell line it loses 0.005 (+0.028), and on data1 new genes
+   it is the worst design (+0.021). This is the outcome predicted from
+   sections 5 and 8: extra expressiveness and range buy cell-line-specific
+   context. A stronger, modern architecture is not the route to better
+   cross-cell-line prediction.
+
+**Confound 1: neighbour count and transcript size**
+(`gain_decomposition.py`). Gain is `h2gcn_aux` over `deepset` (the same
+read encoder, no graph). The first table is in PR AUC with 95% gene-bootstrap
+intervals, trained on cell line 1 only.
+
+| Neighbours within 50 nt | Sites (cell line 1) | Gain, cell line 1 | Gain, cell line 2 |
+|---|---|---|---|
+| 0 | 20,742 | -0.005 (-0.026, 0.014) | +0.004 (-0.010, 0.018) |
+| 1 | 35,764 | +0.010 (-0.014, 0.033) | +0.015 (-0.001, 0.029) |
+| 2-3 | 52,909 | +0.032 (0.014, 0.049) | +0.019 (0.006, 0.031) |
+| 4+ | 12,423 | +0.060 (0.026, 0.096) | +0.017 (-0.006, 0.042) |
+
+Trained on both cell lines, the same four rows on cell line 1 are -0.005 /
++0.016 / +0.045 / +0.075; on cell line 2, +0.003 / +0.020 / +0.025 / +0.045.
+
+Sites per transcript, in quartiles (trained on cell line 1):
+
+| | Smallest | 2nd | 3rd | Largest |
+|---|---|---|---|---|
+| Cell line 1 | +0.007 | +0.026 | +0.036 | +0.011 |
+| Cell line 2 | -0.003 | +0.022 | +0.025 | +0.023 |
+
+- The gain rises with the number of neighbours. It is steeper on cell
+  line 1, which fits the cell-line-specific part of wider context.
+- The gain does **not** rise steadily with transcript size, a proxy for
+  expression and coverage: the largest quartile gains little on cell
+  line 1.
+- So "more neighbours helps" is not simply "better-covered transcripts
+  help". This supports corroboration over a coverage artefact. It does not
+  fully separate the two, since neighbour count itself depends on coverage.
+- ROC AUC gains follow the same pattern and are smaller.
+
+Source: results/gain_decomposition.csv.
+
+**Confound 2: very close neighbours** (`band_ablation.py`, `h2gcn_aux_r400`
+seed 0, scored without retraining). Values are PR AUC on cell line 1 / cell
+line 2, trained on cell line 1.
+
+| Neighbours used | Cell line 1 | Cell line 2 |
+|---|---|---|
+| all (within 400 nt) | 0.5840 | 0.4042 |
+| none | 0.3464 | 0.2792 |
+| only 0-10 nt | 0.3927 | 0.3193 |
+| only 10-20 nt | 0.4085 | 0.3240 |
+| drop 0-10 nt | 0.5839 | 0.4032 |
+| drop 10-20 nt | 0.5835 | 0.4039 |
+
+Removing all neighbours within 0-10 or 10-20 nt costs at most 0.0010 PR
+AUC (0.0005 on cell line 1). The nanopore signal overlap DeepRM describes
+(±10 nt) is therefore not what the graph exploits; the gain comes from
+genuinely separate sites. The pattern is the same when trained on both cell
+lines.
+
+Source: results/band_ablation.csv. The coarser earlier bands are in
+results/band_ablation_v1.csv.
+
+**Implications.**
+
+- `res_gate` (and possibly an ensemble with `scalar_msg`) is a candidate
+  to replace the shipped `h2gcn_twohead_aux` + `h2gcn_aux` ensemble.
+  Before it does:
+  - it needs a formal `--cross-source` comparison against the shipped
+    ensemble;
+  - then a final fit, a numpy export and a predict.py test.
+
+  None of these have been run.
+- For the report, a paper-ready story:
+  - corroboration (sections 8 and 12C finding 4);
+  - limited to ~100-150 nt to transfer (sections 5 and 12C finding 5);
+  - best exploited by constraining the model (findings 1-3, 6), not by
+    adding capacity (finding 7).
 
 ---
 

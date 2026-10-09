@@ -1,0 +1,125 @@
+ trained on scored on                 stratum                      level  ROC gain  sites  positive %  graph PR AUC  deepset PR AUC   gain  ci_low  ci_high
+   dataset0  dataset0  neighbour within 50 nt unmodified neighbours only    -0.001  93227       2.439         0.407           0.406  0.001  -0.018    0.021
+   dataset0  dataset0  neighbour within 50 nt               no neighbour    -0.007  20742       4.493         0.514           0.518 -0.005  -0.026    0.014
+   dataset0  dataset0  neighbour within 50 nt       a modified neighbour    -0.011   7869      28.835         0.735           0.746 -0.011  -0.028    0.004
+   dataset0  dataset0          own read count             [100, 1000000)     0.010  24533       4.908         0.572           0.553  0.019  -0.003    0.045
+   dataset0  dataset0          own read count                  [50, 100)     0.010  33371       4.288         0.569           0.532  0.038   0.018    0.058
+   dataset0  dataset0          own read count                   [30, 50)     0.007  38830       4.463         0.541           0.522  0.019   0.001    0.039
+   dataset0  dataset0          own read count                   [20, 30)     0.004  25104       4.410         0.498           0.482  0.016  -0.006    0.037
+   dataset0  dataset0           exon junction                   < 100 nt     0.010  67071       1.546         0.364           0.367 -0.003  -0.025    0.021
+   dataset0  dataset0           exon junction                  >= 100 nt     0.008  54767       8.103         0.587           0.560  0.028   0.016    0.040
+   dataset0  dataset0                  region                        CDS     0.010  62590       3.149         0.542           0.528  0.014  -0.002    0.032
+   dataset0  dataset0                  region                      3'UTR     0.008  47989       6.356         0.574           0.545  0.029   0.015    0.043
+   dataset0  dataset0                  region                      5'UTR     0.014   2680       4.179         0.461           0.461 -0.001  -0.067    0.074
+   dataset0  dataset0                  region                  noncoding     0.013   5923       5.774         0.565           0.530  0.035  -0.009    0.070
+   dataset0  dataset0 neighbours within 50 nt                          1     0.002  35764       4.253         0.536           0.526  0.010  -0.014    0.033
+   dataset0  dataset0 neighbours within 50 nt                        2-3     0.015  52909       4.481         0.546           0.514  0.032   0.014    0.049
+   dataset0  dataset0 neighbours within 50 nt                          0    -0.007  20742       4.493         0.514           0.518 -0.005  -0.026    0.014
+   dataset0  dataset0 neighbours within 50 nt                         4+     0.019  12423       5.240         0.606           0.546  0.060   0.026    0.096
+   dataset0  dataset0 sites on the transcript              (0.999, 20.0]     0.002  30715       5.551         0.529           0.522  0.007  -0.012    0.027
+   dataset0  dataset0 sites on the transcript               (32.0, 47.0]     0.012  29660       4.461         0.589           0.554  0.036   0.012    0.057
+   dataset0  dataset0 sites on the transcript               (20.0, 32.0]     0.008  32099       5.050         0.564           0.538  0.026   0.006    0.048
+   dataset0  dataset0 sites on the transcript              (47.0, 118.0]     0.014  29364       2.813         0.476           0.466  0.011  -0.016    0.037
+   dataset0     data1  neighbour within 50 nt unmodified neighbours only     0.007  64238       4.706         0.286           0.277  0.009  -0.001    0.019
+   dataset0     data1  neighbour within 50 nt       a modified neighbour    -0.009   9308      26.407         0.603           0.619 -0.016  -0.028   -0.003
+   dataset0     data1  neighbour within 50 nt               no neighbour    -0.003  16906       6.323         0.347           0.343  0.004  -0.010    0.018
+   dataset0     data1          own read count             [100, 1000000)     0.010  16686       9.445         0.408           0.411 -0.003  -0.019    0.015
+   dataset0     data1          own read count                   [20, 30)     0.014  29324       5.985         0.363           0.335  0.028   0.016    0.039
+   dataset0     data1          own read count                   [30, 50)     0.008  25301       6.577         0.428           0.405  0.023   0.009    0.037
+   dataset0     data1          own read count                  [50, 100)     0.004  19141       8.124         0.458           0.449  0.009  -0.006    0.025
+   dataset0     data1           exon junction                   < 100 nt     0.017  54216       3.617         0.201           0.186  0.015   0.003    0.026
+   dataset0     data1           exon junction                  >= 100 nt     0.006  36236      12.664         0.493           0.481  0.012   0.002    0.022
+   dataset0     data1                  region                        CDS     0.013  48728       5.167         0.345           0.328  0.017   0.005    0.028
+   dataset0     data1                  region                      3'UTR     0.008  31251      10.953         0.459           0.448  0.011   0.000    0.022
+   dataset0     data1                  region                      5'UTR     0.046   2484       4.469         0.325           0.304  0.021  -0.031    0.072
+   dataset0     data1                  region                  noncoding     0.009   5544       8.983         0.432           0.412  0.020  -0.004    0.047
+   dataset0     data1 neighbours within 50 nt                          1     0.005  27233       7.065         0.379           0.364  0.015  -0.001    0.029
+   dataset0     data1 neighbours within 50 nt                        2-3     0.019  37840       7.518         0.435           0.416  0.019   0.006    0.031
+   dataset0     data1 neighbours within 50 nt                          0    -0.003  16906       6.323         0.347           0.343  0.004  -0.010    0.018
+   dataset0     data1 neighbours within 50 nt                         4+     0.017   8473       8.403         0.474           0.457  0.017  -0.006    0.042
+   dataset0     data1 sites on the transcript              (0.999, 18.0]     0.004  23671       8.652         0.392           0.395 -0.003  -0.016    0.011
+   dataset0     data1 sites on the transcript               (28.0, 41.0]     0.016  24082       6.951         0.448           0.424  0.025   0.011    0.040
+   dataset0     data1 sites on the transcript               (18.0, 28.0]     0.010  21792       7.617         0.412           0.390  0.022   0.005    0.036
+   dataset0     data1 sites on the transcript              (41.0, 122.0]     0.014  20907       5.587         0.361           0.338  0.023   0.008    0.040
+pooled_both  dataset0  neighbour within 50 nt unmodified neighbours only     0.002  93227       2.439         0.418           0.407  0.011  -0.003    0.029
+pooled_both  dataset0  neighbour within 50 nt               no neighbour    -0.005  20742       4.493         0.520           0.515  0.005  -0.013    0.024
+pooled_both  dataset0  neighbour within 50 nt       a modified neighbour    -0.002   7869      28.835         0.732           0.741 -0.010  -0.023    0.004
+pooled_both  dataset0          own read count             [100, 1000000)     0.018  24533       4.908         0.583           0.549  0.034   0.009    0.061
+pooled_both  dataset0          own read count                  [50, 100)     0.014  33371       4.288         0.568           0.535  0.033   0.012    0.055
+pooled_both  dataset0          own read count                   [30, 50)     0.008  38830       4.463         0.558           0.513  0.045   0.026    0.066
+pooled_both  dataset0          own read count                   [20, 30)     0.008  25104       4.410         0.487           0.472  0.015  -0.010    0.036
+pooled_both  dataset0           exon junction                   < 100 nt     0.014  67071       1.546         0.390           0.342  0.047   0.022    0.071
+pooled_both  dataset0           exon junction                  >= 100 nt     0.012  54767       8.103         0.592           0.564  0.028   0.016    0.041
+pooled_both  dataset0                  region                        CDS     0.017  62590       3.149         0.566           0.531  0.035   0.020    0.052
+pooled_both  dataset0                  region                      3'UTR     0.010  47989       6.356         0.575           0.546  0.028   0.013    0.045
+pooled_both  dataset0                  region                      5'UTR     0.017   2680       4.179         0.525           0.456  0.069   0.002    0.126
+pooled_both  dataset0                  region                  noncoding     0.006   5923       5.774         0.556           0.529  0.028  -0.012    0.070
+pooled_both  dataset0 neighbours within 50 nt                          1     0.009  35764       4.253         0.544           0.528  0.016  -0.003    0.036
+pooled_both  dataset0 neighbours within 50 nt                        2-3     0.017  52909       4.481         0.563           0.518  0.045   0.027    0.063
+pooled_both  dataset0 neighbours within 50 nt                          0    -0.005  20742       4.493         0.520           0.515  0.005  -0.013    0.024
+pooled_both  dataset0 neighbours within 50 nt                         4+     0.024  12423       5.240         0.597           0.522  0.075   0.035    0.113
+pooled_both  dataset0 sites on the transcript              (0.999, 20.0]     0.006  30715       5.551         0.539           0.523  0.016  -0.006    0.037
+pooled_both  dataset0 sites on the transcript               (32.0, 47.0]     0.015  29660       4.461         0.590           0.549  0.042   0.021    0.064
+pooled_both  dataset0 sites on the transcript               (20.0, 32.0]     0.010  32099       5.050         0.572           0.536  0.036   0.014    0.057
+pooled_both  dataset0 sites on the transcript              (47.0, 118.0]     0.020  29364       2.813         0.506           0.460  0.046   0.010    0.075
+pooled_both     data1  neighbour within 50 nt unmodified neighbours only     0.011  64238       4.706         0.309           0.296  0.013   0.001    0.027
+pooled_both     data1  neighbour within 50 nt       a modified neighbour    -0.000   9308      26.407         0.626           0.633 -0.007  -0.018    0.007
+pooled_both     data1  neighbour within 50 nt               no neighbour     0.001  16906       6.323         0.379           0.376  0.003  -0.011    0.019
+pooled_both     data1          own read count             [100, 1000000)     0.015  16686       9.445         0.443           0.424  0.019  -0.000    0.036
+pooled_both     data1          own read count                   [20, 30)     0.017  29324       5.985         0.381           0.349  0.032   0.019    0.046
+pooled_both     data1          own read count                   [30, 50)     0.009  25301       6.577         0.442           0.425  0.017   0.001    0.032
+pooled_both     data1          own read count                  [50, 100)     0.007  19141       8.124         0.489           0.475  0.014   0.002    0.027
+pooled_both     data1           exon junction                   < 100 nt     0.017  54216       3.617         0.219           0.209  0.010  -0.001    0.021
+pooled_both     data1           exon junction                  >= 100 nt     0.013  36236      12.664         0.525           0.500  0.026   0.016    0.036
+pooled_both     data1                  region                        CDS     0.017  48728       5.167         0.375           0.352  0.023   0.012    0.036
+pooled_both     data1                  region                      3'UTR     0.012  31251      10.953         0.489           0.468  0.020   0.010    0.032
+pooled_both     data1                  region                      5'UTR     0.022   2484       4.469         0.334           0.338 -0.004  -0.048    0.035
+pooled_both     data1                  region                  noncoding     0.018   5544       8.983         0.467           0.427  0.040   0.012    0.067
+pooled_both     data1 neighbours within 50 nt                          1     0.008  27233       7.065         0.404           0.383  0.020   0.006    0.034
+pooled_both     data1 neighbours within 50 nt                        2-3     0.024  37840       7.518         0.460           0.435  0.025   0.010    0.036
+pooled_both     data1 neighbours within 50 nt                          0     0.001  16906       6.323         0.379           0.376  0.003  -0.011    0.019
+pooled_both     data1 neighbours within 50 nt                         4+     0.014   8473       8.403         0.526           0.481  0.045   0.018    0.077
+pooled_both     data1 sites on the transcript              (0.999, 18.0]     0.018  23671       8.652         0.426           0.401  0.025   0.010    0.038
+pooled_both     data1 sites on the transcript               (28.0, 41.0]     0.016  24082       6.951         0.473           0.453  0.020   0.005    0.036
+pooled_both     data1 sites on the transcript               (18.0, 28.0]     0.011  21792       7.617         0.437           0.424  0.013  -0.002    0.029
+pooled_both     data1 sites on the transcript              (41.0, 122.0]     0.010  20907       5.587         0.398           0.363  0.035   0.015    0.054
+  dataset0 fold 0 (582s)
+  dataset0 fold 1 (657s)
+  dataset0 fold 2 (529s)
+  dataset0 fold 3 (587s)
+  dataset0 fold 4 (606s)
+  pooled_both fold 0 (583s)
+  pooled_both fold 1 (659s)
+  pooled_both fold 2 (547s)
+  pooled_both fold 3 (598s)
+  pooled_both fold 4 (603s)
+scored on                 dataset0   data1
+trained on  neighbours                    
+dataset0    all             0.5840  0.4042
+            none            0.3464  0.2792
+            only 0-10       0.3927  0.3193
+            only 10-20      0.4085  0.3240
+            only 20-50      0.4604  0.3655
+            only 50-100     0.4998  0.3703
+            only 100-200    0.5392  0.3859
+            only 200-400    0.5551  0.3875
+            drop 0-10       0.5839  0.4032
+            drop 10-20      0.5835  0.4039
+            drop 20-50      0.5805  0.4012
+            drop 50-100     0.5792  0.4023
+            drop 100-200    0.5771  0.4007
+            drop 200-400    0.5702  0.4048
+pooled_both all             0.5847  0.4244
+            none            0.4219  0.3439
+            only 0-10       0.4423  0.3640
+            only 10-20      0.4448  0.3590
+            only 20-50      0.4819  0.3865
+            only 50-100     0.5073  0.3909
+            only 100-200    0.5386  0.4002
+            only 200-400    0.5462  0.3974
+            drop 0-10       0.5831  0.4227
+            drop 10-20      0.5838  0.4236
+            drop 20-50      0.5795  0.4196
+            drop 50-100     0.5804  0.4208
+            drop 100-200    0.5763  0.4213
+            drop 200-400    0.5743  0.4252

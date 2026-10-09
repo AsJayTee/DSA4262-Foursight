@@ -1,0 +1,440 @@
+{
+  "created": "2026-10-08T12:10:01+00:00",
+  "profile": "standard",
+  "subsample_seed": 4262,
+  "cross_source": {
+    "config": "scalar_random (network)",
+    "baseline": "lightgbm_quantiles",
+    "arms": {
+      "dataset0": {
+        "dataset0": {
+          "n": 121838,
+          "n_positive": 5475,
+          "pr_auc": 0.5211535149375712,
+          "roc_auc": 0.9301552640126274,
+          "baseline_pr_auc": 0.47594076977013616,
+          "gain": 0.045212745167435064,
+          "ci_low": 0.035762447567748434,
+          "ci_high": 0.05607458983986159,
+          "win_rate": 1.0
+        },
+        "data1": {
+          "n": 90452,
+          "n_positive": 6550,
+          "pr_auc": 0.38657025270675194,
+          "roc_auc": 0.81298967661472,
+          "baseline_pr_auc": 0.37187928166628553,
+          "gain": 0.014690971040466405,
+          "ci_low": 0.005632027158713371,
+          "ci_high": 0.023147570868575704,
+          "win_rate": 1.0
+        },
+        "gain_mean": 0.029951858103950735,
+        "gain_worst": 0.014690971040466405,
+        "eligible": true
+      },
+      "pooled_both": {
+        "dataset0": {
+          "n": 121838,
+          "n_positive": 5475,
+          "pr_auc": 0.5292379500083912,
+          "roc_auc": 0.9328342707439249,
+          "baseline_pr_auc": 0.47227920663912526,
+          "gain": 0.056958743369265985,
+          "ci_low": 0.04636754525287,
+          "ci_high": 0.06698575800081949,
+          "win_rate": 1.0
+        },
+        "data1": {
+          "n": 90452,
+          "n_positive": 6550,
+          "pr_auc": 0.419507164787014,
+          "roc_auc": 0.8359739143140643,
+          "baseline_pr_auc": 0.39167361585367527,
+          "gain": 0.027833548933338725,
+          "ci_low": 0.01982579865894267,
+          "ci_high": 0.035801643418364,
+          "win_rate": 1.0
+        },
+        "gain_mean": 0.042396146151302355,
+        "gain_worst": 0.027833548933338725,
+        "eligible": true
+      }
+    },
+    "veto": -0.005,
+    "headline_arm": "dataset0",
+    "crossed": {
+      "A": {
+        "measurements": "dataset0",
+        "labels": "dataset0",
+        "n": 67320,
+        "n_positive": 3291,
+        "pr_auc": 0.5591446517845609,
+        "roc_auc": 0.9294374853570107,
+        "baseline_pr_auc": 0.512497605948465,
+        "gain": 0.0466470458360958,
+        "ci_low": 0.033232051870944655,
+        "ci_high": 0.059334634004293056,
+        "win_rate": 1.0
+      },
+      "B": {
+        "measurements": "dataset0",
+        "labels": "data1",
+        "n": 67320,
+        "n_positive": 4853,
+        "pr_auc": 0.3916102644262428,
+        "roc_auc": 0.8096626685900252,
+        "baseline_pr_auc": 0.36517073804202915,
+        "gain": 0.026439526384213652,
+        "ci_low": 0.017645110876657717,
+        "ci_high": 0.03468631928296612,
+        "win_rate": 1.0
+      },
+      "C": {
+        "measurements": "data1",
+        "labels": "dataset0",
+        "n": 67320,
+        "n_positive": 3291,
+        "pr_auc": 0.5554624626280277,
+        "roc_auc": 0.9237624892310007,
+        "baseline_pr_auc": 0.5211049338026963,
+        "gain": 0.034357528825331385,
+        "ci_low": 0.02180608737524965,
+        "ci_high": 0.04731852322787781,
+        "win_rate": 1.0
+      },
+      "D": {
+        "measurements": "data1",
+        "labels": "data1",
+        "n": 67320,
+        "n_positive": 4853,
+        "pr_auc": 0.39325927648431364,
+        "roc_auc": 0.8048018519242821,
+        "baseline_pr_auc": 0.3801754213698428,
+        "gain": 0.013083855114470855,
+        "ci_low": 0.004500245215205101,
+        "ci_high": 0.023461553706783617,
+        "win_rate": 1.0
+      }
+    },
+    "data1_new_genes": {
+      "n": 12061,
+      "n_positive": 920,
+      "pr_auc": 0.37877964260529867,
+      "roc_auc": 0.8512326190373981,
+      "baseline_pr_auc": 0.36233987820931063,
+      "gain": 0.016439764395988044,
+      "ci_low": -0.003962240501695799,
+      "ci_high": 0.039558379381240495,
+      "win_rate": 0.944
+    }
+  },
+  "curves": {
+    "series": {
+      "curve/xsrc/diag/dataset0_gain": [
+        0.045212745167435064,
+        -0.05,
+        0.1,
+        -0.05,
+        0.1,
+        -0.005,
+        -0.005
+      ],
+      "curve/xsrc/diag/data1_gain": [
+        0.014690971040466405,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN
+      ],
+      "curve/xsrc/diag/y_equals_x": [
+        NaN,
+        -0.05,
+        0.1,
+        NaN,
+        NaN,
+        NaN,
+        NaN
+      ],
+      "curve/xsrc/diag/veto_data1": [
+        NaN,
+        NaN,
+        NaN,
+        -0.005,
+        -0.005,
+        NaN,
+        NaN
+      ],
+      "curve/xsrc/diag/veto_dataset0": [
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        NaN,
+        -0.05,
+        0.1
+      ],
+      "curve/xsrc/transfer/step": [
+        0.0,
+        1.0,
+        2.0
+      ],
+      "curve/xsrc/transfer/gain": [
+        0.045212745167435064,
+        0.014690971040466405,
+        0.016439764395988044
+      ],
+      "curve/xsrc/transfer/ci_low": [
+        0.035762447567748434,
+        0.005632027158713371,
+        -0.003962240501695799
+      ],
+      "curve/xsrc/transfer/ci_high": [
+        0.05607458983986159,
+        0.023147570868575704,
+        0.039558379381240495
+      ],
+      "curve/xsrc/crossed/cell": [
+        0.0,
+        1.0,
+        2.0,
+        3.0
+      ],
+      "curve/xsrc/crossed/gain": [
+        0.0466470458360958,
+        0.026439526384213652,
+        0.034357528825331385,
+        0.013083855114470855
+      ],
+      "curve/xsrc/crossed/ci_low": [
+        0.033232051870944655,
+        0.017645110876657717,
+        0.02180608737524965,
+        0.004500245215205101
+      ],
+      "curve/xsrc/crossed/ci_high": [
+        0.059334634004293056,
+        0.03468631928296612,
+        0.04731852322787781,
+        0.023461553706783617
+      ],
+      "curve/xsrc/arm/index": [
+        0.0,
+        2.0
+      ],
+      "curve/xsrc/arm/gain_mean": [
+        0.029951858103950735,
+        0.042396146151302355
+      ],
+      "curve/xsrc/arm/dataset0_gain": [
+        0.045212745167435064,
+        0.056958743369265985
+      ],
+      "curve/xsrc/arm/data1_gain": [
+        0.014690971040466405,
+        0.027833548933338725
+      ],
+      "curve/xsrc/path/dataset0_pr_auc": [
+        0.5211535149375712,
+        0.5292379500083912
+      ],
+      "curve/xsrc/path/data1_pr_auc": [
+        0.38657025270675194,
+        0.419507164787014
+      ]
+    },
+    "pairs": [
+      [
+        "curve/xsrc/diag/dataset0_gain",
+        "curve/xsrc/diag/data1_gain"
+      ],
+      [
+        "curve/xsrc/diag/dataset0_gain",
+        "curve/xsrc/diag/y_equals_x"
+      ],
+      [
+        "curve/xsrc/diag/dataset0_gain",
+        "curve/xsrc/diag/veto_data1"
+      ],
+      [
+        "curve/xsrc/diag/dataset0_gain",
+        "curve/xsrc/diag/veto_dataset0"
+      ],
+      [
+        "curve/xsrc/transfer/step",
+        "curve/xsrc/transfer/gain"
+      ],
+      [
+        "curve/xsrc/transfer/step",
+        "curve/xsrc/transfer/ci_low"
+      ],
+      [
+        "curve/xsrc/transfer/step",
+        "curve/xsrc/transfer/ci_high"
+      ],
+      [
+        "curve/xsrc/crossed/cell",
+        "curve/xsrc/crossed/gain"
+      ],
+      [
+        "curve/xsrc/crossed/cell",
+        "curve/xsrc/crossed/ci_low"
+      ],
+      [
+        "curve/xsrc/crossed/cell",
+        "curve/xsrc/crossed/ci_high"
+      ],
+      [
+        "curve/xsrc/arm/index",
+        "curve/xsrc/arm/gain_mean"
+      ],
+      [
+        "curve/xsrc/arm/index",
+        "curve/xsrc/arm/dataset0_gain"
+      ],
+      [
+        "curve/xsrc/arm/index",
+        "curve/xsrc/arm/data1_gain"
+      ],
+      [
+        "curve/xsrc/path/dataset0_pr_auc",
+        "curve/xsrc/path/data1_pr_auc"
+      ]
+    ]
+  },
+  "vs_deepset": {
+    "arms": {
+      "dataset0": {
+        "dataset0": {
+          "n": 121838,
+          "n_positive": 5475,
+          "pr_auc": 0.5211535149375712,
+          "roc_auc": 0.9301552640126274,
+          "baseline_pr_auc": 0.5212987525914113,
+          "gain": -0.00014523765384011345,
+          "ci_low": -0.006087616610405131,
+          "ci_high": 0.006350371947327114,
+          "win_rate": 0.502
+        },
+        "data1": {
+          "n": 90452,
+          "n_positive": 6550,
+          "pr_auc": 0.38657025270675194,
+          "roc_auc": 0.81298967661472,
+          "baseline_pr_auc": 0.38933388094843024,
+          "gain": -0.0027636282416783065,
+          "ci_low": -0.007297392358751133,
+          "ci_high": 0.0022386888222595495,
+          "win_rate": 0.128
+        },
+        "gain_mean": -0.00145443294775921,
+        "gain_worst": -0.0027636282416783065,
+        "eligible": true
+      },
+      "pooled_both": {
+        "dataset0": {
+          "n": 121838,
+          "n_positive": 5475,
+          "pr_auc": 0.5292379500083912,
+          "roc_auc": 0.9328342707439249,
+          "baseline_pr_auc": 0.5191811149859111,
+          "gain": 0.010056835022480115,
+          "ci_low": 0.0007176665893489311,
+          "ci_high": 0.02012734667356382,
+          "win_rate": 0.986
+        },
+        "data1": {
+          "n": 90452,
+          "n_positive": 6550,
+          "pr_auc": 0.419507164787014,
+          "roc_auc": 0.8359739143140643,
+          "baseline_pr_auc": 0.41190536931591176,
+          "gain": 0.007601795471102235,
+          "ci_low": 0.0005001403491231864,
+          "ci_high": 0.01407797690892887,
+          "win_rate": 0.984
+        },
+        "gain_mean": 0.008829315246791175,
+        "gain_worst": 0.007601795471102235,
+        "eligible": true
+      }
+    },
+    "veto": -0.005,
+    "headline_arm": "dataset0",
+    "crossed": {
+      "A": {
+        "measurements": "dataset0",
+        "labels": "dataset0",
+        "n": 67320,
+        "n_positive": 3291,
+        "pr_auc": 0.5591446517845609,
+        "roc_auc": 0.9294374853570107,
+        "baseline_pr_auc": 0.5565835300705149,
+        "gain": 0.0025611217140459885,
+        "ci_low": -0.005442067819710927,
+        "ci_high": 0.01047710228296257,
+        "win_rate": 0.728
+      },
+      "B": {
+        "measurements": "dataset0",
+        "labels": "data1",
+        "n": 67320,
+        "n_positive": 4853,
+        "pr_auc": 0.3916102644262428,
+        "roc_auc": 0.8096626685900252,
+        "baseline_pr_auc": 0.39421194039164886,
+        "gain": -0.0026016759654060584,
+        "ci_low": -0.007302927689759945,
+        "ci_high": 0.003141876057588371,
+        "win_rate": 0.182
+      },
+      "C": {
+        "measurements": "data1",
+        "labels": "dataset0",
+        "n": 67320,
+        "n_positive": 3291,
+        "pr_auc": 0.5554624626280277,
+        "roc_auc": 0.9237624892310007,
+        "baseline_pr_auc": 0.5565581624970304,
+        "gain": -0.0010956998690027087,
+        "ci_low": -0.008302008614889587,
+        "ci_high": 0.006637385462031997,
+        "win_rate": 0.41
+      },
+      "D": {
+        "measurements": "data1",
+        "labels": "data1",
+        "n": 67320,
+        "n_positive": 4853,
+        "pr_auc": 0.39325927648431364,
+        "roc_auc": 0.8048018519242821,
+        "baseline_pr_auc": 0.39675935234431703,
+        "gain": -0.003500075860003393,
+        "ci_low": -0.008235206405772673,
+        "ci_high": 0.0018346924550332246,
+        "win_rate": 0.114
+      }
+    },
+    "data1_new_genes": {
+      "n": 12061,
+      "n_positive": 920,
+      "pr_auc": 0.37877964260529867,
+      "roc_auc": 0.8512326190373981,
+      "baseline_pr_auc": 0.3785825194708917,
+      "gain": 0.00019712313440695128,
+      "ci_low": -0.012725788812774622,
+      "ci_high": 0.013225086363259276,
+      "win_rate": 0.496
+    }
+  },
+  "network": {
+    "model": "scalar_random",
+    "minutes": 720.0,
+    "epochs": 300,
+    "genes": 1.0,
+    "recipe": "v3",
+    "seeds": 1
+  }
+}
