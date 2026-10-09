@@ -898,16 +898,131 @@ lines.
 Source: results/band_ablation.csv. The coarser earlier bands are in
 results/band_ablation_v1.csv.
 
+### 12D. Do the gains hold across genes? And can the models tell the cell lines apart? (9 Oct)
+
+`analysis/representation/day_significance.py` runs locally from the cached
+out-of-fold predictions and needs no torch.
+- Each model's three seeds are rank-averaged.
+- The difference from `h2gcn_aux` (also seed-averaged) is computed on
+  identical sites.
+- The 95% interval and the win rate come from 1,000 resamples of whole
+  genes.
+
+Source: results/day_significance.csv.
+
+**Paired difference from `h2gcn_aux`, PR AUC [95% gene interval] (gene
+resamples won):**
+
+| Model | Unseen cell line | New genes | Both → cell line 2 | Both → cell line 1 |
+|---|---|---|---|---|
+| `res_gate` | **+0.017 [+0.011, +0.023]** 100% | +0.028 [+0.012, +0.042] 100% | +0.009 [+0.003, +0.016] 100% | +0.019 [+0.010, +0.028] 100% |
+| `scalar_msg` | **+0.020 [+0.013, +0.028]** 100% | +0.024 [+0.007, +0.041] 100% | +0.010 [+0.002, +0.017] 99% | -0.007 [-0.017, +0.004] 10% |
+| `res_gate` + `scalar_msg` (rank average) | **+0.024 [+0.018, +0.029]** 100% | +0.029 [+0.012, +0.045] 100% | +0.016 [+0.009, +0.022] 100% | +0.019 [+0.010, +0.027] 100% |
+| `h2gcn_aux_r100` | +0.005 [-0.002, +0.011] 92% | +0.022 [+0.004, +0.039] 99% | -0.000 [-0.008, +0.006] 44% | +0.009 [-0.001, +0.018] 96% |
+| `gps` | -0.003 [-0.011, +0.005] 26% | -0.003 [-0.018, +0.012] 34% | -0.002 [-0.009, +0.005] 24% | **+0.025 [+0.015, +0.035]** 100% |
+| `scalar_random` (seed 0) | -0.018 [-0.026, -0.010] 0% | -0.013 [-0.032, +0.007] 13% | -0.016 [-0.024, -0.008] 0% | -0.024 [-0.036, -0.013] 0% |
+
+- **`res_gate` beats `h2gcn_aux` everywhere.** Every interval excludes
+  zero.
+- **`scalar_msg` beats it only on cell line 2.** On cell line 1 it is a
+  tie.
+- **Their ensemble is the best on the unseen cell line:** +0.024
+  [+0.018, +0.029].
+- **`gps` is significantly better *only* on the training cell line,**
+  which confirms finding 7.
+- **`scalar_random` is significantly worse.** That is the corroboration
+  test, now with intervals.
+
+**Against the shipped ensemble (seed 0 only).** The shipped model is
+`h2gcn_twohead_aux` + `h2gcn_aux`; only seed 0 of `h2gcn_twohead_aux` is
+cached, so this is a stand-in. Both-cell-lines arm. Numbers are in
+results/day_significance.csv (rows with vs = "shipped ensemble"):
+
+- `res_gate` alone **loses** on cell line 1: -0.0135 [-0.022, -0.006].
+  On cell line 2 it ties: -0.002.
+- `res_gate` + `scalar_msg` gains on cell line 2 (+0.007, interval above
+  zero) but loses on cell line 1 (-0.013). The worse-gain rule (0032)
+  rejects it.
+- **`h2gcn_twohead_aux` + `res_gate` + `scalar_msg`** gains on both:
+  - cell line 2: +0.0074 [+0.003, +0.012], 100% of gene resamples;
+  - cell line 1: +0.0044 [-0.002, +0.010], 92% of gene resamples.
+
+  Its worse gain is +0.004, positive but inside the ~0.005 tie band. It is
+  the only candidate so far that does not lose on either cell line.
+- Adding all four models (shipped + both new ones) gives +0.008 / +0.003.
+
+The shipped model's strength on cell line 1 comes from `h2gcn_twohead_aux`,
+which has a separate head per cell line and the transcript channel. The new
+designs add what transfers. Confirming this needs seeds 1-2 and an export
+path for the new designs (not run).
+
+**Discordant sites: can a model tell which cell line carries the
+modification?** 67,320 sites appear in both files. Their labels:
+
+| | Count |
+|---|---|
+| Modified in both | 2,136 |
+| Modified in cell line 1 only | 1,155 |
+| Modified in cell line 2 only | 2,717 |
+| Unmodified in both | 61,312 |
+
+Of the 6,008 shared sites modified in either cell line, **64% are modified
+in only one** (labels agree on 36%, by Jaccard overlap).
+
+For each discordant site, the test compares the model's score in cell line
+2's reads with its score in cell line 1's reads, as percentile ranks within
+each file. The models were trained on cell line 1 labels only.
+
+| Model (seed 0) | Which-line AUC | Rank correlation between the two files, shared sites |
+|---|---|---|
+| quantiles + LightGBM | 0.52 | 0.72 |
+| deepset (reads only) | 0.50 | 0.88 |
+| `h2gcn_aux` | 0.48 | 0.91 |
+| `res_gate` | 0.48 | 0.91 |
+| `scalar_msg` | 0.48 | 0.91 |
+| `gps` | 0.45 | 0.93 |
+
+- **No model can tell which cell line carries the modification** at sites
+  where the labels disagree. The which-line AUC is about 0.5 throughout.
+- A site gets nearly the same rank in both cell lines' reads (correlation
+  0.88-0.93 for the networks). That includes deepset, which sees only the
+  site's own reads.
+- The scores shift by the same small amount at discordant and concordant
+  sites (-0.02 to -0.03 in rank).
+
+So at the 3,872 sites where the two labellings disagree, the reads give
+the networks no detectable cell-line difference. There are two readings,
+and this test cannot separate them:
+1. **Labels:** much of the disagreement is labelling (m6ACE-seq thresholds,
+   coverage, antibody background) rather than a difference in the
+   molecules.
+2. **Sensitivity:** the molecules do differ, by modification fraction, but
+   the signal is below what these models resolve.
+
+Either way, there is a **ceiling on cross-cell-line accuracy that no model
+can pass using the reads alone.** It also explains why context features
+that encode one cell line's labelling do not transfer.
+
+A direct test would be to compare the raw read measurements of each
+discordant site between the two files. Not run.
+
+Source: results/discordant_sites.csv.
+
 **Implications.**
 
-- `res_gate` (and possibly an ensemble with `scalar_msg`) is a candidate
-  to replace the shipped `h2gcn_twohead_aux` + `h2gcn_aux` ensemble.
-  Before it does:
-  - it needs a formal `--cross-source` comparison against the shipped
-    ensemble;
-  - then a final fit, a numpy export and a predict.py test.
+- **What to ship (updated 12D).** `res_gate` alone does not beat the
+  shipped ensemble: it loses on cell line 1.
+  - The candidate is `h2gcn_twohead_aux` + `res_gate` + `scalar_msg`. On
+    seed 0 it is the only option that does not lose on either cell line.
+  - Before it ships: seeds 1-2 of `h2gcn_twohead_aux` (to compare like with
+    like), then a final fit, a numpy export of `res_gate` and `scalar_msg`
+    (new inference code: shared infrastructure, needs a decision record) and
+    a predict.py test.
 
   None of these have been run.
+- **A labelling ceiling (12D).** At sites where the two cell lines' labels
+  disagree, no model sees a difference in the reads. Cross-cell-line PR AUC
+  is bounded by label agreement, not only by the model.
 - For the report, a paper-ready story:
   - corroboration (sections 8 and 12C finding 4);
   - limited to ~100-150 nt to transfer (sections 5 and 12C finding 5);
