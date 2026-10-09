@@ -1098,8 +1098,53 @@ Consequences for our report:
      compute plus setup.
    - The METTL3 knock-out gives a label-free test: scores at the same sites
      should collapse when the enzyme that writes m6A is gone.
+   - **Done (9 Oct), see "Other HCT116 runs" below.**
 4. **Synthetic curlcake RNA** (GEO GSE124309): fully known modification
    status, like data2. Also needs processing from raw signal.
+
+**Other HCT116 runs: a new sequencing run of the same biology (9 Oct).**
+`analysis/representation/score_hct116_runs.py` scored two more SG-NEx HCT116
+direct-RNA runs from the public bucket:
+- replicate 3 run 4: the same RNA sample as dataset0, sequenced again;
+- replicate 4 run 3: a separately grown batch of cells.
+
+Setup:
+- Every one of dataset0's 121,838 labelled sites is present in both runs,
+  with dataset0's m6ACE-seq labels.
+- Each site was scored by the seed-0 fold model that held out its gene,
+  using only that run's reads.
+- Comparison: the same models' out-of-fold scores on dataset0's own run, on
+  identical sites.
+- Median depth is 42 reads in replicate 3 run 4. **Every site has at least
+  20 reads in both runs**, so this tests run-to-run variation, *not* low
+  depth.
+
+PR AUC (identical sites):
+
+| Model (trained on) | Replicate 3 run 4 | Replicate 4 run 3 | dataset0's own run |
+|---|---|---|---|
+| `h2gcn_aux` (cell line 1) | 0.523 | 0.533 | 0.544 |
+| `res_gate` (cell line 1) | 0.562 | 0.567 | 0.584 |
+| `scalar_msg` (cell line 1) | 0.539 | 0.549 | 0.560 |
+| `gps` (cell line 1) | 0.554 | 0.551 | 0.569 |
+| `h2gcn_twohead_aux` (both) | 0.561 | 0.560 | 0.586 |
+| shipped ensemble (both, seed 0 stand-in) | 0.575 | 0.578 | 0.595 |
+| **`h2gcn_twohead_aux` + `res_gate` + `scalar_msg` (both)** | **0.584** | **0.590** | **0.599** |
+
+- **A new run of the same cell line costs 0.01-0.025 PR AUC**, about the
+  size of the seed spread and far smaller than the cross-cell-line drop.
+  Run-to-run noise is a minor issue.
+- **The two runs agree.** The separately grown cells (replicate 4) score no
+  worse than the re-sequenced sample, so biological replicate variation is
+  negligible here.
+- **The ranking holds on new runs.** The three-model ensemble is best on
+  both, ahead of the shipped one by +0.009 / +0.012. Within cell line 1,
+  `res_gate` beats `gps`, which beats `h2gcn_aux`, as in cross-validation.
+- **What this means for the leaderboard:** if the test file is another
+  HCT116 run, expect roughly our cross-validated number minus 0.01-0.02. A
+  new cell line costs far more.
+
+Source: analysis/representation/results/hct116_runs.csv (by depth band too).
 
 Accessions are as given in the m6Anet paper. The specific claims about
 GLORI and other assays come from search summaries and were not checked
