@@ -1,4 +1,4 @@
-"""The shipped site-graph ensemble, scored in plain numpy (docs/decisions/0033).
+"""The shipped site-graph ensemble, scored in plain numpy (docs/decisions/0033, 0034).
 
 The networks are trained with torch (analysis/representation/: graph.py,
 final_fit.py) and exported to .npz by analysis/representation/export_final.py.
@@ -24,6 +24,16 @@ How one network scores a site (graph.GraphNet, kind="h2gcn"):
   4. the head reads the site's vector from all three stages. A two-head network
      has one output per labelling and ships their mean.
 
+The constrained designs (0034: res_gate, scalar_drop) keep stages 1-2 and add
+an own-reads score s = aux_head(site vector). Their neighbours are every site
+within 150 nt, weighted exp(-d / lambda) with lambda stored in the network:
+  res_gate     s + g x (stages 3-4 output) x has-neighbour,
+               g = sigmoid(a log(1 + reads) + b |s| + c)
+  scalar_drop  s + c_mlp([s, log(1 + reads), weighted mean of neighbours' s,
+               best neighbour s within 75 nt, weighted mean of their log reads,
+               has-neighbour]) - neighbours pass one number, never a vector
+Dropout was a training device only; nothing is dropped here.
+
 The ensemble ranks each network's scores within the file and averages the
 ranks - the combination that was evaluated (analysis/representation/ensemble.py).
 """
@@ -43,6 +53,10 @@ from m6a.registry import register
 # with: dwell and current sd are positive and heavy-tailed, so they are logged.
 LOG_COLUMNS = [0, 1, 3, 4, 6, 7]
 BASES = "ACGT"
+# graph.FK_RADIUS: the constrained designs' neighbourhood; and the scalar
+# messages' "best neighbour" distance.
+KERNEL_RADIUS = 150
+BEST_RADIUS = 75
 
 
 def transform_reads(values: np.ndarray, mean: np.ndarray, scale: np.ndarray) -> np.ndarray:
@@ -83,9 +97,16 @@ class Network:
             self.read_mean, self.read_scale = stored["_read_mean"], stored["_read_scale"]
         kw = self.meta["kwargs"]
         if kw.get("kind") != "h2gcn" or kw.get("reader", "mean") != "mean" or kw.get("deep", 0) \
-                or kw.get("pool", "meansd") != "meansd":
-            raise ValueError(f"{path.name}: only plain-read-encoder h2gcn networks can be scored "
-                             f"in numpy, got {kw}. Re-export a supported model.")
+                or kw.get("pool", "meansd") != "meansd" or kw.get("gps") or kw.get("nbr", "mean") == "bands":
+            raise ValueError(f"{path.name}: only plain-read-encoder h2gcn networks (mean or kernel "
+                             f"neighbours, residual or scalar messages) can be scored in numpy, got "
+                             f"{kw}. Re-export a supported model.")
+        # graph.GraphNet.v2: the constrained designs take a different forward pass.
+        self.v2 = (kw.get("nbr", "mean") != "mean" or kw.get("residual", False) or kw.get("scalar", False)
+                   or bool(kw.get("edge_drop")) or bool(kw.get("node_drop")))
+        self.kernel = kw.get("nbr", "mean") == "kernel" or kw.get("scalar", False)
+        self.residual, self.gate = kw.get("residual", False), kw.get("gate", True)
+        self.scalar = kw.get("scalar", False)
         self.window = kw.get("window", 200)
         self.local, self.transcript = kw.get("local", True), kw.get("transcript", True)
         self.twohead = kw.get("output", "single") == "twohead"
@@ -103,8 +124,10 @@ class Network:
         log_count = (np.log1p(counts) / 5.0)[:, None].astype(np.float32)
         return mlp2(np.concatenate([mean, sd, log_count, kmers], 1), self.w, "site_in")
 
-    def logits(self, s: np.ndarray, positions: np.ndarray) -> np.ndarray:
-        """Stages 3-4 for ONE transcript's sites."""
+    def logits(self, s: np.ndarray, positions: np.ndarray, counts: np.ndarray | None = None) -> np.ndarray:
+        """Stages 3-4 for ONE transcript's sites (`counts`: reads per site, needed by v2)."""
+        if self.v2:
+            return self._logits_v2(s, positions, counts)
         delta = np.abs(positions[:, None] - positions[None, :])
         adj = (delta <= self.window).astype(np.float32)
         np.fill_diagonal(adj, 0.0)
@@ -123,6 +146,38 @@ class Network:
             outs.append(s)
         out = dense(np.concatenate(outs, 1), self.w, "head")
         return out.mean(1) if self.twohead else out[:, 0]
+
+    def _logits_v2(self, s: np.ndarray, positions: np.ndarray, counts: np.ndarray | None) -> np.ndarray:
+        """graph.GraphNet.forward_v2 in eval mode, for ONE transcript's sites."""
+        if counts is None:
+            raise ValueError("the constrained designs need each site's read count")
+        own = dense(s, self.w, "aux_head")[:, 0]
+        logn = np.log1p(np.asarray(counts, dtype=np.float32))
+        delta = np.abs(positions[:, None] - positions[None, :]).astype(np.float32)
+        adj = delta <= (KERNEL_RADIUS if self.kernel else self.window)
+        np.fill_diagonal(adj, False)
+        a = adj.astype(np.float32)
+        has = (a.sum(1) > 0).astype(np.float32)
+        if self.kernel:
+            kern = a * np.exp(-delta / float(self.w["kernel_nt"]))
+            weights = kern / np.maximum(kern.sum(1, keepdims=True), 1e-9)
+        else:
+            weights = a / np.maximum(a.sum(1, keepdims=True), 1.0)
+        if self.scalar:
+            near = adj & (delta <= BEST_RADIUS)
+            best = np.where(near.any(1), np.where(near, own[None, :], -1e9).max(1), 0.0)
+            feats = np.stack([own, logn, weights @ own, best, weights @ logn, has], -1).astype(np.float32)
+            return own + dense(relu(dense(feats, self.w, "c_mlp.0")), self.w, "c_mlp.2")[:, 0]
+        outs = [s]
+        for i in range(self.n_layers):
+            s = relu(dense(np.concatenate([s, weights @ s, has[:, None]], 1), self.w, f"layers.{i}"))
+            outs.append(s)
+        correction = dense(np.concatenate(outs, 1), self.w, "head")[:, 0]
+        if not self.residual:
+            return correction
+        ga, gb, gc = self.w["gate_params"]
+        g = 1.0 / (1.0 + np.exp(-(ga * logn + gb * np.abs(own) + gc))) if self.gate else np.ones_like(own)
+        return own + g * correction * has
 
 
 @register("models", "site_graph_ensemble")
@@ -175,8 +230,9 @@ class SiteGraphEnsemble(BaseModel):
                 net.site_vectors(reads[offsets[a]:offsets[b]], offsets[a:b + 1] - offsets[a], onehot[a:b])
                 for a, b in _chunks(offsets, 2_000_000)])
             logit = np.empty(len(frame), dtype=np.float64)
+            n_reads = np.asarray(counts)
             for rows in groups.values():
-                logit[rows] = net.logits(s[rows], pos[rows])
+                logit[rows] = net.logits(s[rows], pos[rows], n_reads[rows])
             ranks.append(pd.Series(logit).rank(method="average").to_numpy() / len(logit))
         frame["score"] = np.mean(ranks, 0)
         return frame

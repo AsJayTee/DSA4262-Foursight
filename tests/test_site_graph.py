@@ -33,13 +33,14 @@ import xsrc_nets as X  # noqa: E402
 from m6a.data import ReadBlocks, Site  # noqa: E402
 from m6a.models.site_graph import SiteGraphEnsemble, kmer_onehot  # noqa: E402
 
-SHIPPED = ("h2gcn_twohead_aux", "h2gcn_aux")
+# Every kind ever shipped: the 0033 pair, and 0034's constrained designs.
+SHIPPED = ("h2gcn_twohead_aux", "h2gcn_aux", "res_gate", "scalar_drop")
 
 
 def synthetic_sites(seed: int = 0) -> list[Site]:
     rng = np.random.default_rng(seed)
     sites = []
-    # Transcripts of 1, 4 and 9 sites; spacings straddle both windows (50 and 200 nt).
+    # Transcripts of 1, 4 and 9 sites; spacings straddle every window (50, 75, 150, 200 nt).
     for t, n in (("T1", 1), ("T2", 4), ("T3", 9)):
         positions = np.cumsum(rng.integers(5, 120, n))
         for p in positions:
@@ -68,6 +69,11 @@ def torch_logits(model, sites, mean, scale) -> np.ndarray:
 def test_numpy_matches_torch(tmp_path, name):
     torch.manual_seed(0)
     model = graph.GraphNet(**X.GRAPH_MODELS[name]).eval()
+    if hasattr(model, "kernel_nt"):
+        model.kernel_nt = torch.tensor(113.0)      # a fitted scale, not the 90 nt starting value
+    if hasattr(model, "gate_params"):
+        with torch.no_grad():                      # a gate that varies, not sigmoid(0) everywhere
+            model.gate_params.copy_(torch.tensor([-0.12, -0.18, 0.12]))
     mean = np.random.default_rng(1).normal(0, 0.3, 9).astype(np.float32)
     scale = np.random.default_rng(2).uniform(0.5, 2.0, 9).astype(np.float32)
     export_final.export_network({"model": name, "seed": 0, "kwargs": X.GRAPH_MODELS[name],
@@ -85,7 +91,8 @@ def test_numpy_matches_torch(tmp_path, name):
     got = np.empty(len(sites))
     for t in ("T1", "T2", "T3"):
         rows = np.array([i for i, x in enumerate(sites) if x.transcript_id == t])
-        got[rows] = net.logits(s[rows], np.array([sites[i].position for i in rows], dtype=np.float32))
+        got[rows] = net.logits(s[rows], np.array([sites[i].position for i in rows], dtype=np.float32),
+                               counts[rows])
     np.testing.assert_allclose(got, expected, rtol=1e-4, atol=1e-4)
 
 

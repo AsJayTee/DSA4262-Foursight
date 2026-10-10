@@ -65,7 +65,7 @@ def main() -> None:
         "networks": networks,
         "combine": "mean of within-file ranks",
         "trained_on": "dataset0 + data1, every labelled site (pooled_both)",
-        "evaluation": "analysis/representation/results/ (cross-source, decision 0032)",
+        "evaluation": "analysis/representation/results/ (cross-source, decisions 0032, 0034)",
         "created": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }, indent=2) + "\n")
     print(f"meta.json -> {out}")
