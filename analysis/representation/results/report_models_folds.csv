@@ -1,0 +1,711 @@
+version,model,label,seed,scored on,fold,pr_auc,gain over lightgbm
+cl1,logistic,Logistic regression (baseline),0,cell line 1,0,0.39372535334873526,-0.06106168673805312
+cl1,logistic,Logistic regression (baseline),0,cell line 1,1,0.4262662496271921,-0.0818421344143005
+cl1,logistic,Logistic regression (baseline),0,cell line 1,2,0.41249300600411454,-0.0560433815459605
+cl1,logistic,Logistic regression (baseline),0,cell line 1,3,0.4205270959121091,-0.04988099607270208
+cl1,logistic,Logistic regression (baseline),0,cell line 1,4,0.4171741637334132,-0.06836062969969592
+cl1,logistic,Logistic regression (baseline),0,cell line 2,0,0.324812921109591,-0.05731522415899709
+cl1,logistic,Logistic regression (baseline),0,cell line 2,1,0.3376632353167042,-0.046384257701336085
+cl1,logistic,Logistic regression (baseline),0,cell line 2,2,0.32386574211648955,-0.04405383010767505
+cl1,logistic,Logistic regression (baseline),0,cell line 2,3,0.320252523487085,-0.058248766091534676
+cl1,logistic,Logistic regression (baseline),0,cell line 2,4,0.3091847890733903,-0.044506368549445285
+cl1,lightgbm,Quantiles + LightGBM,0,cell line 1,0,0.4547870400867884,0.0
+cl1,lightgbm,Quantiles + LightGBM,0,cell line 1,1,0.5081083840414926,0.0
+cl1,lightgbm,Quantiles + LightGBM,0,cell line 1,2,0.46853638755007504,0.0
+cl1,lightgbm,Quantiles + LightGBM,0,cell line 1,3,0.47040809198481115,0.0
+cl1,lightgbm,Quantiles + LightGBM,0,cell line 1,4,0.4855347934331091,0.0
+cl1,lightgbm,Quantiles + LightGBM,0,cell line 2,0,0.38212814526858807,0.0
+cl1,lightgbm,Quantiles + LightGBM,0,cell line 2,1,0.3840474930180403,0.0
+cl1,lightgbm,Quantiles + LightGBM,0,cell line 2,2,0.3679195722241646,0.0
+cl1,lightgbm,Quantiles + LightGBM,0,cell line 2,3,0.37850128957861967,0.0
+cl1,lightgbm,Quantiles + LightGBM,0,cell line 2,4,0.3536911576228356,0.0
+cl1,lightgbm,Quantiles + LightGBM,1,cell line 1,0,0.4547870400867884,0.0
+cl1,lightgbm,Quantiles + LightGBM,1,cell line 1,1,0.5081083840414926,0.0
+cl1,lightgbm,Quantiles + LightGBM,1,cell line 1,2,0.46853638755007504,0.0
+cl1,lightgbm,Quantiles + LightGBM,1,cell line 1,3,0.47040809198481115,0.0
+cl1,lightgbm,Quantiles + LightGBM,1,cell line 1,4,0.4855347934331091,0.0
+cl1,lightgbm,Quantiles + LightGBM,1,cell line 2,0,0.38212814526858807,0.0
+cl1,lightgbm,Quantiles + LightGBM,1,cell line 2,1,0.3840474930180403,0.0
+cl1,lightgbm,Quantiles + LightGBM,1,cell line 2,2,0.3679195722241646,0.0
+cl1,lightgbm,Quantiles + LightGBM,1,cell line 2,3,0.37850128957861967,0.0
+cl1,lightgbm,Quantiles + LightGBM,1,cell line 2,4,0.3536911576228356,0.0
+cl1,lightgbm,Quantiles + LightGBM,2,cell line 1,0,0.4547870400867884,0.0
+cl1,lightgbm,Quantiles + LightGBM,2,cell line 1,1,0.5081083840414926,0.0
+cl1,lightgbm,Quantiles + LightGBM,2,cell line 1,2,0.46853638755007504,0.0
+cl1,lightgbm,Quantiles + LightGBM,2,cell line 1,3,0.47040809198481115,0.0
+cl1,lightgbm,Quantiles + LightGBM,2,cell line 1,4,0.4855347934331091,0.0
+cl1,lightgbm,Quantiles + LightGBM,2,cell line 2,0,0.38212814526858807,0.0
+cl1,lightgbm,Quantiles + LightGBM,2,cell line 2,1,0.3840474930180403,0.0
+cl1,lightgbm,Quantiles + LightGBM,2,cell line 2,2,0.3679195722241646,0.0
+cl1,lightgbm,Quantiles + LightGBM,2,cell line 2,3,0.37850128957861967,0.0
+cl1,lightgbm,Quantiles + LightGBM,2,cell line 2,4,0.3536911576228356,0.0
+cl1,m6anet,m6Anet (pretrained on HCT116),0,cell line 1,0,0.4772734825198612,0.022486442433072795
+cl1,m6anet,m6Anet (pretrained on HCT116),0,cell line 1,1,0.5255731362632327,0.017464752221740043
+cl1,m6anet,m6Anet (pretrained on HCT116),0,cell line 1,2,0.4887141337883904,0.020177746238315364
+cl1,m6anet,m6Anet (pretrained on HCT116),0,cell line 1,3,0.49971705499060565,0.029308963005794497
+cl1,m6anet,m6Anet (pretrained on HCT116),0,cell line 1,4,0.5356011927917165,0.05006639935860735
+cl1,m6anet,m6Anet (pretrained on HCT116),0,cell line 2,0,0.36032057942070467,-0.021807565847883403
+cl1,m6anet,m6Anet (pretrained on HCT116),0,cell line 2,1,0.36800279421124693,-0.016044698806793378
+cl1,m6anet,m6Anet (pretrained on HCT116),0,cell line 2,2,0.35834201813132693,-0.00957755409283767
+cl1,m6anet,m6Anet (pretrained on HCT116),0,cell line 2,3,0.355870790754868,-0.022630498823751677
+cl1,m6anet,m6Anet (pretrained on HCT116),0,cell line 2,4,0.34120160357764723,-0.012489554045188367
+cl1,deepset,DeepSet (reads only),0,cell line 1,0,0.5074414538950763,0.05265441380828795
+cl1,deepset,DeepSet (reads only),0,cell line 1,1,0.550048268364608,0.04193988432311535
+cl1,deepset,DeepSet (reads only),0,cell line 1,2,0.5267931800432104,0.05825679249313537
+cl1,deepset,DeepSet (reads only),0,cell line 1,3,0.5264679479784374,0.056059855993626284
+cl1,deepset,DeepSet (reads only),0,cell line 1,4,0.5489315274472971,0.063396734014188
+cl1,deepset,DeepSet (reads only),0,cell line 2,0,0.3987663768813221,0.016638231612734034
+cl1,deepset,DeepSet (reads only),0,cell line 2,1,0.41309987790053776,0.02905238488249745
+cl1,deepset,DeepSet (reads only),0,cell line 2,2,0.3856707299758313,0.01775115775166669
+cl1,deepset,DeepSet (reads only),0,cell line 2,3,0.391657372378842,0.013156082800222346
+cl1,deepset,DeepSet (reads only),0,cell line 2,4,0.38243905620343555,0.02874789858059995
+cl1,set_transformer,Set Transformer (reads only),0,cell line 1,0,0.49137653500062595,0.03658949491383756
+cl1,set_transformer,Set Transformer (reads only),0,cell line 1,1,0.5447195061876546,0.03661112214616202
+cl1,set_transformer,Set Transformer (reads only),0,cell line 1,2,0.510904981272201,0.042368593722125925
+cl1,set_transformer,Set Transformer (reads only),0,cell line 1,3,0.5041246653662681,0.03371657338145695
+cl1,set_transformer,Set Transformer (reads only),0,cell line 1,4,0.5316512531668145,0.04611645973370537
+cl1,set_transformer,Set Transformer (reads only),0,cell line 2,0,0.3893182739738877,0.007190128705299614
+cl1,set_transformer,Set Transformer (reads only),0,cell line 2,1,0.39878039193200954,0.014732898913969228
+cl1,set_transformer,Set Transformer (reads only),0,cell line 2,2,0.3694589207206001,0.0015393484964354998
+cl1,set_transformer,Set Transformer (reads only),0,cell line 2,3,0.37885611282833576,0.00035482324971608525
+cl1,set_transformer,Set Transformer (reads only),0,cell line 2,4,0.3668769720239734,0.013185814401137808
+cl1,gcn,GCN,0,cell line 1,0,0.30917790271143725,-0.14560913737535114
+cl1,gcn,GCN,0,cell line 1,1,0.36991730000441486,-0.13819108403707775
+cl1,gcn,GCN,0,cell line 1,2,0.3164156090559849,-0.15212077849409011
+cl1,gcn,GCN,0,cell line 1,3,0.3787342782107233,-0.09167381377408784
+cl1,gcn,GCN,0,cell line 1,4,0.3242776662697725,-0.16125712716333662
+cl1,gcn,GCN,0,cell line 2,0,0.2861390100779144,-0.09598913519067365
+cl1,gcn,GCN,0,cell line 2,1,0.30817336054871947,-0.07587413246932084
+cl1,gcn,GCN,0,cell line 2,2,0.2628928395338714,-0.10502673269029322
+cl1,gcn,GCN,0,cell line 2,3,0.28804533743246363,-0.09045595214615604
+cl1,gcn,GCN,0,cell line 2,4,0.25276395391081785,-0.10092720371201774
+cl1,gat,GAT,0,cell line 1,0,0.539498816480177,0.08471177639338856
+cl1,gat,GAT,0,cell line 1,1,0.5453730587990135,0.03726467475752093
+cl1,gat,GAT,0,cell line 1,2,0.5495316619906022,0.08099527444052718
+cl1,gat,GAT,0,cell line 1,3,0.5258826004252878,0.05547450844047663
+cl1,gat,GAT,0,cell line 1,4,0.5222815673727955,0.036746773939686395
+cl1,gat,GAT,0,cell line 2,0,0.4013073497116506,0.019179204443062536
+cl1,gat,GAT,0,cell line 2,1,0.39263339525295865,0.008585902234918341
+cl1,gat,GAT,0,cell line 2,2,0.3812983719567625,0.013378799732597924
+cl1,gat,GAT,0,cell line 2,3,0.3729872005072602,-0.005514089071359474
+cl1,gat,GAT,0,cell line 2,4,0.34684128109162427,-0.00684987653121133
+cl1,h2gcn_aux,H2GCN + own-reads head,0,cell line 1,0,0.5172869987506131,0.06249995866382474
+cl1,h2gcn_aux,H2GCN + own-reads head,0,cell line 1,1,0.5757591168212829,0.06765073277979028
+cl1,h2gcn_aux,H2GCN + own-reads head,0,cell line 1,2,0.5466595134655662,0.07812312591549114
+cl1,h2gcn_aux,H2GCN + own-reads head,0,cell line 1,3,0.5507979395620268,0.08038984757721568
+cl1,h2gcn_aux,H2GCN + own-reads head,0,cell line 1,4,0.5585529533994317,0.07301815996632255
+cl1,h2gcn_aux,H2GCN + own-reads head,0,cell line 2,0,0.41782878427087583,0.03570063900228776
+cl1,h2gcn_aux,H2GCN + own-reads head,0,cell line 2,1,0.42925695021521265,0.04520945719717234
+cl1,h2gcn_aux,H2GCN + own-reads head,0,cell line 2,2,0.3963506346202571,0.0284310623960925
+cl1,h2gcn_aux,H2GCN + own-reads head,0,cell line 2,3,0.4047626508959072,0.026261361317287513
+cl1,h2gcn_aux,H2GCN + own-reads head,0,cell line 2,4,0.3874569401679269,0.03376578254509133
+cl1,h2gcn_aux,H2GCN + own-reads head,1,cell line 1,0,0.5093292723675269,0.05454223228073851
+cl1,h2gcn_aux,H2GCN + own-reads head,1,cell line 1,1,0.572023558768464,0.06391517472697139
+cl1,h2gcn_aux,H2GCN + own-reads head,1,cell line 1,2,0.5291714412908333,0.06063505374075823
+cl1,h2gcn_aux,H2GCN + own-reads head,1,cell line 1,3,0.5557573282196262,0.08534923623481505
+cl1,h2gcn_aux,H2GCN + own-reads head,1,cell line 1,4,0.5652840421097179,0.07974924867660882
+cl1,h2gcn_aux,H2GCN + own-reads head,1,cell line 2,0,0.41834205846056377,0.0362139131919757
+cl1,h2gcn_aux,H2GCN + own-reads head,1,cell line 2,1,0.4288559017326388,0.04480840871459851
+cl1,h2gcn_aux,H2GCN + own-reads head,1,cell line 2,2,0.39354296799430954,0.02562339577014494
+cl1,h2gcn_aux,H2GCN + own-reads head,1,cell line 2,3,0.41262018605919826,0.03411889648057859
+cl1,h2gcn_aux,H2GCN + own-reads head,1,cell line 2,4,0.38364517874330345,0.029954021120467855
+cl1,h2gcn_aux,H2GCN + own-reads head,2,cell line 1,0,0.5306595707037649,0.07587253061697652
+cl1,h2gcn_aux,H2GCN + own-reads head,2,cell line 1,1,0.569449570098617,0.06134118605712435
+cl1,h2gcn_aux,H2GCN + own-reads head,2,cell line 1,2,0.5338036263101164,0.06526723876004131
+cl1,h2gcn_aux,H2GCN + own-reads head,2,cell line 1,3,0.5432256561451181,0.07281756416030694
+cl1,h2gcn_aux,H2GCN + own-reads head,2,cell line 1,4,0.5615857199007585,0.07605092646764933
+cl1,h2gcn_aux,H2GCN + own-reads head,2,cell line 2,0,0.4246629281233694,0.04253478285478135
+cl1,h2gcn_aux,H2GCN + own-reads head,2,cell line 2,1,0.4219733711295251,0.03792587811148479
+cl1,h2gcn_aux,H2GCN + own-reads head,2,cell line 2,2,0.39018173285036717,0.022262160626202565
+cl1,h2gcn_aux,H2GCN + own-reads head,2,cell line 2,3,0.40270908794398624,0.024207798365366573
+cl1,h2gcn_aux,H2GCN + own-reads head,2,cell line 2,4,0.3927847003930283,0.039093542770192724
+cl1,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 1,0,0.5747291788825791,0.11994213879579074
+cl1,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 1,1,0.616158427372195,0.10805004333070234
+cl1,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 1,2,0.5655190252684428,0.09698263771836774
+cl1,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 1,3,0.5907713556826303,0.12036326369781913
+cl1,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 1,4,0.6060820299616777,0.12054723652856858
+cl1,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 2,0,0.41744763562935805,0.03531949036076998
+cl1,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 2,1,0.43354517894168826,0.04949768592364795
+cl1,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 2,2,0.3866252258152736,0.018705653591108984
+cl1,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 2,3,0.41413552196303666,0.035634232384416986
+cl1,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 2,4,0.3890308512929593,0.035339693670123684
+cl1,gps,Graph transformer (GPS),0,cell line 1,0,0.5577806085612736,0.10299356847448526
+cl1,gps,Graph transformer (GPS),0,cell line 1,1,0.5946762519279077,0.08656786788641513
+cl1,gps,Graph transformer (GPS),0,cell line 1,2,0.5681695858423634,0.0996331982922884
+cl1,gps,Graph transformer (GPS),0,cell line 1,3,0.5674939008230404,0.09708580883822926
+cl1,gps,Graph transformer (GPS),0,cell line 1,4,0.5807759255591423,0.09524113212603313
+cl1,gps,Graph transformer (GPS),0,cell line 2,0,0.42689915254237043,0.04477100727378236
+cl1,gps,Graph transformer (GPS),0,cell line 2,1,0.4199147047952115,0.03586721177717117
+cl1,gps,Graph transformer (GPS),0,cell line 2,2,0.3937891533157377,0.025869581091573113
+cl1,gps,Graph transformer (GPS),0,cell line 2,3,0.40946223201762566,0.03096094243900599
+cl1,gps,Graph transformer (GPS),0,cell line 2,4,0.38208320806931945,0.028392050446483852
+cl1,gps,Graph transformer (GPS),1,cell line 1,0,0.5527046684676554,0.09791762838086704
+cl1,gps,Graph transformer (GPS),1,cell line 1,1,0.5959381331324942,0.08782974909100161
+cl1,gps,Graph transformer (GPS),1,cell line 1,2,0.5528371587680645,0.08430077121798946
+cl1,gps,Graph transformer (GPS),1,cell line 1,3,0.5857573479430869,0.11534925595827572
+cl1,gps,Graph transformer (GPS),1,cell line 1,4,0.5801140498980226,0.0945792564649135
+cl1,gps,Graph transformer (GPS),1,cell line 2,0,0.40816846582582944,0.02604032055724137
+cl1,gps,Graph transformer (GPS),1,cell line 2,1,0.4138396679669816,0.029792174948941264
+cl1,gps,Graph transformer (GPS),1,cell line 2,2,0.3868986630347961,0.018979090810631483
+cl1,gps,Graph transformer (GPS),1,cell line 2,3,0.4171146662794373,0.0386133767008176
+cl1,gps,Graph transformer (GPS),1,cell line 2,4,0.38719234182991474,0.03350118420707915
+cl1,gps,Graph transformer (GPS),2,cell line 1,0,0.5655595888155832,0.11077254872879483
+cl1,gps,Graph transformer (GPS),2,cell line 1,1,0.5777214720056172,0.06961308796412458
+cl1,gps,Graph transformer (GPS),2,cell line 1,2,0.5515897044929968,0.08305331694292178
+cl1,gps,Graph transformer (GPS),2,cell line 1,3,0.5683053224542637,0.09789723046945253
+cl1,gps,Graph transformer (GPS),2,cell line 1,4,0.5942344785590045,0.10869968512589534
+cl1,gps,Graph transformer (GPS),2,cell line 2,0,0.4167432975418308,0.034615152273242744
+cl1,gps,Graph transformer (GPS),2,cell line 2,1,0.4187814136395833,0.03473392062154301
+cl1,gps,Graph transformer (GPS),2,cell line 2,2,0.3912451763488748,0.023325604124710186
+cl1,gps,Graph transformer (GPS),2,cell line 2,3,0.40281152652826835,0.024310236949648678
+cl1,gps,Graph transformer (GPS),2,cell line 2,4,0.3794506747303793,0.025759517107543706
+cl1,scalar_msg,Scalar messages,0,cell line 1,0,0.556424870304224,0.10163783021743567
+cl1,scalar_msg,Scalar messages,0,cell line 1,1,0.5975543644171583,0.08944598037566565
+cl1,scalar_msg,Scalar messages,0,cell line 1,2,0.5320352573584883,0.0634988698084133
+cl1,scalar_msg,Scalar messages,0,cell line 1,3,0.5631928069227682,0.09278471493795704
+cl1,scalar_msg,Scalar messages,0,cell line 1,4,0.5905854262252015,0.10505063279209237
+cl1,scalar_msg,Scalar messages,0,cell line 2,0,0.46070539139622557,0.0785772461276375
+cl1,scalar_msg,Scalar messages,0,cell line 2,1,0.4437975106226147,0.05975001760457438
+cl1,scalar_msg,Scalar messages,0,cell line 2,2,0.4058341417694483,0.037914569545283716
+cl1,scalar_msg,Scalar messages,0,cell line 2,3,0.42604013273580055,0.04753884315718088
+cl1,scalar_msg,Scalar messages,0,cell line 2,4,0.4094615213824438,0.0557703637596082
+cl1,scalar_msg,Scalar messages,1,cell line 1,0,0.5443921462239735,0.08960510613718509
+cl1,scalar_msg,Scalar messages,1,cell line 1,1,0.5969579510515719,0.08884956701007929
+cl1,scalar_msg,Scalar messages,1,cell line 1,2,0.5353026485404268,0.06676626099035171
+cl1,scalar_msg,Scalar messages,1,cell line 1,3,0.5617734547479057,0.09136536276309459
+cl1,scalar_msg,Scalar messages,1,cell line 1,4,0.5904927940429682,0.10495800060985905
+cl1,scalar_msg,Scalar messages,1,cell line 2,0,0.4553043968220374,0.07317625155344931
+cl1,scalar_msg,Scalar messages,1,cell line 2,1,0.4426284706526193,0.05858097763457898
+cl1,scalar_msg,Scalar messages,1,cell line 2,2,0.4082397996492039,0.04032022742503932
+cl1,scalar_msg,Scalar messages,1,cell line 2,3,0.43296417596723724,0.05446288638861757
+cl1,scalar_msg,Scalar messages,1,cell line 2,4,0.4063857221485271,0.05269456452569149
+cl1,scalar_msg,Scalar messages,2,cell line 1,0,0.5455899346482395,0.09080289456145108
+cl1,scalar_msg,Scalar messages,2,cell line 1,1,0.6018501932150484,0.09374180917355579
+cl1,scalar_msg,Scalar messages,2,cell line 1,2,0.525730532380311,0.05719414483023594
+cl1,scalar_msg,Scalar messages,2,cell line 1,3,0.5528302254319876,0.08242213344717642
+cl1,scalar_msg,Scalar messages,2,cell line 1,4,0.5924278642078912,0.10689307077478205
+cl1,scalar_msg,Scalar messages,2,cell line 2,0,0.4487589175562287,0.06663077228764064
+cl1,scalar_msg,Scalar messages,2,cell line 2,1,0.4473119718877336,0.06326447886969327
+cl1,scalar_msg,Scalar messages,2,cell line 2,2,0.41205460812971095,0.04413503590554635
+cl1,scalar_msg,Scalar messages,2,cell line 2,3,0.43095401964533336,0.05245273006671369
+cl1,scalar_msg,Scalar messages,2,cell line 2,4,0.41462100490448245,0.060929847281646854
+cl1,scalar_random,  control: random neighbours,0,cell line 1,0,0.5045375215716061,0.049750481484817755
+cl1,scalar_random,  control: random neighbours,0,cell line 1,1,0.5444888476494677,0.03638046360797509
+cl1,scalar_random,  control: random neighbours,0,cell line 1,2,0.5190534332109575,0.0505170456608825
+cl1,scalar_random,  control: random neighbours,0,cell line 1,3,0.5156181032530365,0.045210011268225325
+cl1,scalar_random,  control: random neighbours,0,cell line 1,4,0.5582515622408453,0.07271676880773614
+cl1,scalar_random,  control: random neighbours,0,cell line 2,0,0.3984627247969659,0.0163345795283778
+cl1,scalar_random,  control: random neighbours,0,cell line 2,1,0.40567703772710884,0.021629544709068527
+cl1,scalar_random,  control: random neighbours,0,cell line 2,2,0.3824511642473649,0.014531592023200313
+cl1,scalar_random,  control: random neighbours,0,cell line 2,3,0.38822156294493965,0.009720273366319976
+cl1,scalar_random,  control: random neighbours,0,cell line 2,4,0.3845188627177272,0.030827705094891578
+cl1,scalar_random,  control: random neighbours,1,cell line 1,0,0.5012831535284907,0.04649611344170235
+cl1,scalar_random,  control: random neighbours,1,cell line 1,1,0.5566094893778271,0.04850110533633445
+cl1,scalar_random,  control: random neighbours,1,cell line 1,2,0.5153157853112119,0.046779397761136876
+cl1,scalar_random,  control: random neighbours,1,cell line 1,3,0.5255494160256318,0.055141324040820616
+cl1,scalar_random,  control: random neighbours,1,cell line 1,4,0.5535188869978838,0.06798409356477464
+cl1,scalar_random,  control: random neighbours,1,cell line 2,0,0.40173299712636173,0.019604851857773664
+cl1,scalar_random,  control: random neighbours,1,cell line 2,1,0.41564624603976724,0.03159875302172693
+cl1,scalar_random,  control: random neighbours,1,cell line 2,2,0.38431739644252544,0.016397824218360835
+cl1,scalar_random,  control: random neighbours,1,cell line 2,3,0.394169627372591,0.01566833779397131
+cl1,scalar_random,  control: random neighbours,1,cell line 2,4,0.384564604277514,0.030873446654678394
+cl1,scalar_random,  control: random neighbours,2,cell line 1,0,0.4917890048998899,0.03700196481310153
+cl1,scalar_random,  control: random neighbours,2,cell line 1,1,0.5560295055432578,0.047921121501765196
+cl1,scalar_random,  control: random neighbours,2,cell line 1,2,0.5083166612943737,0.039780273744298655
+cl1,scalar_random,  control: random neighbours,2,cell line 1,3,0.5091300030805292,0.0387219110957181
+cl1,scalar_random,  control: random neighbours,2,cell line 1,4,0.5509627562373902,0.06542796280428109
+cl1,scalar_random,  control: random neighbours,2,cell line 2,0,0.3986414684185707,0.016513323149982606
+cl1,scalar_random,  control: random neighbours,2,cell line 2,1,0.40594782236635274,0.02190032934831243
+cl1,scalar_random,  control: random neighbours,2,cell line 2,2,0.3872478165595475,0.019328244335382883
+cl1,scalar_random,  control: random neighbours,2,cell line 2,3,0.3868837357070056,0.008382446128385956
+cl1,scalar_random,  control: random neighbours,2,cell line 2,4,0.3787893337914821,0.025098176168646513
+cl1,res_gate,Residual + dropout,0,cell line 1,0,0.5745395176454163,0.11975247755862795
+cl1,res_gate,Residual + dropout,0,cell line 1,1,0.6151838516938082,0.10707546765231557
+cl1,res_gate,Residual + dropout,0,cell line 1,2,0.5638237537022363,0.09528736615216121
+cl1,res_gate,Residual + dropout,0,cell line 1,3,0.5884629260346672,0.11805483404985606
+cl1,res_gate,Residual + dropout,0,cell line 1,4,0.6038034746164125,0.11826868118330336
+cl1,res_gate,Residual + dropout,0,cell line 2,0,0.44207925806571846,0.05995111279713039
+cl1,res_gate,Residual + dropout,0,cell line 2,1,0.44658032669523734,0.06253283367719703
+cl1,res_gate,Residual + dropout,0,cell line 2,2,0.41274549331842536,0.04482592109426076
+cl1,res_gate,Residual + dropout,0,cell line 2,3,0.4236540548225353,0.04515276524391565
+cl1,res_gate,Residual + dropout,0,cell line 2,4,0.39763020279018435,0.043939045167348756
+cl1,res_gate,Residual + dropout,1,cell line 1,0,0.5667467929098091,0.11195975282302073
+cl1,res_gate,Residual + dropout,1,cell line 1,1,0.6129897131432785,0.10488132910178594
+cl1,res_gate,Residual + dropout,1,cell line 1,2,0.5628236279488182,0.0942872403987432
+cl1,res_gate,Residual + dropout,1,cell line 1,3,0.5875645619571995,0.11715646997238838
+cl1,res_gate,Residual + dropout,1,cell line 1,4,0.6148928898738393,0.12935809644073015
+cl1,res_gate,Residual + dropout,1,cell line 2,0,0.4370437781913596,0.05491563292277152
+cl1,res_gate,Residual + dropout,1,cell line 2,1,0.44413806597312017,0.06009057295507986
+cl1,res_gate,Residual + dropout,1,cell line 2,2,0.40972080925711496,0.041801237032950356
+cl1,res_gate,Residual + dropout,1,cell line 2,3,0.4307822952284091,0.052281005649789436
+cl1,res_gate,Residual + dropout,1,cell line 2,4,0.4138841533950251,0.060192995772189506
+cl1,res_gate,Residual + dropout,2,cell line 1,0,0.5685448981906975,0.11375785810390915
+cl1,res_gate,Residual + dropout,2,cell line 1,1,0.6079192995190558,0.09981091547756316
+cl1,res_gate,Residual + dropout,2,cell line 1,2,0.5684223113699535,0.09988592381987843
+cl1,res_gate,Residual + dropout,2,cell line 1,3,0.5894696394078142,0.11906154742300301
+cl1,res_gate,Residual + dropout,2,cell line 1,4,0.6165754976585529,0.13104070422544378
+cl1,res_gate,Residual + dropout,2,cell line 2,0,0.4366253480982082,0.05449720282962012
+cl1,res_gate,Residual + dropout,2,cell line 2,1,0.4323056021905648,0.04825810917252449
+cl1,res_gate,Residual + dropout,2,cell line 2,2,0.4212095203547119,0.05328994813054727
+cl1,res_gate,Residual + dropout,2,cell line 2,3,0.4288566532376468,0.05035536365902715
+cl1,res_gate,Residual + dropout,2,cell line 2,4,0.41030379758604457,0.05661263996320898
+cl1,res_nodrop,  control: no dropout,0,cell line 1,0,0.5647333088302096,0.10994626874342117
+cl1,res_nodrop,  control: no dropout,0,cell line 1,1,0.5883990545707303,0.08029067052923766
+cl1,res_nodrop,  control: no dropout,0,cell line 1,2,0.5350807165883362,0.06654432903826119
+cl1,res_nodrop,  control: no dropout,0,cell line 1,3,0.590675532845431,0.1202674408606198
+cl1,res_nodrop,  control: no dropout,0,cell line 1,4,0.5906355459912739,0.10510075255816476
+cl1,res_nodrop,  control: no dropout,0,cell line 2,0,0.43005893117128885,0.04793078590270078
+cl1,res_nodrop,  control: no dropout,0,cell line 2,1,0.4256765868790777,0.041629093861037414
+cl1,res_nodrop,  control: no dropout,0,cell line 2,2,0.3991906881900831,0.03127111596591847
+cl1,res_nodrop,  control: no dropout,0,cell line 2,3,0.4256497036144551,0.04714841403583542
+cl1,res_nodrop,  control: no dropout,0,cell line 2,4,0.3950493529009758,0.04135819527814022
+cl1,res_nodrop,  control: no dropout,1,cell line 1,0,0.5637660973788957,0.10897905729210733
+cl1,res_nodrop,  control: no dropout,1,cell line 1,1,0.6004684999395475,0.09236011589805493
+cl1,res_nodrop,  control: no dropout,1,cell line 1,2,0.5403234128343594,0.07178702528428432
+cl1,res_nodrop,  control: no dropout,1,cell line 1,3,0.5774261486185015,0.10701805663369035
+cl1,res_nodrop,  control: no dropout,1,cell line 1,4,0.607630784907427,0.12209599147431782
+cl1,res_nodrop,  control: no dropout,1,cell line 2,0,0.43574004263724087,0.053611897368652794
+cl1,res_nodrop,  control: no dropout,1,cell line 2,1,0.43734815292283147,0.05330065990479116
+cl1,res_nodrop,  control: no dropout,1,cell line 2,2,0.4001586213796153,0.03223904915545067
+cl1,res_nodrop,  control: no dropout,1,cell line 2,3,0.4212281710757427,0.042726881497123004
+cl1,res_nodrop,  control: no dropout,1,cell line 2,4,0.3986645739624575,0.04497341633962193
+cl1,res_nodrop,  control: no dropout,2,cell line 1,0,0.5620314313143212,0.10724439122753282
+cl1,res_nodrop,  control: no dropout,2,cell line 1,1,0.5951247515319145,0.08701636749042185
+cl1,res_nodrop,  control: no dropout,2,cell line 1,2,0.5587144698984267,0.09017808234835162
+cl1,res_nodrop,  control: no dropout,2,cell line 1,3,0.5787191411945535,0.10831104920974233
+cl1,res_nodrop,  control: no dropout,2,cell line 1,4,0.6075592607545304,0.12202446732142125
+cl1,res_nodrop,  control: no dropout,2,cell line 2,0,0.43314442718110646,0.05101628191251839
+cl1,res_nodrop,  control: no dropout,2,cell line 2,1,0.42024655901487706,0.036199065996836755
+cl1,res_nodrop,  control: no dropout,2,cell line 2,2,0.4070848008952866,0.03916522867112199
+cl1,res_nodrop,  control: no dropout,2,cell line 2,3,0.41579530512519397,0.0372940155465743
+cl1,res_nodrop,  control: no dropout,2,cell line 2,4,0.4031052265742456,0.049414068951409984
+cl1,scalar_drop,Scalar messages + dropout,0,cell line 1,0,0.546276495780164,0.09148945569337563
+cl1,scalar_drop,Scalar messages + dropout,0,cell line 1,1,0.5954344733546854,0.08732608931319275
+cl1,scalar_drop,Scalar messages + dropout,0,cell line 1,2,0.5368599797198982,0.06832359216982314
+cl1,scalar_drop,Scalar messages + dropout,0,cell line 1,3,0.5572430313175007,0.0868349393326896
+cl1,scalar_drop,Scalar messages + dropout,0,cell line 1,4,0.5984142133281544,0.11287941989504524
+cl1,scalar_drop,Scalar messages + dropout,0,cell line 2,0,0.4532191387994418,0.07109099353085374
+cl1,scalar_drop,Scalar messages + dropout,0,cell line 2,1,0.44510814658778686,0.06106065356974655
+cl1,scalar_drop,Scalar messages + dropout,0,cell line 2,2,0.40857501385466916,0.04065544163050455
+cl1,scalar_drop,Scalar messages + dropout,0,cell line 2,3,0.4262923206559279,0.047791031077308255
+cl1,scalar_drop,Scalar messages + dropout,0,cell line 2,4,0.417800432680933,0.06410927505809738
+cl1,scalar_drop,Scalar messages + dropout,1,cell line 1,0,0.5445627472976772,0.08977570721088879
+cl1,scalar_drop,Scalar messages + dropout,1,cell line 1,1,0.5987628126054875,0.09065442856399486
+cl1,scalar_drop,Scalar messages + dropout,1,cell line 1,2,0.5420121368170132,0.07347574926693817
+cl1,scalar_drop,Scalar messages + dropout,1,cell line 1,3,0.5589857467594428,0.08857765477463164
+cl1,scalar_drop,Scalar messages + dropout,1,cell line 1,4,0.5982817261863044,0.11274693275319525
+cl1,scalar_drop,Scalar messages + dropout,1,cell line 2,0,0.4521363372817549,0.07000819201316683
+cl1,scalar_drop,Scalar messages + dropout,1,cell line 2,1,0.4444869331862443,0.06043944016820402
+cl1,scalar_drop,Scalar messages + dropout,1,cell line 2,2,0.40751638025430054,0.03959680803013593
+cl1,scalar_drop,Scalar messages + dropout,1,cell line 2,3,0.4312927432702631,0.05279145369164345
+cl1,scalar_drop,Scalar messages + dropout,1,cell line 2,4,0.4066291762105067,0.05293801858767111
+cl1,scalar_drop,Scalar messages + dropout,2,cell line 1,0,0.5466758525398658,0.09188881245307745
+cl1,scalar_drop,Scalar messages + dropout,2,cell line 1,1,0.5979149896683208,0.08980660562682818
+cl1,scalar_drop,Scalar messages + dropout,2,cell line 1,2,0.5346824706973685,0.06614608314729348
+cl1,scalar_drop,Scalar messages + dropout,2,cell line 1,3,0.5545254915162285,0.08411739953141739
+cl1,scalar_drop,Scalar messages + dropout,2,cell line 1,4,0.5962466142797354,0.11071182084662623
+cl1,scalar_drop,Scalar messages + dropout,2,cell line 2,0,0.44658391871783876,0.06445577344925069
+cl1,scalar_drop,Scalar messages + dropout,2,cell line 2,1,0.4460927973887875,0.06204530437074718
+cl1,scalar_drop,Scalar messages + dropout,2,cell line 2,2,0.4132270647193077,0.0453074924951431
+cl1,scalar_drop,Scalar messages + dropout,2,cell line 2,3,0.428557693728921,0.050056404150301326
+cl1,scalar_drop,Scalar messages + dropout,2,cell line 2,4,0.4178028399418679,0.0641116823190323
+both,logistic,Logistic regression (baseline),0,cell line 1,0,0.3946371382352304,-0.061877437183338546
+both,logistic,Logistic regression (baseline),0,cell line 1,1,0.4313270248628486,-0.06111319705087587
+both,logistic,Logistic regression (baseline),0,cell line 1,2,0.4170968156804861,-0.05270569221643223
+both,logistic,Logistic regression (baseline),0,cell line 1,3,0.4228756221746619,-0.04531819895229838
+both,logistic,Logistic regression (baseline),0,cell line 1,4,0.4177144286567059,-0.06731591991388897
+both,logistic,Logistic regression (baseline),0,cell line 2,0,0.33367828504620706,-0.06658515910235274
+both,logistic,Logistic regression (baseline),0,cell line 2,1,0.3495867960907378,-0.05885699482376222
+both,logistic,Logistic regression (baseline),0,cell line 2,2,0.3318647731236611,-0.04665839715078274
+both,logistic,Logistic regression (baseline),0,cell line 2,3,0.3287718610861755,-0.06429910417370527
+both,logistic,Logistic regression (baseline),0,cell line 2,4,0.3148129640722023,-0.069044399513357
+both,lightgbm,Quantiles + LightGBM,0,cell line 1,0,0.45651457541856894,0.0
+both,lightgbm,Quantiles + LightGBM,0,cell line 1,1,0.49244022191372444,0.0
+both,lightgbm,Quantiles + LightGBM,0,cell line 1,2,0.46980250789691835,0.0
+both,lightgbm,Quantiles + LightGBM,0,cell line 1,3,0.4681938211269603,0.0
+both,lightgbm,Quantiles + LightGBM,0,cell line 1,4,0.48503034857059485,0.0
+both,lightgbm,Quantiles + LightGBM,0,cell line 2,0,0.4002634441485598,0.0
+both,lightgbm,Quantiles + LightGBM,0,cell line 2,1,0.4084437909145,0.0
+both,lightgbm,Quantiles + LightGBM,0,cell line 2,2,0.3785231702744438,0.0
+both,lightgbm,Quantiles + LightGBM,0,cell line 2,3,0.3930709652598808,0.0
+both,lightgbm,Quantiles + LightGBM,0,cell line 2,4,0.3838573635855593,0.0
+both,lightgbm,Quantiles + LightGBM,1,cell line 1,0,0.45651457541856894,0.0
+both,lightgbm,Quantiles + LightGBM,1,cell line 1,1,0.49244022191372444,0.0
+both,lightgbm,Quantiles + LightGBM,1,cell line 1,2,0.46980250789691835,0.0
+both,lightgbm,Quantiles + LightGBM,1,cell line 1,3,0.4681938211269603,0.0
+both,lightgbm,Quantiles + LightGBM,1,cell line 1,4,0.48503034857059485,0.0
+both,lightgbm,Quantiles + LightGBM,1,cell line 2,0,0.4002634441485598,0.0
+both,lightgbm,Quantiles + LightGBM,1,cell line 2,1,0.4084437909145,0.0
+both,lightgbm,Quantiles + LightGBM,1,cell line 2,2,0.3785231702744438,0.0
+both,lightgbm,Quantiles + LightGBM,1,cell line 2,3,0.3930709652598808,0.0
+both,lightgbm,Quantiles + LightGBM,1,cell line 2,4,0.3838573635855593,0.0
+both,lightgbm,Quantiles + LightGBM,2,cell line 1,0,0.45651457541856894,0.0
+both,lightgbm,Quantiles + LightGBM,2,cell line 1,1,0.49244022191372444,0.0
+both,lightgbm,Quantiles + LightGBM,2,cell line 1,2,0.46980250789691835,0.0
+both,lightgbm,Quantiles + LightGBM,2,cell line 1,3,0.4681938211269603,0.0
+both,lightgbm,Quantiles + LightGBM,2,cell line 1,4,0.48503034857059485,0.0
+both,lightgbm,Quantiles + LightGBM,2,cell line 2,0,0.4002634441485598,0.0
+both,lightgbm,Quantiles + LightGBM,2,cell line 2,1,0.4084437909145,0.0
+both,lightgbm,Quantiles + LightGBM,2,cell line 2,2,0.3785231702744438,0.0
+both,lightgbm,Quantiles + LightGBM,2,cell line 2,3,0.3930709652598808,0.0
+both,lightgbm,Quantiles + LightGBM,2,cell line 2,4,0.3838573635855593,0.0
+both,m6anet,m6Anet (pretrained on HCT116),0,cell line 1,0,0.4772734825198612,0.020758907101292245
+both,m6anet,m6Anet (pretrained on HCT116),0,cell line 1,1,0.5255731362632327,0.03313291434950821
+both,m6anet,m6Anet (pretrained on HCT116),0,cell line 1,2,0.4887141337883904,0.01891162589147205
+both,m6anet,m6Anet (pretrained on HCT116),0,cell line 1,3,0.49971705499060565,0.03152323386364536
+both,m6anet,m6Anet (pretrained on HCT116),0,cell line 1,4,0.5356011927917165,0.050570844221121625
+both,m6anet,m6Anet (pretrained on HCT116),0,cell line 2,0,0.36032057942070467,-0.03994286472785513
+both,m6anet,m6Anet (pretrained on HCT116),0,cell line 2,1,0.36800279421124693,-0.040440996703253074
+both,m6anet,m6Anet (pretrained on HCT116),0,cell line 2,2,0.35834201813132693,-0.020181152143116887
+both,m6anet,m6Anet (pretrained on HCT116),0,cell line 2,3,0.355870790754868,-0.037200174505012784
+both,m6anet,m6Anet (pretrained on HCT116),0,cell line 2,4,0.34120160357764723,-0.04265576000791205
+both,deepset,DeepSet (reads only),0,cell line 1,0,0.5073132360996994,0.050798660681130425
+both,deepset,DeepSet (reads only),0,cell line 1,1,0.5470179191270294,0.05457769721330491
+both,deepset,DeepSet (reads only),0,cell line 1,2,0.5287412346613715,0.05893872676445311
+both,deepset,DeepSet (reads only),0,cell line 1,3,0.51289045058272,0.044696629455759695
+both,deepset,DeepSet (reads only),0,cell line 1,4,0.5546947156915907,0.06966436712099583
+both,deepset,DeepSet (reads only),0,cell line 2,0,0.43011176075000923,0.02984831660144943
+both,deepset,DeepSet (reads only),0,cell line 2,1,0.4277939039277778,0.01935011301327777
+both,deepset,DeepSet (reads only),0,cell line 2,2,0.40720935939413255,0.028686189119688732
+both,deepset,DeepSet (reads only),0,cell line 2,3,0.41398911951492096,0.020918154255040178
+both,deepset,DeepSet (reads only),0,cell line 2,4,0.4055167646640405,0.021659401078481244
+both,set_transformer,Set Transformer (reads only),0,cell line 1,0,0.5185942561368226,0.062079680718253705
+both,set_transformer,Set Transformer (reads only),0,cell line 1,1,0.55896589919446,0.0665256772807356
+both,set_transformer,Set Transformer (reads only),0,cell line 1,2,0.5137441917672583,0.04394168387033992
+both,set_transformer,Set Transformer (reads only),0,cell line 1,3,0.5031454503805397,0.03495162925357942
+both,set_transformer,Set Transformer (reads only),0,cell line 1,4,0.5339704905104531,0.04894014193985824
+both,set_transformer,Set Transformer (reads only),0,cell line 2,0,0.4242513421743966,0.023987898025836785
+both,set_transformer,Set Transformer (reads only),0,cell line 2,1,0.4294322969007367,0.020988505986236694
+both,set_transformer,Set Transformer (reads only),0,cell line 2,2,0.39801985433407877,0.01949668405963495
+both,set_transformer,Set Transformer (reads only),0,cell line 2,3,0.4010952044075439,0.008024239147663148
+both,set_transformer,Set Transformer (reads only),0,cell line 2,4,0.398709056940306,0.014851693354746731
+both,gcn,GCN,0,cell line 1,0,0.3230652247422159,-0.13344935067635305
+both,gcn,GCN,0,cell line 1,1,0.39139476907568194,-0.1010454528380425
+both,gcn,GCN,0,cell line 1,2,0.30948068851826527,-0.16032181937865309
+both,gcn,GCN,0,cell line 1,3,0.38542244041782225,-0.08277138070913803
+both,gcn,GCN,0,cell line 1,4,0.34299287123963,-0.14203747733096483
+both,gcn,GCN,0,cell line 2,0,0.30043170118213225,-0.09983174296642755
+both,gcn,GCN,0,cell line 2,1,0.3308000721603817,-0.0776437187541183
+both,gcn,GCN,0,cell line 2,2,0.2736366668867377,-0.10488650338770611
+both,gcn,GCN,0,cell line 2,3,0.3009716095938129,-0.09209935566606786
+both,gcn,GCN,0,cell line 2,4,0.27381531811471505,-0.11004204547084423
+both,gat,GAT,0,cell line 1,0,0.5418487346251555,0.08533415920658655
+both,gat,GAT,0,cell line 1,1,0.5663516161791808,0.0739113942654564
+both,gat,GAT,0,cell line 1,2,0.5260150001790701,0.05621249228215175
+both,gat,GAT,0,cell line 1,3,0.5458522881488913,0.07765846702193102
+both,gat,GAT,0,cell line 1,4,0.5364442808724802,0.051413932301885346
+both,gat,GAT,0,cell line 2,0,0.42023443183970066,0.019970987691140862
+both,gat,GAT,0,cell line 2,1,0.4140011533755225,0.005557362461022508
+both,gat,GAT,0,cell line 2,2,0.381584746129766,0.003061575855322185
+both,gat,GAT,0,cell line 2,3,0.39568606625887315,0.00261510099899237
+both,gat,GAT,0,cell line 2,4,0.3840872260795812,0.00022986249402190406
+both,h2gcn_aux,H2GCN + own-reads head,0,cell line 1,0,0.5168672792776465,0.060352703859077594
+both,h2gcn_aux,H2GCN + own-reads head,0,cell line 1,1,0.5907674262430432,0.0983272043293188
+both,h2gcn_aux,H2GCN + own-reads head,0,cell line 1,2,0.5416462537549367,0.07184374585801834
+both,h2gcn_aux,H2GCN + own-reads head,0,cell line 1,3,0.5552405677053144,0.0870467465783541
+both,h2gcn_aux,H2GCN + own-reads head,0,cell line 1,4,0.5714684629210384,0.08643811435044352
+both,h2gcn_aux,H2GCN + own-reads head,0,cell line 2,0,0.4512815470448451,0.05101810289628528
+both,h2gcn_aux,H2GCN + own-reads head,0,cell line 2,1,0.44346473646504997,0.035020945550549964
+both,h2gcn_aux,H2GCN + own-reads head,0,cell line 2,2,0.4292301572376442,0.05070698696320036
+both,h2gcn_aux,H2GCN + own-reads head,0,cell line 2,3,0.4439624120051895,0.05089144674530871
+both,h2gcn_aux,H2GCN + own-reads head,0,cell line 2,4,0.4182505443159673,0.034393180730408035
+both,h2gcn_aux,H2GCN + own-reads head,1,cell line 1,0,0.5279922757544989,0.07147770033592998
+both,h2gcn_aux,H2GCN + own-reads head,1,cell line 1,1,0.5848556362604654,0.092415414346741
+both,h2gcn_aux,H2GCN + own-reads head,1,cell line 1,2,0.5226769956102848,0.05287448771336645
+both,h2gcn_aux,H2GCN + own-reads head,1,cell line 1,3,0.5526526402640456,0.0844588191370853
+both,h2gcn_aux,H2GCN + own-reads head,1,cell line 1,4,0.5608346944902087,0.07580434591961388
+both,h2gcn_aux,H2GCN + own-reads head,1,cell line 2,0,0.44596001744977104,0.04569657330121124
+both,h2gcn_aux,H2GCN + own-reads head,1,cell line 2,1,0.457924708984334,0.04948091806983401
+both,h2gcn_aux,H2GCN + own-reads head,1,cell line 2,2,0.40994647665704514,0.031423306382601324
+both,h2gcn_aux,H2GCN + own-reads head,1,cell line 2,3,0.4362644290528173,0.04319346379293654
+both,h2gcn_aux,H2GCN + own-reads head,1,cell line 2,4,0.4245529769620012,0.04069561337644195
+both,h2gcn_aux,H2GCN + own-reads head,2,cell line 1,0,0.5431967818170619,0.08668220639849294
+both,h2gcn_aux,H2GCN + own-reads head,2,cell line 1,1,0.5854529492156285,0.09301272730190407
+both,h2gcn_aux,H2GCN + own-reads head,2,cell line 1,2,0.5448110273478433,0.0750085194509249
+both,h2gcn_aux,H2GCN + own-reads head,2,cell line 1,3,0.5377898381995977,0.0695960170726374
+both,h2gcn_aux,H2GCN + own-reads head,2,cell line 1,4,0.5733631197936193,0.08833277122302446
+both,h2gcn_aux,H2GCN + own-reads head,2,cell line 2,0,0.46557209692958684,0.06530865278102704
+both,h2gcn_aux,H2GCN + own-reads head,2,cell line 2,1,0.4628431868660754,0.05439939595157539
+both,h2gcn_aux,H2GCN + own-reads head,2,cell line 2,2,0.4210995410064136,0.04257637073196979
+both,h2gcn_aux,H2GCN + own-reads head,2,cell line 2,3,0.4242044149165553,0.031133449656674528
+both,h2gcn_aux,H2GCN + own-reads head,2,cell line 2,4,0.4277959861830081,0.04393862259744885
+both,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 1,0,0.585163128789723,0.12864855337115405
+both,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 1,1,0.6040382261368092,0.1115980042230848
+both,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 1,2,0.5644281749751491,0.09462566707823072
+both,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 1,3,0.5896878698697727,0.12149404874281244
+both,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 1,4,0.6030059864232271,0.11797563785263226
+both,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 2,0,0.439442732402601,0.03917928825404121
+both,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 2,1,0.4419760172615185,0.03353222634701847
+both,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 2,2,0.4160311148668935,0.03750794459244966
+both,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 2,3,0.4415761297923315,0.04850516453245074
+both,h2gcn_aux_r400,"H2GCN, 400 nt context",0,cell line 2,4,0.4109389205349484,0.02708155694938913
+both,gps,Graph transformer (GPS),0,cell line 1,0,0.5806601707916215,0.12414559537305253
+both,gps,Graph transformer (GPS),0,cell line 1,1,0.5958987843325495,0.10345856241882506
+both,gps,Graph transformer (GPS),0,cell line 1,2,0.5549406277013323,0.08513811980441399
+both,gps,Graph transformer (GPS),0,cell line 1,3,0.5541531875620777,0.08595936643511737
+both,gps,Graph transformer (GPS),0,cell line 1,4,0.5828343111061746,0.09780396253557971
+both,gps,Graph transformer (GPS),0,cell line 2,0,0.45577182216367174,0.05550837801511194
+both,gps,Graph transformer (GPS),0,cell line 2,1,0.4514400592230935,0.04299626830859349
+both,gps,Graph transformer (GPS),0,cell line 2,2,0.4167053064368018,0.038182136162357994
+both,gps,Graph transformer (GPS),0,cell line 2,3,0.4278563236000855,0.03478535834020474
+both,gps,Graph transformer (GPS),0,cell line 2,4,0.43700063447376397,0.0531432708882047
+both,gps,Graph transformer (GPS),1,cell line 1,0,0.5740746393739983,0.11756006395542934
+both,gps,Graph transformer (GPS),1,cell line 1,1,0.6106726834692715,0.11823246155554706
+both,gps,Graph transformer (GPS),1,cell line 1,2,0.5691839196416515,0.09938141174473314
+both,gps,Graph transformer (GPS),1,cell line 1,3,0.5842679219807446,0.11607410085378433
+both,gps,Graph transformer (GPS),1,cell line 1,4,0.5729136050904697,0.08788325651987489
+both,gps,Graph transformer (GPS),1,cell line 2,0,0.4451243757905304,0.04486093164197058
+both,gps,Graph transformer (GPS),1,cell line 2,1,0.45844567318668045,0.05000188227218044
+both,gps,Graph transformer (GPS),1,cell line 2,2,0.414013460233434,0.03549028995899017
+both,gps,Graph transformer (GPS),1,cell line 2,3,0.44279254626011544,0.04972158100023466
+both,gps,Graph transformer (GPS),1,cell line 2,4,0.4154206667494456,0.031563303163886336
+both,gps,Graph transformer (GPS),2,cell line 1,0,0.5616727970910967,0.10515822167252781
+both,gps,Graph transformer (GPS),2,cell line 1,1,0.5985256327165077,0.10608541080278328
+both,gps,Graph transformer (GPS),2,cell line 1,2,0.5632926903159463,0.09349018241902796
+both,gps,Graph transformer (GPS),2,cell line 1,3,0.5844858371443128,0.1162920160173525
+both,gps,Graph transformer (GPS),2,cell line 1,4,0.5881339681787432,0.10310361960814834
+both,gps,Graph transformer (GPS),2,cell line 2,0,0.4413265185630316,0.04106307441447182
+both,gps,Graph transformer (GPS),2,cell line 2,1,0.45747959855075937,0.049035807636259365
+both,gps,Graph transformer (GPS),2,cell line 2,2,0.42263088041243024,0.04410771013798642
+both,gps,Graph transformer (GPS),2,cell line 2,3,0.43367725393025314,0.04060628867037236
+both,gps,Graph transformer (GPS),2,cell line 2,4,0.40802244166781093,0.024165078082251656
+both,h2gcn_twohead_aux,Two-head H2GCN,0,cell line 1,0,0.5899614554646231,0.13344688004605415
+both,h2gcn_twohead_aux,Two-head H2GCN,0,cell line 1,1,0.618712418671369,0.1262721967576445
+both,h2gcn_twohead_aux,Two-head H2GCN,0,cell line 1,2,0.569130270022732,0.09932776212581362
+both,h2gcn_twohead_aux,Two-head H2GCN,0,cell line 1,3,0.5815264357322453,0.11333261460528499
+both,h2gcn_twohead_aux,Two-head H2GCN,0,cell line 1,4,0.6126739145611569,0.1276435659905621
+both,h2gcn_twohead_aux,Two-head H2GCN,0,cell line 2,0,0.46207031949447275,0.06180687534591295
+both,h2gcn_twohead_aux,Two-head H2GCN,0,cell line 2,1,0.45096863660075565,0.04252484568625564
+both,h2gcn_twohead_aux,Two-head H2GCN,0,cell line 2,2,0.4198651858224213,0.041342015547977506
+both,h2gcn_twohead_aux,Two-head H2GCN,0,cell line 2,3,0.4471109515546537,0.05403998629477291
+both,h2gcn_twohead_aux,Two-head H2GCN,0,cell line 2,4,0.416740608659166,0.03288324507360674
+both,h2gcn_twohead_aux,Two-head H2GCN,1,cell line 1,0,0.589502826028174,0.13298825060960512
+both,h2gcn_twohead_aux,Two-head H2GCN,1,cell line 1,1,0.6256602503194659,0.1332200284057415
+both,h2gcn_twohead_aux,Two-head H2GCN,1,cell line 1,2,0.5698968115733974,0.10009430367647909
+both,h2gcn_twohead_aux,Two-head H2GCN,1,cell line 1,3,0.5913408348168733,0.12314701368991299
+both,h2gcn_twohead_aux,Two-head H2GCN,1,cell line 1,4,0.6147441457274628,0.12971379715686798
+both,h2gcn_twohead_aux,Two-head H2GCN,1,cell line 2,0,0.45576573951748284,0.05550229536892304
+both,h2gcn_twohead_aux,Two-head H2GCN,1,cell line 2,1,0.4700988673045329,0.06165507639003287
+both,h2gcn_twohead_aux,Two-head H2GCN,1,cell line 2,2,0.4254641031230502,0.0469409328486064
+both,h2gcn_twohead_aux,Two-head H2GCN,1,cell line 2,3,0.45168761461020307,0.05861664935032229
+both,h2gcn_twohead_aux,Two-head H2GCN,1,cell line 2,4,0.4165529034424856,0.0326955398569263
+both,h2gcn_twohead_aux,Two-head H2GCN,2,cell line 1,0,0.5763807295223303,0.11986615410376139
+both,h2gcn_twohead_aux,Two-head H2GCN,2,cell line 1,1,0.6304145504668902,0.13797432855316577
+both,h2gcn_twohead_aux,Two-head H2GCN,2,cell line 1,2,0.5506575727934861,0.0808550648965678
+both,h2gcn_twohead_aux,Two-head H2GCN,2,cell line 1,3,0.5968794885625943,0.12868566743563403
+both,h2gcn_twohead_aux,Two-head H2GCN,2,cell line 1,4,0.6180761185339883,0.1330457699633934
+both,h2gcn_twohead_aux,Two-head H2GCN,2,cell line 2,0,0.46040522957666774,0.06014178542810794
+both,h2gcn_twohead_aux,Two-head H2GCN,2,cell line 2,1,0.4756482291787231,0.06720443826422312
+both,h2gcn_twohead_aux,Two-head H2GCN,2,cell line 2,2,0.4185713565681774,0.04004818629373358
+both,h2gcn_twohead_aux,Two-head H2GCN,2,cell line 2,3,0.427696286365419,0.03462532110553823
+both,h2gcn_twohead_aux,Two-head H2GCN,2,cell line 2,4,0.4122037991532328,0.028346435567673522
+both,scalar_msg,Scalar messages,0,cell line 1,0,0.5347248926167237,0.0782103171981548
+both,scalar_msg,Scalar messages,0,cell line 1,1,0.5941133354311565,0.10167311351743208
+both,scalar_msg,Scalar messages,0,cell line 1,2,0.5207228766093231,0.050920368712404795
+both,scalar_msg,Scalar messages,0,cell line 1,3,0.5484648917508119,0.08027107062385164
+both,scalar_msg,Scalar messages,0,cell line 1,4,0.5731855575421776,0.08815520897158274
+both,scalar_msg,Scalar messages,0,cell line 2,0,0.47382311126161963,0.07355966711305983
+both,scalar_msg,Scalar messages,0,cell line 2,1,0.4706531942463917,0.06220940333189168
+both,scalar_msg,Scalar messages,0,cell line 2,2,0.42794474007787725,0.04942156980343343
+both,scalar_msg,Scalar messages,0,cell line 2,3,0.4463366853737079,0.05326572011382713
+both,scalar_msg,Scalar messages,0,cell line 2,4,0.4293076263111862,0.04545026272562691
+both,scalar_msg,Scalar messages,1,cell line 1,0,0.5287928673586999,0.07227829194013097
+both,scalar_msg,Scalar messages,1,cell line 1,1,0.6021639000171087,0.10972367810338429
+both,scalar_msg,Scalar messages,1,cell line 1,2,0.5259565033497913,0.05615399545287292
+both,scalar_msg,Scalar messages,1,cell line 1,3,0.548134985892068,0.07994116476510771
+both,scalar_msg,Scalar messages,1,cell line 1,4,0.5719935821346745,0.0869632335640797
+both,scalar_msg,Scalar messages,1,cell line 2,0,0.48745717613440204,0.08719373198584224
+both,scalar_msg,Scalar messages,1,cell line 2,1,0.4734868212117097,0.0650430302972097
+both,scalar_msg,Scalar messages,1,cell line 2,2,0.4235332797848634,0.04501010951041956
+both,scalar_msg,Scalar messages,1,cell line 2,3,0.4499910666842449,0.0569201014243641
+both,scalar_msg,Scalar messages,1,cell line 2,4,0.43526214078875886,0.05140477720319958
+both,scalar_msg,Scalar messages,2,cell line 1,0,0.5383280701867323,0.08181349476816341
+both,scalar_msg,Scalar messages,2,cell line 1,1,0.606575313634366,0.11413509172064157
+both,scalar_msg,Scalar messages,2,cell line 1,2,0.5333029674012901,0.06350045950437178
+both,scalar_msg,Scalar messages,2,cell line 1,3,0.5518280184330513,0.08363419730609101
+both,scalar_msg,Scalar messages,2,cell line 1,4,0.5918634615473725,0.10683311297677761
+both,scalar_msg,Scalar messages,2,cell line 2,0,0.4752328255277701,0.07496938137921028
+both,scalar_msg,Scalar messages,2,cell line 2,1,0.4781805318845939,0.06973674097009391
+both,scalar_msg,Scalar messages,2,cell line 2,2,0.4400190681937136,0.06149589791926979
+both,scalar_msg,Scalar messages,2,cell line 2,3,0.45477594606428023,0.061704980804399456
+both,scalar_msg,Scalar messages,2,cell line 2,4,0.4288332433142439,0.04497587972868461
+both,scalar_random,  control: random neighbours,0,cell line 1,0,0.5209438254629661,0.0644292500443972
+both,scalar_random,  control: random neighbours,0,cell line 1,1,0.5607055595553526,0.06826533764162818
+both,scalar_random,  control: random neighbours,0,cell line 1,2,0.5288843104750592,0.059081802578140885
+both,scalar_random,  control: random neighbours,0,cell line 1,3,0.519358985049584,0.05116516392262371
+both,scalar_random,  control: random neighbours,0,cell line 1,4,0.5453212830505768,0.06029093447998196
+both,scalar_random,  control: random neighbours,0,cell line 2,0,0.4395246766872936,0.039261232538733815
+both,scalar_random,  control: random neighbours,0,cell line 2,1,0.43333521165159855,0.024891420737098546
+both,scalar_random,  control: random neighbours,0,cell line 2,2,0.4080892925087407,0.029566122234296888
+both,scalar_random,  control: random neighbours,0,cell line 2,3,0.4259154919886246,0.03284452672874383
+both,scalar_random,  control: random neighbours,0,cell line 2,4,0.40815516573549054,0.02429780214993127
+both,scalar_random,  control: random neighbours,1,cell line 1,0,0.5139046899168558,0.05739011449828685
+both,scalar_random,  control: random neighbours,1,cell line 1,1,0.5621882410476382,0.06974801913391376
+both,scalar_random,  control: random neighbours,1,cell line 1,2,0.5270078165805646,0.05720530868364626
+both,scalar_random,  control: random neighbours,1,cell line 1,3,0.5184276124085748,0.05023379128161454
+both,scalar_random,  control: random neighbours,1,cell line 1,4,0.5466553758675317,0.06162502729693681
+both,scalar_random,  control: random neighbours,1,cell line 2,0,0.4366018323336842,0.036338388185124415
+both,scalar_random,  control: random neighbours,1,cell line 2,1,0.44537409447474824,0.036930303560248234
+both,scalar_random,  control: random neighbours,1,cell line 2,2,0.40939035601291085,0.03086718573846703
+both,scalar_random,  control: random neighbours,1,cell line 2,3,0.4333395340627853,0.040268568802904525
+both,scalar_random,  control: random neighbours,1,cell line 2,4,0.4159041712133422,0.03204680762778295
+both,scalar_random,  control: random neighbours,2,cell line 1,0,0.5114877564846421,0.05497318106607313
+both,scalar_random,  control: random neighbours,2,cell line 1,1,0.5642048556986976,0.07176463378497316
+both,scalar_random,  control: random neighbours,2,cell line 1,2,0.5237466604906303,0.05394415259371199
+both,scalar_random,  control: random neighbours,2,cell line 1,3,0.5241148241241864,0.05592100299722613
+both,scalar_random,  control: random neighbours,2,cell line 1,4,0.5324396389262764,0.04740929035568159
+both,scalar_random,  control: random neighbours,2,cell line 2,0,0.4338205981092449,0.03355715396068509
+both,scalar_random,  control: random neighbours,2,cell line 2,1,0.431917488174913,0.023473697260412985
+both,scalar_random,  control: random neighbours,2,cell line 2,2,0.41064715110541505,0.03212398083097123
+both,scalar_random,  control: random neighbours,2,cell line 2,3,0.4151981878179211,0.022127222558040338
+both,scalar_random,  control: random neighbours,2,cell line 2,4,0.4065246459827782,0.022667282397218935
+both,res_gate,Residual + dropout,0,cell line 1,0,0.5749669747011456,0.11845239928257661
+both,res_gate,Residual + dropout,0,cell line 1,1,0.6168093003632514,0.12436907844952699
+both,res_gate,Residual + dropout,0,cell line 1,2,0.5598495172983792,0.09004700940146082
+both,res_gate,Residual + dropout,0,cell line 1,3,0.5837102950464017,0.11551647391944142
+both,res_gate,Residual + dropout,0,cell line 1,4,0.604903894250898,0.11987354568030312
+both,res_gate,Residual + dropout,0,cell line 2,0,0.45729435615760955,0.05703091200904975
+both,res_gate,Residual + dropout,0,cell line 2,1,0.47970569836014165,0.07126190744564165
+both,res_gate,Residual + dropout,0,cell line 2,2,0.42924937797257934,0.05072620769813552
+both,res_gate,Residual + dropout,0,cell line 2,3,0.4548021904287535,0.06173122516887275
+both,res_gate,Residual + dropout,0,cell line 2,4,0.42609686413686926,0.04223950055130998
+both,res_gate,Residual + dropout,1,cell line 1,0,0.5693642236877842,0.11284964826921523
+both,res_gate,Residual + dropout,1,cell line 1,1,0.6116644783089747,0.1192242563952503
+both,res_gate,Residual + dropout,1,cell line 1,2,0.5458773358298584,0.07607482793294007
+both,res_gate,Residual + dropout,1,cell line 1,3,0.582051211037052,0.11385738991009176
+both,res_gate,Residual + dropout,1,cell line 1,4,0.6056364488969503,0.12060610032635549
+both,res_gate,Residual + dropout,1,cell line 2,0,0.47093561634104336,0.07067217219248356
+both,res_gate,Residual + dropout,1,cell line 2,1,0.4729304310680894,0.0644866401535894
+both,res_gate,Residual + dropout,1,cell line 2,2,0.42389365233090065,0.04537048205645683
+both,res_gate,Residual + dropout,1,cell line 2,3,0.45523015206227163,0.06215918680239085
+both,res_gate,Residual + dropout,1,cell line 2,4,0.4403887544295655,0.05653139084400621
+both,res_gate,Residual + dropout,2,cell line 1,0,0.5600149393828862,0.10350036396431722
+both,res_gate,Residual + dropout,2,cell line 1,1,0.6076803868749368,0.11524016496121231
+both,res_gate,Residual + dropout,2,cell line 1,2,0.5579059466068633,0.08810343870994497
+both,res_gate,Residual + dropout,2,cell line 1,3,0.5676933188829917,0.0994994977560314
+both,res_gate,Residual + dropout,2,cell line 1,4,0.5904211575861806,0.10539080901558578
+both,res_gate,Residual + dropout,2,cell line 2,0,0.44760523834168603,0.04734179419312623
+both,res_gate,Residual + dropout,2,cell line 2,1,0.45773804839465193,0.049294257480151926
+both,res_gate,Residual + dropout,2,cell line 2,2,0.4372644800946066,0.05874130982016279
+both,res_gate,Residual + dropout,2,cell line 2,3,0.4503814154123502,0.05731045015246944
+both,res_gate,Residual + dropout,2,cell line 2,4,0.4242711471505429,0.04041378356498365
+both,res_nodrop,  control: no dropout,0,cell line 1,0,0.575008724400261,0.11849414898169203
+both,res_nodrop,  control: no dropout,0,cell line 1,1,0.6109661861239042,0.11852596421017975
+both,res_nodrop,  control: no dropout,0,cell line 1,2,0.5458920403902516,0.07608953249333328
+both,res_nodrop,  control: no dropout,0,cell line 1,3,0.5680028122515577,0.0998089911245974
+both,res_nodrop,  control: no dropout,0,cell line 1,4,0.5912512449393751,0.10622089636878024
+both,res_nodrop,  control: no dropout,0,cell line 2,0,0.46549558114751566,0.06523213699895586
+both,res_nodrop,  control: no dropout,0,cell line 2,1,0.4658587426715232,0.057414951757023214
+both,res_nodrop,  control: no dropout,0,cell line 2,2,0.42761388135469103,0.04909071108024721
+both,res_nodrop,  control: no dropout,0,cell line 2,3,0.43743321057604984,0.04436224531616906
+both,res_nodrop,  control: no dropout,0,cell line 2,4,0.42546450085823917,0.041607137272679895
+both,res_nodrop,  control: no dropout,1,cell line 1,0,0.5693188521732948,0.11280427675472587
+both,res_nodrop,  control: no dropout,1,cell line 1,1,0.6212409094507253,0.12880068753700086
+both,res_nodrop,  control: no dropout,1,cell line 1,2,0.5544971255848067,0.08469461768788833
+both,res_nodrop,  control: no dropout,1,cell line 1,3,0.5696989349899024,0.10150511386294214
+both,res_nodrop,  control: no dropout,1,cell line 1,4,0.5923839631903501,0.10735361461975529
+both,res_nodrop,  control: no dropout,1,cell line 2,0,0.46222009037924594,0.06195664623068614
+both,res_nodrop,  control: no dropout,1,cell line 2,1,0.4704206254728886,0.061976834558388594
+both,res_nodrop,  control: no dropout,1,cell line 2,2,0.42602184017369005,0.047498669899246226
+both,res_nodrop,  control: no dropout,1,cell line 2,3,0.44650270159585687,0.05343173633597609
+both,res_nodrop,  control: no dropout,1,cell line 2,4,0.42060320941867485,0.036745845833115576
+both,res_nodrop,  control: no dropout,2,cell line 1,0,0.5601366668100172,0.10362209139144823
+both,res_nodrop,  control: no dropout,2,cell line 1,1,0.6048566976415952,0.11241647572787078
+both,res_nodrop,  control: no dropout,2,cell line 1,2,0.5411125043562858,0.07130999645936742
+both,res_nodrop,  control: no dropout,2,cell line 1,3,0.5781410443727991,0.10994722324583883
+both,res_nodrop,  control: no dropout,2,cell line 1,4,0.607900874885941,0.12287052631534617
+both,res_nodrop,  control: no dropout,2,cell line 2,0,0.47550856681514436,0.07524512266658456
+both,res_nodrop,  control: no dropout,2,cell line 2,1,0.4597860007007133,0.05134220978621329
+both,res_nodrop,  control: no dropout,2,cell line 2,2,0.4214441449262735,0.0429209746518297
+both,res_nodrop,  control: no dropout,2,cell line 2,3,0.44748709395554276,0.05441612869566198
+both,res_nodrop,  control: no dropout,2,cell line 2,4,0.4251671606673874,0.04130979708182814
+both,scalar_drop,Scalar messages + dropout,0,cell line 1,0,0.5463588000719072,0.08984422465333824
+both,scalar_drop,Scalar messages + dropout,0,cell line 1,1,0.5985140971779461,0.10607387526422168
+both,scalar_drop,Scalar messages + dropout,0,cell line 1,2,0.5260010638572965,0.05619855596037815
+both,scalar_drop,Scalar messages + dropout,0,cell line 1,3,0.5482996139196994,0.0801057927927391
+both,scalar_drop,Scalar messages + dropout,0,cell line 1,4,0.5856801641285408,0.100649815557946
+both,scalar_drop,Scalar messages + dropout,0,cell line 2,0,0.49088882149948454,0.09062537735092474
+both,scalar_drop,Scalar messages + dropout,0,cell line 2,1,0.47522963729458334,0.06678584638008334
+both,scalar_drop,Scalar messages + dropout,0,cell line 2,2,0.42772669257100504,0.04920352229656122
+both,scalar_drop,Scalar messages + dropout,0,cell line 2,3,0.44695520953721984,0.053884244277339066
+both,scalar_drop,Scalar messages + dropout,0,cell line 2,4,0.4300069793506986,0.04614961576513932
+both,scalar_drop,Scalar messages + dropout,1,cell line 1,0,0.5373947659526167,0.08088019053404777
+both,scalar_drop,Scalar messages + dropout,1,cell line 1,1,0.5935113843513952,0.10107116243767073
+both,scalar_drop,Scalar messages + dropout,1,cell line 1,2,0.5389799115706122,0.06917740367369385
+both,scalar_drop,Scalar messages + dropout,1,cell line 1,3,0.5473378557283037,0.07914403460134345
+both,scalar_drop,Scalar messages + dropout,1,cell line 1,4,0.5779302846941493,0.09289993612355446
+both,scalar_drop,Scalar messages + dropout,1,cell line 2,0,0.4812220782009231,0.08095863405236331
+both,scalar_drop,Scalar messages + dropout,1,cell line 2,1,0.47619445881898265,0.06775066790448264
+both,scalar_drop,Scalar messages + dropout,1,cell line 2,2,0.4234380573217349,0.044914887047291074
+both,scalar_drop,Scalar messages + dropout,1,cell line 2,3,0.45098837762514854,0.05791741236526776
+both,scalar_drop,Scalar messages + dropout,1,cell line 2,4,0.4269902965047434,0.04313293291918413
+both,scalar_drop,Scalar messages + dropout,2,cell line 1,0,0.5358451396027311,0.07933056418416212
+both,scalar_drop,Scalar messages + dropout,2,cell line 1,1,0.6001120538837142,0.1076718319699898
+both,scalar_drop,Scalar messages + dropout,2,cell line 1,2,0.5394905693463155,0.0696880614493971
+both,scalar_drop,Scalar messages + dropout,2,cell line 1,3,0.5568943858095166,0.08870056468255627
+both,scalar_drop,Scalar messages + dropout,2,cell line 1,4,0.5796590538051039,0.094628705234509
+both,scalar_drop,Scalar messages + dropout,2,cell line 2,0,0.47346238919123557,0.07319894504267577
+both,scalar_drop,Scalar messages + dropout,2,cell line 2,1,0.47779558709304015,0.06935179617854015
+both,scalar_drop,Scalar messages + dropout,2,cell line 2,2,0.43895532970154905,0.060432159427105225
+both,scalar_drop,Scalar messages + dropout,2,cell line 2,3,0.45216585798497305,0.059094892725092274
+both,scalar_drop,Scalar messages + dropout,2,cell line 2,4,0.4318003590546442,0.047942995469084926
+both,ens_intermediate,Intermediate leaderboard ensemble,0,cell line 1,0,0.5820757824740801,0.12556120705551116
+both,ens_intermediate,Intermediate leaderboard ensemble,0,cell line 1,1,0.6286207322035473,0.13618051028982286
+both,ens_intermediate,Intermediate leaderboard ensemble,0,cell line 1,2,0.5840889594282906,0.11428645153137229
+both,ens_intermediate,Intermediate leaderboard ensemble,0,cell line 1,3,0.59185881897471,0.12366499784774976
+both,ens_intermediate,Intermediate leaderboard ensemble,0,cell line 1,4,0.6142959894243386,0.12926564085374376
+both,ens_intermediate,Intermediate leaderboard ensemble,0,cell line 2,0,0.4718462566063113,0.0715828124577515
+both,ens_intermediate,Intermediate leaderboard ensemble,0,cell line 2,1,0.46246552400559143,0.05402173309109143
+both,ens_intermediate,Intermediate leaderboard ensemble,0,cell line 2,2,0.4381946188204768,0.05967144854603296
+both,ens_intermediate,Intermediate leaderboard ensemble,0,cell line 2,3,0.45875229917699906,0.06568133391711828
+both,ens_intermediate,Intermediate leaderboard ensemble,0,cell line 2,4,0.42702667682396017,0.0431693132384009
+both,ens_intermediate,Intermediate leaderboard ensemble,1,cell line 1,0,0.5834272794217291,0.12691270400316018
+both,ens_intermediate,Intermediate leaderboard ensemble,1,cell line 1,1,0.6284950446115137,0.1360548226977893
+both,ens_intermediate,Intermediate leaderboard ensemble,1,cell line 1,2,0.5692928757302816,0.09949036783336329
+both,ens_intermediate,Intermediate leaderboard ensemble,1,cell line 1,3,0.5876720115880203,0.11947819046106001
+both,ens_intermediate,Intermediate leaderboard ensemble,1,cell line 1,4,0.620280142507803,0.1352497939372081
+both,ens_intermediate,Intermediate leaderboard ensemble,1,cell line 2,0,0.46407644958105526,0.06381300543249546
+both,ens_intermediate,Intermediate leaderboard ensemble,1,cell line 2,1,0.4828843216606892,0.07444053074618917
+both,ens_intermediate,Intermediate leaderboard ensemble,1,cell line 2,2,0.42797000954990866,0.04944683927546484
+both,ens_intermediate,Intermediate leaderboard ensemble,1,cell line 2,3,0.4542392512946033,0.06116828603472252
+both,ens_intermediate,Intermediate leaderboard ensemble,1,cell line 2,4,0.43215532047741795,0.04829795689185867
+both,ens_intermediate,Intermediate leaderboard ensemble,2,cell line 1,0,0.5904961029403488,0.1339815275217799
+both,ens_intermediate,Intermediate leaderboard ensemble,2,cell line 1,1,0.6364873658615602,0.14404714394783574
+both,ens_intermediate,Intermediate leaderboard ensemble,2,cell line 1,2,0.5761583423524812,0.10635583445556285
+both,ens_intermediate,Intermediate leaderboard ensemble,2,cell line 1,3,0.587564639891286,0.11937081876432576
+both,ens_intermediate,Intermediate leaderboard ensemble,2,cell line 1,4,0.6219023127131047,0.13687196414250985
+both,ens_intermediate,Intermediate leaderboard ensemble,2,cell line 2,0,0.47933618709821907,0.07907274294965927
+both,ens_intermediate,Intermediate leaderboard ensemble,2,cell line 2,1,0.48573550920908737,0.07729171829458736
+both,ens_intermediate,Intermediate leaderboard ensemble,2,cell line 2,2,0.43606620256505224,0.05754303229060842
+both,ens_intermediate,Intermediate leaderboard ensemble,2,cell line 2,3,0.43463505322307466,0.041564087963193885
+both,ens_intermediate,Intermediate leaderboard ensemble,2,cell line 2,4,0.43023432875068274,0.04637696516512346
+both,ens_final,Final ensemble,0,cell line 1,0,0.5995249005895531,0.14301032517098416
+both,ens_final,Final ensemble,0,cell line 1,1,0.6330821747188166,0.14064195280509212
+both,ens_final,Final ensemble,0,cell line 1,2,0.5767792438736096,0.10697673597669122
+both,ens_final,Final ensemble,0,cell line 1,3,0.5904918133918481,0.1222979922648878
+both,ens_final,Final ensemble,0,cell line 1,4,0.6245559736300685,0.1395256250594737
+both,ens_final,Final ensemble,0,cell line 2,0,0.484792225836576,0.0845287816880162
+both,ens_final,Final ensemble,0,cell line 2,1,0.4806631667907667,0.0722193758762667
+both,ens_final,Final ensemble,0,cell line 2,2,0.4406925135176705,0.062169343243226705
+both,ens_final,Final ensemble,0,cell line 2,3,0.4613324334184582,0.06826146815857742
+both,ens_final,Final ensemble,0,cell line 2,4,0.43217407818823367,0.04831671460267439
+both,ens_final,Final ensemble,1,cell line 1,0,0.5905397933709362,0.13402521795236727
+both,ens_final,Final ensemble,1,cell line 1,1,0.6286233489649764,0.13618312705125196
+both,ens_final,Final ensemble,1,cell line 1,2,0.5755743844284776,0.10577187653155928
+both,ens_final,Final ensemble,1,cell line 1,3,0.589922362073751,0.12172854094679075
+both,ens_final,Final ensemble,1,cell line 1,4,0.6267076829201843,0.14167733434958946
+both,ens_final,Final ensemble,1,cell line 2,0,0.48333310945830316,0.08306966530974336
+both,ens_final,Final ensemble,1,cell line 2,1,0.4866032299454366,0.07815943903093658
+both,ens_final,Final ensemble,1,cell line 2,2,0.4354910037753589,0.056967833500915055
+both,ens_final,Final ensemble,1,cell line 2,3,0.46256061568170204,0.06948965042182126
+both,ens_final,Final ensemble,1,cell line 2,4,0.4377739883355812,0.0539166247500219
+both,ens_final,Final ensemble,2,cell line 1,0,0.5849634178368741,0.12844884241830518
+both,ens_final,Final ensemble,2,cell line 1,1,0.6386774325109329,0.14623721059720846
+both,ens_final,Final ensemble,2,cell line 1,2,0.5796769543686122,0.10987444647169387
+both,ens_final,Final ensemble,2,cell line 1,3,0.5905062183914312,0.12231239726447096
+both,ens_final,Final ensemble,2,cell line 1,4,0.6291079811099809,0.14407763253938605
+both,ens_final,Final ensemble,2,cell line 2,0,0.4744424856073661,0.07417904145880633
+both,ens_final,Final ensemble,2,cell line 2,1,0.48631350026996584,0.07786970935546583
+both,ens_final,Final ensemble,2,cell line 2,2,0.446073225260277,0.06755005498583316
+both,ens_final,Final ensemble,2,cell line 2,3,0.45268138517733497,0.059610419917454194
+both,ens_final,Final ensemble,2,cell line 2,4,0.4348855189625278,0.05102815537696853

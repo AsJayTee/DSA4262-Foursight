@@ -1,0 +1,70 @@
+  cl1 logistic: 1 seed(s)
+  cl1 lightgbm: 3 seed(s)
+  cl1 m6anet: 1 seed(s)
+  cl1 deepset: 1 seed(s)
+  cl1 set_transformer: 1 seed(s)
+  cl1 gcn: 1 seed(s)
+  cl1 gat: 1 seed(s)
+  cl1 h2gcn_aux: 3 seed(s)
+  cl1 h2gcn_aux_r400: 1 seed(s)
+  cl1 gps: 3 seed(s)
+  cl1 scalar_msg: 3 seed(s)
+  cl1 scalar_random: 3 seed(s)
+  cl1 res_gate: 3 seed(s)
+  cl1 res_nodrop: 3 seed(s)
+  cl1 scalar_drop: 3 seed(s)
+  both logistic: 1 seed(s)
+  both lightgbm: 3 seed(s)
+  both m6anet: 1 seed(s)
+  both deepset: 1 seed(s)
+  both set_transformer: 1 seed(s)
+  both gcn: 1 seed(s)
+  both gat: 1 seed(s)
+  both h2gcn_aux: 3 seed(s)
+  both h2gcn_aux_r400: 1 seed(s)
+  both gps: 3 seed(s)
+  both h2gcn_twohead_aux: 3 seed(s)
+  both scalar_msg: 3 seed(s)
+  both scalar_random: 3 seed(s)
+  both res_gate: 3 seed(s)
+  both res_nodrop: 3 seed(s)
+  both scalar_drop: 3 seed(s)
+  both ens_intermediate: 3 seed(s)
+  both ens_final: 3 seed(s)
+                                               pr_auc                 roc_auc            
+scored on                                 cell line 1 cell line 2 cell line 1 cell line 2
+version label                                                                            
+cl1     Logistic regression (baseline)          0.412       0.322       0.901       0.807
+        Quantiles + LightGBM                    0.476       0.372       0.917       0.815
+        m6Anet (pretrained on HCT116)           0.503       0.356       0.932       0.819
+        DeepSet (reads only)                    0.521       0.389       0.932       0.815
+        Set Transformer (reads only)            0.501       0.377       0.929       0.809
+        GCN                                     0.336       0.277       0.905       0.793
+        GAT                                     0.520       0.371       0.938       0.829
+        H2GCN + own-reads head                  0.557       0.412       0.944       0.830
+        H2GCN, 400 nt context                   0.584       0.404       0.952       0.838
+        Graph transformer (GPS)                 0.585       0.409       0.953       0.842
+        Scalar messages                         0.571       0.432       0.948       0.835
+          control: random neighbours            0.534       0.398       0.932       0.816
+        Residual + dropout                      0.595       0.429       0.954       0.843
+          control: no dropout                   0.577       0.419       0.953       0.844
+        Scalar messages + dropout               0.570       0.431       0.948       0.833
+both    Logistic regression (baseline)          0.415       0.331       0.899       0.813
+        Quantiles + LightGBM                    0.472       0.392       0.918       0.829
+        m6Anet (pretrained on HCT116)           0.503       0.356       0.932       0.819
+        DeepSet (reads only)                    0.519       0.412       0.932       0.833
+        Set Transformer (reads only)            0.516       0.407       0.933       0.826
+        GCN                                     0.343       0.292       0.907       0.806
+        GAT                                     0.520       0.392       0.937       0.843
+        H2GCN + own-reads head                  0.568       0.444       0.948       0.855
+        H2GCN, 400 nt context                   0.585       0.424       0.949       0.855
+        Graph transformer (GPS)                 0.593       0.442       0.953       0.861
+        Scalar messages                         0.562       0.454       0.950       0.858
+          control: random neighbours            0.540       0.428       0.936       0.840
+        Residual + dropout                      0.587       0.454       0.954       0.865
+          control: no dropout                   0.587       0.451       0.954       0.863
+        Scalar messages + dropout               0.568       0.456       0.950       0.858
+        Two-head H2GCN                          0.606       0.445       0.958       0.859
+        Intermediate leaderboard ensemble       0.606       0.454       0.957       0.863
+        Final ensemble                          0.607       0.460       0.958       0.865
+figures -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\report\figures

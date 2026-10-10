@@ -1,0 +1,67 @@
+version,model,label,seeds,scored on,pr_auc,roc_auc
+cl1,logistic,Logistic regression (baseline),1,cell line 1,0.41210177901030975,0.9007906489442953
+cl1,logistic,Logistic regression (baseline),1,cell line 2,0.32238279882544774,0.8066288186817736
+cl1,lightgbm,Quantiles + LightGBM,3,cell line 1,0.47594076977013616,0.9169071293472791
+cl1,lightgbm,Quantiles + LightGBM,3,cell line 2,0.37187928166628553,0.81494449995369
+cl1,m6anet,m6Anet (pretrained on HCT116),1,cell line 1,0.5032507417156737,0.9321630143618045
+cl1,m6anet,m6Anet (pretrained on HCT116),1,cell line 2,0.35558811805312646,0.8190479641733968
+cl1,deepset,DeepSet (reads only),1,cell line 1,0.5212987525914113,0.9323563151477993
+cl1,deepset,DeepSet (reads only),1,cell line 2,0.38933388094843024,0.8148245026322058
+cl1,set_transformer,Set Transformer (reads only),1,cell line 1,0.5008580476539073,0.929295811324482
+cl1,set_transformer,Set Transformer (reads only),1,cell line 2,0.37717607389668145,0.8086754694362616
+cl1,gcn,GCN,1,cell line 1,0.33613290539615903,0.9045467252787166
+cl1,gcn,GCN,1,cell line 2,0.27692904661729,0.7932161813282345
+cl1,gat,GAT,1,cell line 1,0.5200007420338812,0.9382349290601679
+cl1,gat,GAT,1,cell line 2,0.3711763315919885,0.8286685602486797
+cl1,h2gcn_aux,H2GCN + own-reads head,3,cell line 1,0.5574510929979555,0.9435764385084198
+cl1,h2gcn_aux,H2GCN + own-reads head,3,cell line 2,0.4119264710263676,0.8303878789158052
+cl1,h2gcn_aux_r400,"H2GCN, 400 nt context",1,cell line 1,0.5839850476766574,0.9515762346117567
+cl1,h2gcn_aux_r400,"H2GCN, 400 nt context",1,cell line 2,0.40415873576847505,0.8379051787245061
+cl1,gps,Graph transformer (GPS),3,cell line 1,0.5849376721530541,0.9530994682558677
+cl1,gps,Graph transformer (GPS),3,cell line 2,0.40918613928918457,0.8423247905908403
+cl1,scalar_msg,Scalar messages,3,cell line 1,0.5707302842510149,0.9482158009946593
+cl1,scalar_msg,Scalar messages,3,cell line 2,0.4322255341465007,0.834922741562721
+cl1,scalar_random,  control: random neighbours,3,cell line 1,0.533989025449291,0.9324928144673393
+cl1,scalar_random,  control: random neighbours,3,cell line 2,0.3983936859716867,0.8158861710890988
+cl1,res_gate,Residual + dropout,3,cell line 1,0.5951909183939048,0.9535897534000142
+cl1,res_gate,Residual + dropout,3,cell line 2,0.4285693063654884,0.8431319718515659
+cl1,res_nodrop,  control: no dropout,3,cell line 1,0.5765888158457049,0.95342947241503
+cl1,res_nodrop,  control: no dropout,3,cell line 2,0.41903898562224645,0.843910250799688
+cl1,scalar_drop,Scalar messages + dropout,3,cell line 1,0.5698773000923623,0.9476603685907
+cl1,scalar_drop,Scalar messages + dropout,3,cell line 2,0.43104198318238723,0.8331367238513998
+both,logistic,Logistic regression (baseline),1,cell line 1,0.4151491891889999,0.8985568723162287
+both,logistic,Logistic regression (baseline),1,cell line 2,0.3307645155205223,0.8129939063767779
+both,lightgbm,Quantiles + LightGBM,3,cell line 1,0.47227920663912526,0.9176374843688055
+both,lightgbm,Quantiles + LightGBM,3,cell line 2,0.39167361585367527,0.8288085918486146
+both,m6anet,m6Anet (pretrained on HCT116),1,cell line 1,0.5032507417156737,0.9321630143618045
+both,m6anet,m6Anet (pretrained on HCT116),1,cell line 2,0.35558811805312646,0.8190479641733968
+both,deepset,DeepSet (reads only),1,cell line 1,0.5191811149859111,0.9322659696194757
+both,deepset,DeepSet (reads only),1,cell line 2,0.41190536931591176,0.833017578123223
+both,set_transformer,Set Transformer (reads only),1,cell line 1,0.5156245535692475,0.9327995761335267
+both,set_transformer,Set Transformer (reads only),1,cell line 2,0.4071676026896827,0.8260102162082589
+both,gcn,GCN,1,cell line 1,0.34325390893945706,0.9068544941065193
+both,gcn,GCN,1,cell line 2,0.29234248950370073,0.8056544103344123
+both,gat,GAT,1,cell line 1,0.5199162211737252,0.9369405690278692
+both,gat,GAT,1,cell line 2,0.3915165464848424,0.8433778421244268
+both,h2gcn_aux,H2GCN + own-reads head,3,cell line 1,0.5683147141050222,0.947524199681072
+both,h2gcn_aux,H2GCN + own-reads head,3,cell line 2,0.444455871015989,0.8545163313942602
+both,h2gcn_aux_r400,"H2GCN, 400 nt context",1,cell line 1,0.5847001921434658,0.9494803809696919
+both,h2gcn_aux_r400,"H2GCN, 400 nt context",1,cell line 2,0.42444753026843807,0.8554112695272802
+both,gps,Graph transformer (GPS),3,cell line 1,0.5933652651313582,0.9532614389618506
+both,gps,Graph transformer (GPS),3,cell line 2,0.44222912563512257,0.8605789633525556
+both,h2gcn_twohead_aux,Two-head H2GCN,3,cell line 1,0.6055483631062267,0.9582036099676587
+both,h2gcn_twohead_aux,Two-head H2GCN,3,cell line 2,0.4452327249467474,0.8590082622747258
+both,scalar_msg,Scalar messages,3,cell line 1,0.5618109994025936,0.9498873227642187
+both,scalar_msg,Scalar messages,3,cell line 2,0.4541999782907299,0.857608190107652
+both,scalar_random,  control: random neighbours,3,cell line 1,0.5401331209922835,0.9364689406638342
+both,scalar_random,  control: random neighbours,3,cell line 2,0.4281174563490752,0.8403993253852504
+both,res_gate,Residual + dropout,3,cell line 1,0.5873972318590807,0.9544163738595217
+both,res_gate,Residual + dropout,3,cell line 2,0.45376814739236715,0.8646004235039024
+both,res_nodrop,  control: no dropout,3,cell line 1,0.5869484066871232,0.9537639751718534
+both,res_nodrop,  control: no dropout,3,cell line 2,0.450802416071626,0.8634244177276251
+both,scalar_drop,Scalar messages + dropout,3,cell line 1,0.5680317206304231,0.9502408707878671
+both,scalar_drop,Scalar messages + dropout,3,cell line 2,0.45595853825529004,0.8582853851121475
+both,ens_intermediate,Intermediate leaderboard ensemble,3,cell line 1,0.606124247417484,0.9570541319348753
+both,ens_intermediate,Intermediate leaderboard ensemble,3,cell line 2,0.4543484921986763,0.8627254534142978
+both,ens_final,Final ensemble,3,cell line 1,0.6071070772502078,0.9575403925136334
+both,ens_final,Final ensemble,3,cell line 2,0.46025392166137696,0.8651947774038814
