@@ -254,7 +254,67 @@ combined.
   rules.**
 - **Who builds what**, and by when (final deadline 28 Oct).
 
-### c) Report, Results (2)
+### c) Turning the score into a probability (proposed next step)
+
+The model's score orders sites well, but it is **not a probability**. We
+trained with modified sites up-weighted about 21×, which inflates every
+score by a fixed amount. The exact amount is derived in
+[theory.md §5](theory.md). A probability would let the dashboard say "this
+site is ~30% likely to be modified", and lets us choose a yes/no cut-off
+sensibly.
+
+**Step 1: calibrate.** Fit a small mapping from raw score to "probability
+the site is truly modified", using held-out predictions where we know the
+answer (both labelled cell lines).
+- **First, undo the known inflation:** subtract $\log w$ from the raw
+  score (theory.md §5).
+- **Platt scaling (the usual default):** a one-variable logistic
+  regression on the raw score. Two numbers, smooth, hard to overfit.
+- **Isotonic regression (the flexible alternative):** a step function that
+  only assumes "higher score means more likely". Better with lots of data,
+  but can be jagged.
+- **Judge the result with:**
+  - the Brier score (mean squared error of the probabilities);
+  - log loss;
+  - a reliability plot: of the sites given "30%", are about 30% truly
+    modified?
+- The repo already has `configs/calibrated_platt.yaml` and
+  `calibrated_prior_shift.yaml` from earlier LightGBM work.
+
+**Step 2: pick a threshold.** The cut-off that maximises F1 is a common,
+defensible default.
+- **Pick it on one dataset and judge it on another:** threshold from cell
+  line 1's held-out predictions, evaluated on cell line 2. Picking and
+  judging on the same data flatters every metric.
+- **At that threshold, report:**
+  - precision, recall and F1;
+  - specificity;
+  - balanced accuracy;
+  - MCC (one honest score when positives are rare);
+  - the confusion matrix.
+
+  **Not plain accuracy:** with 4.5% positives, calling nothing modified
+  scores 95.5%.
+- **Show a small sweep around the threshold.** Site counts can swing about
+  2× between reasonable thresholds (AGENTS.md rule).
+- **Already partly tested (C2 above):** a cut-off set on cell line 1 kept
+  its precision on cell line 2 (50% set, 53% observed).
+
+**Three caveats to state:**
+1. **Probabilities depend on how common m6A is.** Base rates are 4.5% vs
+   7.2% in our two labelled lines. A calibration fitted on one is off on
+   the other. A standard "prior-shift" correction exists if the target's
+   base rate is known (theory.md §5), but for SG-NEx it is not.
+2. **They depend on read depth.** Fewer reads mean scores closer to the
+   middle, so calibrate per read band. We have scores at 1, 3 and 10 reads
+   for the labelled sites.
+3. **They mean "modified at all", not "what fraction"** (theory.md §4;
+   `fig_data2_fractions`).
+
+**Effort:** small, laptop only, about 30 minutes for the calibration, the
+threshold, a metrics table and a reliability figure.
+
+### d) Report, Results (2)
 
 - One figure (candidates: the stop-codon profile across lines; the A2
   agreement chart; the C3 range).
