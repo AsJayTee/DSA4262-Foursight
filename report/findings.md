@@ -1497,13 +1497,86 @@ report/figures/fig_depth.png).
 | Xron (Genome Res 2024) | Signal-to-methylated-base encoder-decoder; context within a read only | Verified |
 | structRFM (bioRxiv 2025) | Structure-guided RNA foundation model (sequence + secondary structure) | Verified (preprint) |
 | NanoFM | Nanopore signal + structRFM embeddings + cross-attention | GitHub repo verified; it gives no paper, training data or results. Its claimed DOI (10.1016/j.ijbiomac.2026.152629) resolves but could not be read |
-| "m6A-IIN" (claimed Commun Biol 2025, graph wavelet network on RNA structure) | - | **Not found**: treat as unverified. Real models of this type: M6A-SAI (PeerJ), SMART-m6A (PLOS Comput Biol) |
+| m6A-IIN (Li et al., Commun Biol 8:1022, 2025; doi:10.1038/s42003-025-08265-8) | Sequence-only: a 41-nt fragment plus RNAfold secondary structure, invertible neural network; one fragment per prediction, no nanopore signal | **Verified** (corrected 10 Oct; first search missed it). The first AI summary's "graph wavelet" description was wrong |
 
-- **None of these shares information between candidate sites on a
-  transcript.** Every nanopore method found scores each site
+**Prior-art search, round 2 (two deep-research reports, 10 Oct; key claims
+re-checked by us).**
+
+- **Our novelty claim must be narrow.** DNA methylation has clear
+  precedent for using neighbouring sites:
+  - **DeepMod** (Liu et al., Nat Commun 2019, doi:10.1038/s41467-019-10168-2;
+    nanopore DNA 5mC). A second network takes a CpG's predicted
+    methylation percentage plus its neighbouring sites' (both strands) and
+    outputs a revised percentage, to exploit the "cluster effect" of CpG
+    methylation. **Verified** from the repo docs (docs/Usage.md: "5mC in
+    CpG motifs has cluster effect"; `hm_cluster_predict.py`) and a search
+    summary of the paper. The improvement it reports (claimed +1-3% AP,
+    +3-5% AUC) is **not** verified. This is essentially our scalar-messages
+    idea in DNA, without the gating, residual design, dropout or
+    cross-domain evaluation. **Cite it.**
+  - **DeepCpG** (Genome Biol 2017), **CpG Transformer** (Bioinformatics
+    2022) and GraphCpG (Bioinformatics 2023) impute single-cell CpG states
+    from observed neighbouring states. ccsmeth and hifimeth (PacBio) use
+    neighbouring CpGs' read-level calls. *(Reported by the research; not
+    individually re-checked.)*
+  - MeRIP-seq peak callers (HEPeak, MeTPeak, BaySeqPeak) use HMMs across
+    neighbouring bins. That is coarse region smoothing, not sites.
+    *(Reported; not re-checked.)*
+- **RNA side:** no nanopore RNA-modification method was found that feeds
+  measured evidence from other candidate sites into a site's prediction.
+  - Both reports agree, covering about 15 tools: m6Anet, m6ATM, DeepRM,
+    CHEUI, TandemMod, SingleMod, m6Aiso, MultiNano, RNANO, ORCA, Xron,
+    MINES, Nanocompore and others.
+  - Co-occurrence between sites appears only as post-hoc analysis (DeepRM,
+    m6Aiso, CHEUI, ORCA, Nanocompore).
+  - Nanocompore combines neighbouring k-mers, but that is one
+    modification's own signal footprint, not other sites.
+- **Defensible wording:** "To our knowledge, the first method to propagate
+  read-derived evidence between candidate RNA modification sites along a
+  transcript in nanopore direct RNA sequencing, and to characterise how such
+  propagation behaves when the labels change between cell lines. Analogous
+  neighbour-site models exist for DNA methylation (DeepMod; DeepCpG; CpG
+  Transformer)."
+- **Supporting results we checked:**
+  - **Graph transformers out of distribution** (Niv & Rabin, arXiv:2506.20575,
+    2025). GPS generalised better than message passing on 4 of 6 GOOD
+    benchmarks, but "vGIN leads by roughly 2% on the size shift and 5% on
+    the scaffold shift ... locality in message passing can be better suited
+    for certain distribution shifts". So "capacity hurts out of
+    distribution" is **not** a general law. Our result is evidence for
+    *label-shift between cell lines* in this domain. Phrase it that way.
+  - **Neighbour-reliant models and data splits** (single-cell methylation
+    imputation benchmark, Brief Bioinform 2026, 27(4):bbag434). "CpG
+    Transformer and MambaCpG showed strong sensitivity to splitting
+    protocol, with severe drops in MCC under the chromosome-based split
+    framework"; "random splitting inevitably places highly similar
+    neighboring sites in both training and test sets". **Verified.** Our
+    split is by gene, so a site and its neighbours (same transcript) are
+    always on the same side of it. Worth a sentence in Methods.
+  - **Low site-level agreement between assays:** NP-mFinder reports 28%
+    site-level and 85% gene-level concordance with GLORI v2.0. Abstract
+    verified via a mirror; the venue (Front Genet 2026) is not confirmed.
+  - **m6Anet's own cross-cell-line claim** ("generalizes robustly to other
+    cell lines without a loss in accuracy") was made with labels from a
+    similar assay in both lines. Our setting has different labels per
+    cell line, which is where we see the drop.
+  - **Not found in either report:** a paper arguing that cross-cell-line
+    accuracy is bounded by label disagreement. Our label oracle and
+    discordant-site results appear to be new as stated, quantified results.
+- **Errors in the first report (do not cite from it):**
+  - EpiNano is given as "Science 2019"; it was Nat Commun 2019.
+  - GraphGPS is attributed to "Dwivedi et al., ICLR 2022"; it is Rampášek et
+    al., NeurIPS 2022.
+  - SMART-m6A's year conflicts with its DOI.
+  - It also says m6A-IIN is not nanopore-based; that part is correct.
+
+  Every citation from either report must be checked before use.
+
+- **None of the nanopore RNA methods above shares information between
+  candidate sites on a transcript.** Every one found scores each site
   independently. The "graph" models build graphs over nucleotides within
   one molecule (structure), not over sites.
-- Report wording: "we found no prior nanopore method that ...".
+- Report wording: "to our knowledge, ..." (above).
 - **Not pursued, with reasons:**
   - RNA structure: our folding test was null (section 7).
   - Expressive pair attention: our graph transformer learns the training
