@@ -330,6 +330,44 @@ may differ in other ways.
 **Source:** `analysis/representation/results/depth_ensembles.csv`
 (`depth_ensembles.py`, from per-site scores saved by `depth_rescore.py`).
 
+### fig_data2_fractions.png
+
+**Shows:** the shipped model's scores on dataset2, the course's in-vitro
+series. One synthetic RNA was sequenced as seven samples made with a *known*
+share of modified molecules (0, 25, 50, 70, 75, 95, 100%), at the same 189
+positions. Each point is one position.
+- **Left:** the final score (site + neighbours).
+- **Right:** the own-reads score (no neighbours).
+
+**Computed:** scored with `models/final` (numpy); never used for training.
+The final score is the six networks' mean raw output; the own-reads score
+is the constrained designs' read-only output. Both are shown on a 0-100%
+scale (sigmoid).
+
+**Read:**
+- The scores **separate unmodified from modified RNA sharply**: final-score
+  median 21% at 0% vs 88% at 25% and ~96% from 50% up.
+- They **plateau from about 50%**: the model cannot tell a half-modified
+  site from a fully modified one.
+- The own-reads score even dips slightly at 95-100% (median 80% vs 87% at
+  70%).
+- Neighbours sharpen the trend (Spearman with the fraction 0.41 vs 0.24),
+  as expected: every neighbour here shares the site's level, so
+  corroboration reinforces it.
+- Within one sample, some positions score low regardless of level:
+  sequence context matters.
+
+**Don't claim:**
+- that the score measures the modification *fraction* (stoichiometry). It
+  detects presence, then saturates.
+- that the neighbour effect is this large in real transcripts: here every
+  neighbour shares the site's level by construction.
+
+**Source:** `analysis/representation/results/data2_score_summary.csv`
+(`analysis/newdata/data2_scores.py`). Per-site scores are in
+`.cache/representation/data2_scores.csv` (they carry course labels, so they
+are not committed); the script regenerates them in about a minute.
+
 ---
 
 ## Outdated
