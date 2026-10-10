@@ -4,11 +4,13 @@
   "networks": [
     "h2gcn_twohead_aux_s0.npz",
     "h2gcn_twohead_aux_s1.npz",
-    "h2gcn_aux_s0.npz",
-    "h2gcn_aux_s1.npz"
+    "res_gate_s0.npz",
+    "res_gate_s1.npz",
+    "scalar_drop_s0.npz",
+    "scalar_drop_s1.npz"
   ],
   "combine": "mean of within-file ranks",
   "trained_on": "dataset0 + data1, every labelled site (pooled_both)",
-  "evaluation": "analysis/representation/results/ (cross-source, decision 0032)",
-  "created": "2026-10-04T04:24:06+00:00"
+  "evaluation": "analysis/representation/results/ (cross-source, decisions 0032, 0034)",
+  "created": "2026-10-10T08:00:06+00:00"
 }
