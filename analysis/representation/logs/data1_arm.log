@@ -1,0 +1,16 @@
+10:48:22 waiting for run_batch2.py
+18:22:41 batch 2 gone; fitting the data1 arm
+18:55:39 fits done, exit codes [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                                                   comparison   value  ci_low  ci_high  win %
+h2gcn_aux, trained on cell line 1 only: PR AUC on cell line 2  0.4046     NaN      NaN    NaN
+h2gcn_aux, trained on cell line 2 only: PR AUC on cell line 2  0.4119     NaN      NaN    NaN
+            h2gcn_aux, trained on both: PR AUC on cell line 2  0.4355     NaN      NaN    NaN
+      gps, trained on cell line 1 only: PR AUC on cell line 2  0.4032     NaN      NaN    NaN
+      gps, trained on cell line 2 only: PR AUC on cell line 2  0.4217     NaN      NaN    NaN
+                  gps, trained on both: PR AUC on cell line 2  0.4357     NaN      NaN    NaN
+            gps - h2gcn_aux, both trained on cell line 1 only -0.0014 -0.0103   0.0082   38.7
+            gps - h2gcn_aux, both trained on cell line 2 only  0.0098  0.0003   0.0200   97.6
+                        gps - h2gcn_aux, both trained on both  0.0002 -0.0083   0.0102   50.5
+   h2gcn_aux: trained on cell line 2 - trained on cell line 1  0.0073 -0.0019   0.0174   93.1
+         gps: trained on cell line 2 - trained on cell line 1  0.0185  0.0070   0.0302   99.9
+18:59:14 done data1_arm_eval (exit 0)

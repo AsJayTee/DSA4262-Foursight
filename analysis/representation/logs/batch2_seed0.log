@@ -1,0 +1,102 @@
+start baseline
+start fit --model scalar_drop --fold 0 --arm dataset0
+start fit --model scalar_drop --fold 0 --arm pooled_both
+start fit --model scalar_drop --fold 1 --arm dataset0
+start fit --model scalar_drop --fold 1 --arm pooled_both
+start fit --model scalar_drop --fold 2 --arm dataset0
+start fit --model scalar_drop --fold 2 --arm pooled_both
+start fit --model scalar_drop --fold 3 --arm dataset0
+start fit --model scalar_drop --fold 3 --arm pooled_both
+start fit --model scalar_drop --fold 4 --arm dataset0
+start fit --model scalar_drop --fold 4 --arm pooled_both
+done baseline
+done fit --model scalar_drop --fold 1 --arm dataset0
+done fit --model scalar_drop --fold 2 --arm pooled_both
+done fit --model scalar_drop --fold 4 --arm pooled_both
+done fit --model scalar_drop --fold 3 --arm pooled_both
+done fit --model scalar_drop --fold 4 --arm dataset0
+done fit --model scalar_drop --fold 0 --arm pooled_both
+done fit --model scalar_drop --fold 0 --arm dataset0
+done fit --model scalar_drop --fold 1 --arm pooled_both
+done fit --model scalar_drop --fold 3 --arm dataset0
+done fit --model scalar_drop --fold 2 --arm dataset0
+loaded: dataset0 121,838 sites, data1 90,452
+
+Cross-source: scalar_drop (network) minus lightgbm_quantiles
+------------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+dataset0           +0.0836  [+0.0719, +0.0953]     +0.0518  [+0.0415, +0.0625]    +0.0677     +0.0518      yes
+pooled_both        +0.0872  [+0.0753, +0.0984]     +0.0603  [+0.0491, +0.0705]    +0.0737     +0.0603      yes
+Each row: scalar_drop (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+dataset0              0.5596        0.4237             0.4759          0.3719
+pooled_both           0.5595        0.4519             0.4723          0.3917
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels   gain  ci_low  ci_high
+cell                                               
+A        dataset0  dataset0 0.0849  0.0696   0.0998
+B        dataset0     data1 0.0611  0.0510   0.0706
+C           data1  dataset0 0.0704  0.0552   0.0868
+D           data1     data1 0.0518  0.0409   0.0624
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain +0.0535 [+0.0306, +0.0797] - compare with cell D for the gene-population effect.
+
+vs deepset alone (same arms, same genes):
+  dataset0     dataset0 +0.0383  data1 +0.0344  worst +0.0344
+  pooled_both  dataset0 +0.0403  data1 +0.0400  worst +0.0400
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
+wandb: Currently logged in as: jinthau-siah (dsa4262-team) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run tc3htnxa
+wandb: Tracking run with wandb version 0.30.0
+wandb: Run data is saved locally in /mnt/sdd/DSA4262/wandb/run-20261009_182204-tc3htnxa
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run scalar_drop_nn__xsrc
+wandb: ⭐️ View project at https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: 🚀 View run at https://wandb.ai/dsa4262-team/dsa4262-project/runs/tc3htnxa
+wandb: updating run metadata; uploading artifact scalar_drop_nn__xsrc-report
+wandb: uploading artifact scalar_drop_nn__xsrc-report
+wandb: uploading requirements.txt; uploading wandb-summary.json; uploading config.yaml
+wandb: uploading history steps 0-7, summary
+wandb: 
+wandb: Run history:
+wandb:     curve/xsrc/arm/data1_gain ▁█
+wandb:  curve/xsrc/arm/dataset0_gain ▁█
+wandb:      curve/xsrc/arm/gain_mean ▁█
+wandb:          curve/xsrc/arm/index ▁█
+wandb:       curve/xsrc/crossed/cell ▁▃▆█
+wandb:    curve/xsrc/crossed/ci_high █▃▆▁
+wandb:     curve/xsrc/crossed/ci_low █▃▄▁
+wandb:       curve/xsrc/crossed/gain █▃▅▁
+wandb:    curve/xsrc/diag/data1_gain ▁
+wandb: curve/xsrc/diag/dataset0_gain ▇▁█▁█▃▃
+wandb:                           +76 ...
+wandb: 
+wandb: Run summary:
+wandb:       vs_deepset/dataset0/data1/gain 0.03439
+wandb:    vs_deepset/dataset0/dataset0/gain 0.03826
+wandb:       vs_deepset/dataset0/gain_worst 0.03439
+wandb:    vs_deepset/pooled_both/data1/gain 0.04002
+wandb: vs_deepset/pooled_both/dataset0/gain 0.0403
+wandb:    vs_deepset/pooled_both/gain_worst 0.04002
+wandb:       xsrc/crossed/A/baseline_pr_auc 0.5125
+wandb:               xsrc/crossed/A/ci_high 0.09982
+wandb:                xsrc/crossed/A/ci_low 0.06962
+wandb:                  xsrc/crossed/A/gain 0.08494
+wandb:                                  +57 ...
+wandb: 
+wandb: 🚀 View run scalar_drop_nn__xsrc at: https://wandb.ai/dsa4262-team/dsa4262-project/runs/tc3htnxa
+wandb: ⭐️ View project at: https://wandb.ai/dsa4262-team/dsa4262-project
+wandb: Synced 4 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20261009_182204-tc3htnxa/logs
+  logged to W&B: https://wandb.ai/dsa4262-team/dsa4262-project/runs/tc3htnxa
+scalar_drop: worst +0.0518  mean +0.0677  -> /mnt/sdd/DSA4262/analysis/representation/results/scalar_drop_nn__xsrc.json

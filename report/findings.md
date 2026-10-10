@@ -770,7 +770,8 @@ Source: analysis/representation/results/day_summary.md (from
      about the same.
    - Both beat a hard 100-nt radius (`h2gcn_aux_r100`, +0.004).
 6. **Neighbour dropout is the active ingredient of `res_gate`; the gate
-   adds little.** Unseen cell line, n = 1 for each control:
+   adds little.** Unseen cell line, n = 1 for each control (*confirmed on
+   3 seeds in 12F: +0.0403 without dropout, +0.0492 without the gate*):
    - without dropout (`res_nodrop`): +0.051 → +0.039;
    - without the depth gate (`res_nogate`): +0.048.
 
@@ -933,7 +934,7 @@ resamples won):**
 - **`scalar_random` is significantly worse.** That is the corroboration
   test, now with intervals.
 
-**Against the shipped ensemble (seed 0 only).** The shipped model is
+**Against the shipped ensemble (seed 0 only; superseded by the 3-seed comparison in 12F).** The shipped model is
 `h2gcn_twohead_aux` + `h2gcn_aux`; only seed 0 of `h2gcn_twohead_aux` is
 cached, so this is a stand-in. Both-cell-lines arm. Numbers are in
 results/day_significance.csv (rows with vs = "shipped ensemble"):
@@ -1085,18 +1086,123 @@ Source: results/probe_scalar_curve.csv (25 points per curve). The inputs
 are correlated, so a partial-dependence curve illustrates the effect; it is
 not a controlled experiment.
 
+### 12F. 9-10 Oct batch: controls on 3 seeds, scalar messages with dropout, and the premise test
+
+All 135 new networks converged (convergence.py: 0 undertrained). Source:
+results/day_summary.md (regenerated) and batch2 logs.
+
+**The controls now have 3 seeds, and every single-seed claim in 12C
+holds.** Values are gains over LightGBM, mean ± SD over 3 seeds, on the
+unseen cell line:
+
+| Pair | Design | Control | Difference | What it shows |
+|---|---|---|---|---|
+| `res_gate` vs `res_nodrop` | +0.0505 ± 0.0011 | +0.0403 ± 0.0017 | **+0.010** | Neighbour dropout is the active ingredient (finding 6) |
+| `res_gate` vs `res_nogate` | +0.0505 ± 0.0011 | +0.0492 ± 0.0014 | +0.001 | The depth gate adds nothing. Without it, trained on both lines, the model even scores slightly higher on cell line 2 (+0.057 vs +0.053) |
+| `fk_band` vs `fk_band_shuffled` | +0.0447 ± 0.0011 | +0.0432 ± 0.0021 | +0.0015 | The measured band weights don't matter (finding 5) |
+| `scalar_msg` vs `scalar_random` | +0.0550 ± 0.0020 | +0.0171 ± 0.0034 | **-0.038** | Corroboration: neighbours' real scores are the signal (finding 4) |
+
+**`scalar_drop` (`scalar_msg` + neighbour dropout) fixes `scalar_msg`'s
+weak spot.**
+
+| | Unseen cell line | New genes | Both → cell line 2 | Both → cell line 1 |
+|---|---|---|---|---|
+| `scalar_msg` | +0.0550 | +0.0518 | +0.0542 | +0.0752 |
+| `scalar_drop` | +0.0537 ± 0.0016 | +0.0502 | **+0.0585** (best of any design) | +0.0875 (+0.012) |
+
+- With dropout, the one-number-message model keeps its transfer and
+  recovers 0.012 on cell line 1.
+- Dropout helps both constrained designs.
+
+**`h2gcn_twohead_aux` on 3 seeds.** Both → cell line 1 +0.1120 ± 0.0035
+(the highest of any model), both → cell line 2 +0.0462 ± 0.0020.
+
+**The premise test: does training on cell line 2 itself help on cell
+line 2?** (`data1_arm_eval.py`, seed 0.) `h2gcn_aux` and `gps` were trained
+on cell line 2 only and scored on cell line 2's held-out genes, the same
+sites as every other row. Source: results/data1_arm.csv.
+
+| PR AUC on cell line 2, trained on | `h2gcn_aux` | `gps` |
+|---|---|---|
+| cell line 1 only | 0.405 | 0.403 |
+| cell line 2 only | 0.412 | 0.422 |
+| both | 0.436 | 0.436 |
+
+| Paired difference, 95% gene interval (win %) | Value |
+|---|---|
+| `gps` - `h2gcn_aux`, both trained on cell line 1 only | -0.001 [-0.010, +0.008] (39%) |
+| **`gps` - `h2gcn_aux`, both trained on cell line 2 only** | **+0.010 [+0.000, +0.020] (98%)** |
+| `gps` - `h2gcn_aux`, both trained on both | +0.000 [-0.008, +0.010] (51%) |
+| `h2gcn_aux`: trained on cell line 2 - trained on cell line 1 | +0.007 [-0.002, +0.017] (93%) |
+| **`gps`: trained on cell line 2 - trained on cell line 1** | **+0.019 [+0.007, +0.030] (100%)** |
+
+1. **Capacity does help within a cell line.** Trained and tested on cell
+   line 2, `gps` beats `h2gcn_aux` (+0.010, interval just above zero), just
+   as it does on cell line 1 (+0.025, 12D).
+   - It loses that advantage only when the training and test cell lines
+     differ.
+   - So `gps`'s cross-line failure is the **labelling differing between
+     cell lines** (the premise breaking), not a lack of generalisation in
+     general.
+   - Report framing: extra capacity learns more of the *training cell
+     line's* labelling, which is real within that line and does not carry
+     over.
+2. **The constrained model barely needs the target cell line's labels.**
+   Its own labels give `h2gcn_aux` only +0.007 (not significant), against
+   +0.019 for `gps`. What `h2gcn_aux` learns from cell line 1 is almost
+   all transferable, and that is what constraining buys.
+3. **Most of the drop from cell line 1 to cell line 2 is not a transfer
+   failure.**
+   - `h2gcn_aux` scores 0.544 on cell line 1 and 0.405 on cell line 2.
+   - Training on cell line 2 itself recovers only 0.007 of that gap.
+   - Cell line 2's labels are simply harder to predict from these reads
+     (lift over its positive rate: 0.41 / 0.073 = 5.6× vs 0.544 / 0.045 =
+     12× on cell line 1). This fits the discordant-site ceiling in 12D.
+4. **Training on both lines is best on cell line 2 for both models**
+   (0.436). More, varied training data beats the target line's labels
+   alone.
+
+Caveats:
+- Cell line 2 alone has fewer training sites: about 73k, against 122k for
+  cell line 1.
+- Seed 0 only; the `gps` interval within cell line 2 just clears zero.
+
+**Ensembles against the shipped one, every component averaged over 3
+seeds.** Both-cell-lines arm, paired, 95% gene interval (win %). Source:
+results/day_significance.csv (vs = "shipped ensemble"); the new-genes
+column is from the same function.
+
+| Candidate | Cell line 1 | Cell line 2 | data1 new genes |
+|---|---|---|---|
+| `res_gate` alone | -0.019 [-0.028, -0.010] 0% | -0.001 | - |
+| `scalar_drop` alone | -0.038 0% | +0.001 | - |
+| `res_gate` + `scalar_msg` | -0.019 0% | +0.006 98% | - |
+| `h2gcn_twohead_aux` + `res_gate` | +0.004 [-0.002, +0.009] 92% | -0.000 | - |
+| `h2gcn_twohead_aux` + `res_gate` + `scalar_msg` | -0.001 [-0.006, +0.005] 35% | +0.006 [+0.002, +0.009] 100% | +0.012 [+0.000, +0.022] 98% |
+| **`h2gcn_twohead_aux` + `res_gate` + `scalar_drop`** | **+0.001 [-0.005, +0.006] 61%** | **+0.006 [+0.002, +0.009] 100%** | **+0.012 [+0.000, +0.023] 98%** |
+| shipped + `res_gate` + `scalar_msg` | -0.003 8% | +0.006 100% | - |
+
+- **The seed-0 result in 12D was optimistic.** With every component
+  seed-averaged, the shipped ensemble is stronger on cell line 1. The
+  candidate's +0.004 there became +0.001, a tie.
+- **What holds up:** about +0.006 on cell line 2 and +0.012 on its new
+  genes, at no cost on cell line 1.
+- On the two other HCT116 sequencing runs (13), the `scalar_msg` version
+  also beat the shipped one: +0.009 / +0.012 (seed 0).
+
 **Implications.**
 
-- **What to ship (updated 12D).** `res_gate` alone does not beat the
-  shipped ensemble: it loses on cell line 1.
-  - The candidate is `h2gcn_twohead_aux` + `res_gate` + `scalar_msg`. On
-    seed 0 it is the only option that does not lose on either cell line.
-  - Before it ships: seeds 1-2 of `h2gcn_twohead_aux` (to compare like with
-    like), then a final fit, a numpy export of `res_gate` and `scalar_msg`
-    (new inference code: shared infrastructure, needs a decision record) and
-    a predict.py test.
+- **What to ship (updated 12F, 3 seeds).** The best candidate is
+  `h2gcn_twohead_aux` + `res_gate` + `scalar_drop`. Against the shipped
+  ensemble it:
+  - ties on cell line 1 (+0.001);
+  - gains +0.006 on cell line 2 (interval above zero);
+  - gains +0.012 on data1's new genes.
 
-  None of these have been run.
+  That is a small but consistent improvement on the cell line we didn't
+  train on. Before it ships: a final fit, a numpy export of `res_gate` and
+  `scalar_drop` (new inference code: shared infrastructure, needs a
+  decision record) and a predict.py test. None of these have been run.
 - **A labelling ceiling (12D).** At sites where the two cell lines' labels
   disagree, no model sees a difference in the reads. Cross-cell-line PR AUC
   is bounded by label agreement, not only by the model.

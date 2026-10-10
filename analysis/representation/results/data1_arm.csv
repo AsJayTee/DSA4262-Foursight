@@ -1,0 +1,12 @@
+comparison,value,ci_low,ci_high,win %
+"h2gcn_aux, trained on cell line 1 only: PR AUC on cell line 2",0.40459832532428613,,,
+"h2gcn_aux, trained on cell line 2 only: PR AUC on cell line 2",0.41189378249495356,,,
+"h2gcn_aux, trained on both: PR AUC on cell line 2",0.435491974271565,,,
+"gps, trained on cell line 1 only: PR AUC on cell line 2",0.4031893646857369,,,
+"gps, trained on cell line 2 only: PR AUC on cell line 2",0.4216505979552758,,,
+"gps, trained on both: PR AUC on cell line 2",0.4356880019863513,,,
+"gps - h2gcn_aux, both trained on cell line 1 only",-0.0014089606385492282,-0.010299711467081665,0.008192333685698692,38.7
+"gps - h2gcn_aux, both trained on cell line 2 only",0.009756815460322255,0.0002776735815939875,0.019992616433144428,97.6
+"gps - h2gcn_aux, both trained on both",0.00019602771478632874,-0.008278087451717604,0.010215069969519052,50.5
+h2gcn_aux: trained on cell line 2 - trained on cell line 1,0.00729545717066743,-0.001891333559305755,0.017371852048065097,93.10000000000001
+gps: trained on cell line 2 - trained on cell line 1,0.018461233269538913,0.007025631389800439,0.030191509499804068,99.9

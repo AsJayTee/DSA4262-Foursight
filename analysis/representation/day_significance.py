@@ -10,8 +10,8 @@ Ronin first, `.cache/representation/xsrc_nets/*.npy`).
    across genes. Each model's three seeds are rank-averaged first (the same
    for h2gcn_aux), then PR AUC difference on identical sites with a 95%
    interval from resampling whole genes; plus the per-seed differences.
-2. Ensembles: res_gate + scalar_msg (rank average), and against a seed-0
-   stand-in for the shipped ensemble (h2gcn_twohead_aux + h2gcn_aux).
+2. Ensembles: res_gate + scalar_msg (rank average), and candidates against
+   the shipped ensemble (h2gcn_twohead_aux + h2gcn_aux), all seed-averaged.
 3. Discordant sites. 67k sites are in both files; where their labels
    disagree, does a model trained on cell line 1 ONLY rank the site higher
    in the file whose label says modified? Scores are percentile ranks within
@@ -35,7 +35,7 @@ from m6a.config import Config
 
 NETS = common.OUT / "xsrc_nets"
 BASELINE = common.ROOT / "configs" / "quantiles.yaml"
-DESIGNS = ["h2gcn_aux_r100", "fk_band", "fk_kernel", "res_gate", "scalar_msg", "gps"]
+DESIGNS = ["h2gcn_aux_r100", "fk_band", "fk_kernel", "res_gate", "scalar_msg", "scalar_drop", "gps"]
 CONTROLS = ["fk_band_shuffled", "res_nogate", "res_nodrop", "scalar_random"]
 N_BOOT = 1000
 
@@ -124,21 +124,28 @@ def main() -> None:
                          "diff": d, "ci_low": lo, "ci_high": hi, "gene-resample win %": 100 * win})
             print(rows[-1], flush=True)
 
-    # Seed-0 stand-in for the shipped ensemble (both files only; twohead has seed 0 only here).
-    shipped = [preds(m, "pooled_both", 0) for m in ("h2gcn_twohead_aux", "h2gcn_aux")]
+    # Against the shipped ensemble, every component seed-averaged over seeds 0-2
+    # (both files only; h2gcn_twohead_aux trains only that arm).
+    shipped = [seed_mean(m, "pooled_both", n0) for m in ("h2gcn_twohead_aux", "h2gcn_aux")]
     if all(p is not None for p in shipped):
-        ship = np.mean([rank_within(p, n0) for p in shipped], 0)
+        ship = np.mean(shipped, 0)
         for name, parts in (("res_gate", ["res_gate"]), ("scalar_msg", ["scalar_msg"]),
+                            ("scalar_drop", ["scalar_drop"]),
                             ("res_gate+scalar_msg", ["res_gate", "scalar_msg"]),
                             ("twohead+res_gate", ["h2gcn_twohead_aux", "res_gate"]),
                             ("twohead+res_gate+scalar_msg", ["h2gcn_twohead_aux", "res_gate", "scalar_msg"]),
+                            ("twohead+res_gate+scalar_drop", ["h2gcn_twohead_aux", "res_gate", "scalar_drop"]),
+                            ("twohead+scalar_drop", ["h2gcn_twohead_aux", "scalar_drop"]),
                             ("shipped+res_gate+scalar_msg",
                              ["h2gcn_twohead_aux", "h2gcn_aux", "res_gate", "scalar_msg"])):
-            cand = np.mean([rank_within(preds(m, "pooled_both", 0), n0) for m in parts], 0)
+            got = [seed_mean(m, "pooled_both", n0) for m in parts]
+            if any(p is None for p in got):
+                continue
+            cand = np.mean(got, 0)
             for col, file in (("both -> cell line 2", "data1"), ("both -> cell line 1", "dataset0")):
                 d, lo, hi, win = paired(y[file], cut(cand, file, None), cut(ship, file, None),
                                         genes[file], rng)
-                rows.append({"model": name, "vs": "shipped ensemble (seed 0)", "seeds": "0",
+                rows.append({"model": name, "vs": "shipped ensemble", "seeds": "0-2",
                              "target": col, "diff": d, "ci_low": lo, "ci_high": hi,
                              "gene-resample win %": 100 * win})
                 print(rows[-1], flush=True)

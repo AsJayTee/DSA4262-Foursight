@@ -1,0 +1,279 @@
+start baseline
+start fit --model h2gcn_twohead_aux --fold 0 --arm pooled_both
+start fit --model h2gcn_twohead_aux --fold 1 --arm pooled_both
+start fit --model h2gcn_twohead_aux --fold 2 --arm pooled_both
+start fit --model h2gcn_twohead_aux --fold 3 --arm pooled_both
+start fit --model h2gcn_twohead_aux --fold 4 --arm pooled_both
+start fit --model fk_band_shuffled --fold 0 --arm dataset0
+start fit --model fk_band_shuffled --fold 0 --arm pooled_both
+start fit --model fk_band_shuffled --fold 1 --arm dataset0
+start fit --model fk_band_shuffled --fold 1 --arm pooled_both
+start fit --model fk_band_shuffled --fold 2 --arm dataset0
+start fit --model fk_band_shuffled --fold 2 --arm pooled_both
+start fit --model fk_band_shuffled --fold 3 --arm dataset0
+start fit --model fk_band_shuffled --fold 3 --arm pooled_both
+start fit --model fk_band_shuffled --fold 4 --arm dataset0
+start fit --model fk_band_shuffled --fold 4 --arm pooled_both
+done baseline
+start fit --model res_nogate --fold 0 --arm dataset0
+done fit --model fk_band_shuffled --fold 2 --arm pooled_both
+start fit --model res_nogate --fold 0 --arm pooled_both
+done fit --model fk_band_shuffled --fold 3 --arm dataset0
+start fit --model res_nogate --fold 1 --arm dataset0
+done fit --model fk_band_shuffled --fold 4 --arm dataset0
+start fit --model res_nogate --fold 1 --arm pooled_both
+done fit --model fk_band_shuffled --fold 1 --arm dataset0
+start fit --model res_nogate --fold 2 --arm dataset0
+done fit --model h2gcn_twohead_aux --fold 4 --arm pooled_both
+start fit --model res_nogate --fold 2 --arm pooled_both
+done fit --model fk_band_shuffled --fold 4 --arm pooled_both
+start fit --model res_nogate --fold 3 --arm dataset0
+done fit --model fk_band_shuffled --fold 0 --arm dataset0
+start fit --model res_nogate --fold 3 --arm pooled_both
+done fit --model h2gcn_twohead_aux --fold 3 --arm pooled_both
+start fit --model res_nogate --fold 4 --arm dataset0
+done fit --model h2gcn_twohead_aux --fold 2 --arm pooled_both
+start fit --model res_nogate --fold 4 --arm pooled_both
+done fit --model h2gcn_twohead_aux --fold 0 --arm pooled_both
+start fit --model res_nodrop --fold 0 --arm dataset0
+done fit --model h2gcn_twohead_aux --fold 1 --arm pooled_both
+start fit --model res_nodrop --fold 0 --arm pooled_both
+done fit --model fk_band_shuffled --fold 1 --arm pooled_both
+start fit --model res_nodrop --fold 1 --arm dataset0
+done fit --model res_nogate --fold 0 --arm dataset0
+start fit --model res_nodrop --fold 1 --arm pooled_both
+done fit --model fk_band_shuffled --fold 3 --arm pooled_both
+start fit --model res_nodrop --fold 2 --arm dataset0
+done fit --model fk_band_shuffled --fold 0 --arm pooled_both
+start fit --model res_nodrop --fold 2 --arm pooled_both
+done fit --model fk_band_shuffled --fold 2 --arm dataset0
+start fit --model res_nodrop --fold 3 --arm dataset0
+done fit --model res_nogate --fold 0 --arm pooled_both
+start fit --model res_nodrop --fold 3 --arm pooled_both
+done fit --model res_nogate --fold 3 --arm dataset0
+start fit --model res_nodrop --fold 4 --arm dataset0
+done fit --model res_nogate --fold 1 --arm dataset0
+start fit --model res_nodrop --fold 4 --arm pooled_both
+done fit --model res_nodrop --fold 1 --arm dataset0
+start fit --model scalar_random --fold 0 --arm dataset0
+done fit --model res_nogate --fold 2 --arm dataset0
+start fit --model scalar_random --fold 0 --arm pooled_both
+done fit --model res_nogate --fold 4 --arm pooled_both
+start fit --model scalar_random --fold 1 --arm dataset0
+done fit --model res_nogate --fold 2 --arm pooled_both
+start fit --model scalar_random --fold 1 --arm pooled_both
+done fit --model res_nodrop --fold 2 --arm dataset0
+start fit --model scalar_random --fold 2 --arm dataset0
+done fit --model res_nogate --fold 3 --arm pooled_both
+start fit --model scalar_random --fold 2 --arm pooled_both
+done fit --model res_nogate --fold 4 --arm dataset0
+start fit --model scalar_random --fold 3 --arm dataset0
+done fit --model res_nodrop --fold 1 --arm pooled_both
+start fit --model scalar_random --fold 3 --arm pooled_both
+done fit --model res_nodrop --fold 0 --arm pooled_both
+start fit --model scalar_random --fold 4 --arm dataset0
+done fit --model res_nodrop --fold 0 --arm dataset0
+start fit --model scalar_random --fold 4 --arm pooled_both
+done fit --model res_nodrop --fold 3 --arm dataset0
+start fit --model scalar_drop --fold 0 --arm dataset0
+done fit --model res_nodrop --fold 2 --arm pooled_both
+start fit --model scalar_drop --fold 0 --arm pooled_both
+done fit --model res_nogate --fold 1 --arm pooled_both
+start fit --model scalar_drop --fold 1 --arm dataset0
+done fit --model res_nodrop --fold 4 --arm pooled_both
+start fit --model scalar_drop --fold 1 --arm pooled_both
+done fit --model res_nodrop --fold 4 --arm dataset0
+start fit --model scalar_drop --fold 2 --arm dataset0
+done fit --model scalar_random --fold 0 --arm dataset0
+start fit --model scalar_drop --fold 2 --arm pooled_both
+done fit --model scalar_random --fold 1 --arm dataset0
+start fit --model scalar_drop --fold 3 --arm dataset0
+done fit --model res_nodrop --fold 3 --arm pooled_both
+done fit --model scalar_random --fold 2 --arm dataset0
+start fit --model scalar_drop --fold 3 --arm pooled_both
+start fit --model scalar_drop --fold 4 --arm dataset0
+done fit --model scalar_random --fold 0 --arm pooled_both
+start fit --model scalar_drop --fold 4 --arm pooled_both
+done fit --model scalar_random --fold 4 --arm dataset0
+done fit --model scalar_random --fold 3 --arm dataset0
+done fit --model scalar_drop --fold 0 --arm dataset0
+done fit --model scalar_random --fold 2 --arm pooled_both
+done fit --model scalar_drop --fold 0 --arm pooled_both
+done fit --model scalar_drop --fold 1 --arm dataset0
+done fit --model scalar_random --fold 4 --arm pooled_both
+done fit --model scalar_random --fold 3 --arm pooled_both
+done fit --model scalar_random --fold 1 --arm pooled_both
+done fit --model scalar_drop --fold 2 --arm pooled_both
+done fit --model scalar_drop --fold 3 --arm pooled_both
+done fit --model scalar_drop --fold 1 --arm pooled_both
+done fit --model scalar_drop --fold 4 --arm dataset0
+done fit --model scalar_drop --fold 4 --arm pooled_both
+done fit --model scalar_drop --fold 2 --arm dataset0
+done fit --model scalar_drop --fold 3 --arm dataset0
+loaded: dataset0 121,838 sites, data1 90,452
+
+Cross-source: h2gcn_twohead_aux (network) minus lightgbm_quantiles
+------------------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+pooled_both        +0.1080  [+0.0909, +0.1230]     +0.0485  [+0.0368, +0.0595]    +0.0782     +0.0485      yes
+Each row: h2gcn_twohead_aux (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): pooled_both.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+pooled_both           0.5802        0.4402             0.4723          0.3917
+h2gcn_twohead_aux: worst +0.0485  mean +0.0782  -> /mnt/sdd/DSA4262/analysis/representation/results/h2gcn_twohead_aux_nn__xsrc__seed1.json
+
+Cross-source: fk_band_shuffled (network) minus lightgbm_quantiles
+-----------------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+dataset0           +0.0993  [+0.0842, +0.1135]     +0.0440  [+0.0339, +0.0549]    +0.0716     +0.0440      yes
+pooled_both        +0.1012  [+0.0837, +0.1155]     +0.0484  [+0.0368, +0.0587]    +0.0748     +0.0484      yes
+Each row: fk_band_shuffled (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+dataset0              0.5752        0.4159             0.4759          0.3719
+pooled_both           0.5734        0.4401             0.4723          0.3917
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels   gain  ci_low  ci_high
+cell                                               
+A        dataset0  dataset0 0.0872  0.0694   0.1051
+B        dataset0     data1 0.0578  0.0467   0.0688
+C           data1  dataset0 0.0759  0.0574   0.0936
+D           data1     data1 0.0456  0.0347   0.0589
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain +0.0468 [+0.0237, +0.0749] - compare with cell D for the gene-population effect.
+fk_band_shuffled: worst +0.0440  mean +0.0716  -> /mnt/sdd/DSA4262/analysis/representation/results/fk_band_shuffled_nn__xsrc__seed1.json
+
+Cross-source: res_nogate (network) minus lightgbm_quantiles
+-----------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+dataset0           +0.1045  [+0.0905, +0.1187]     +0.0507  [+0.0409, +0.0606]    +0.0776     +0.0507      yes
+pooled_both        +0.1051  [+0.0909, +0.1193]     +0.0557  [+0.0437, +0.0670]    +0.0804     +0.0557      yes
+Each row: res_nogate (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+dataset0              0.5804        0.4226             0.4759          0.3719
+pooled_both           0.5774        0.4474             0.4723          0.3917
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels   gain  ci_low  ci_high
+cell                                               
+A        dataset0  dataset0 0.0924  0.0764   0.1096
+B        dataset0     data1 0.0613  0.0498   0.0726
+C           data1  dataset0 0.0821  0.0649   0.0982
+D           data1     data1 0.0498  0.0376   0.0615
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain +0.0555 [+0.0336, +0.0805] - compare with cell D for the gene-population effect.
+res_nogate: worst +0.0507  mean +0.0776  -> /mnt/sdd/DSA4262/analysis/representation/results/res_nogate_nn__xsrc__seed1.json
+
+Cross-source: res_nodrop (network) minus lightgbm_quantiles
+-----------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+dataset0           +0.0850  [+0.0698, +0.1013]     +0.0422  [+0.0318, +0.0526]    +0.0636     +0.0422      yes
+pooled_both        +0.1017  [+0.0871, +0.1145]     +0.0512  [+0.0409, +0.0623]    +0.0765     +0.0512      yes
+Each row: res_nodrop (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+dataset0              0.5609        0.4141             0.4759          0.3719
+pooled_both           0.5740        0.4429             0.4723          0.3917
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels   gain  ci_low  ci_high
+cell                                               
+A        dataset0  dataset0 0.0796  0.0612   0.0992
+B        dataset0     data1 0.0571  0.0454   0.0688
+C           data1  dataset0 0.0700  0.0530   0.0860
+D           data1     data1 0.0446  0.0327   0.0569
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain +0.0428 [+0.0222, +0.0664] - compare with cell D for the gene-population effect.
+res_nodrop: worst +0.0422  mean +0.0636  -> /mnt/sdd/DSA4262/analysis/representation/results/res_nodrop_nn__xsrc__seed1.json
+
+Cross-source: scalar_random (network) minus lightgbm_quantiles
+--------------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+dataset0           +0.0437  [+0.0333, +0.0559]     +0.0210  [+0.0125, +0.0293]    +0.0324     +0.0210      yes
+pooled_both        +0.0523  [+0.0399, +0.0648]     +0.0302  [+0.0204, +0.0399]    +0.0412     +0.0302      yes
+Each row: scalar_random (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+dataset0              0.5197        0.3929             0.4759          0.3719
+pooled_both           0.5246        0.4219             0.4723          0.3917
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels   gain  ci_low  ci_high
+cell                                               
+A        dataset0  dataset0 0.0475  0.0326   0.0627
+B        dataset0     data1 0.0343  0.0254   0.0441
+C           data1  dataset0 0.0443  0.0308   0.0573
+D           data1     data1 0.0209  0.0111   0.0313
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain +0.0141 [-0.0068, +0.0397] - compare with cell D for the gene-population effect.
+scalar_random: worst +0.0210  mean +0.0324  -> /mnt/sdd/DSA4262/analysis/representation/results/scalar_random_nn__xsrc__seed1.json
+
+Cross-source: scalar_drop (network) minus lightgbm_quantiles
+------------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+dataset0           +0.0875  [+0.0760, +0.0993]     +0.0545  [+0.0444, +0.0643]    +0.0710     +0.0545      yes
+pooled_both        +0.0845  [+0.0710, +0.0968]     +0.0554  [+0.0447, +0.0657]    +0.0700     +0.0554      yes
+Each row: scalar_drop (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+dataset0              0.5634        0.4264             0.4759          0.3719
+pooled_both           0.5568        0.4471             0.4723          0.3917
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels   gain  ci_low  ci_high
+cell                                               
+A        dataset0  dataset0 0.0838  0.0683   0.0993
+B        dataset0     data1 0.0633  0.0527   0.0736
+C           data1  dataset0 0.0784  0.0639   0.0930
+D           data1     data1 0.0540  0.0427   0.0642
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain +0.0506 [+0.0264, +0.0783] - compare with cell D for the gene-population effect.
+scalar_drop: worst +0.0545  mean +0.0710  -> /mnt/sdd/DSA4262/analysis/representation/results/scalar_drop_nn__xsrc__seed1.json
