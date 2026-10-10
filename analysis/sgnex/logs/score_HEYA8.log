@@ -1,0 +1,12 @@
+10:08:50 samples: {"A549": 2, "H9": 6, "HEYA8": 5, "Hct116": 3, "HepG2": 2, "K562": 3, "MCF7": 2}
+10:08:50   downloading SGNex_HEYA8_directRNA_replicate1_run1
+10:21:09 SGNex_HEYA8_directRNA_replicate1_run1: 1,340,129 sites, median 3 reads (738s)
+10:21:09   downloading SGNex_HEYA8_directRNA_replicate1_run2
+10:26:02 SGNex_HEYA8_directRNA_replicate1_run2: 834,303 sites, median 2 reads (293s)
+10:26:02   downloading SGNex_HEYA8_directRNA_replicate2_run1
+10:37:31 SGNex_HEYA8_directRNA_replicate2_run1: 1,304,570 sites, median 3 reads (689s)
+10:37:31   downloading SGNex_HEYA8_directRNA_replicate2_run2
+10:46:45 SGNex_HEYA8_directRNA_replicate2_run2: 1,197,113 sites, median 3 reads (554s)
+10:46:45   downloading SGNex_HEYA8_directRNA_replicate3_run1
+11:00:22 SGNex_HEYA8_directRNA_replicate3_run1: 1,408,128 sites, median 3 reads (817s)
+11:31:01 HEYA8 pooled: 1,941,929 sites from 5 samples, median 5 reads, 22,513 showcase sites (1839s)

@@ -1,0 +1,53 @@
+/* Design tokens: light by default, dark when the system asks for it. */
+:root {
+  --surface: #fcfcfb;
+  --card: #ffffff;
+  --ink: #0b0b0b;
+  --ink-soft: #52514e;
+  --muted: #75746f;
+  --grid: #e3e2de;
+  --accent: #2a78d6;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #1a1a19;
+    --card: #222220;
+    --ink: #ffffff;
+    --ink-soft: #c3c2b7;
+    --muted: #9a998f;
+    --grid: #3a3936;
+    --accent: #3987e5;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.page { max-width: 960px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { margin: 0 0 4px; font-size: 1.6rem; }
+h2 { margin: 0 0 8px; font-size: 1.1rem; }
+.lede { margin: 0 0 16px; color: var(--ink-soft); }
+nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.tab {
+  border: 1px solid var(--grid); background: var(--card); color: var(--ink-soft);
+  padding: 6px 12px; border-radius: 6px; cursor: pointer; font: inherit;
+}
+.tab.active { border-color: var(--accent); color: var(--ink); }
+.card { background: var(--card); border: 1px solid var(--grid); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.note { color: var(--muted); font-size: 0.9rem; }
+table { border-collapse: collapse; width: 100%; }
+th, td { padding: 6px 8px; border-bottom: 1px solid var(--grid); text-align: left; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+svg { width: 100%; height: auto; }
+.series { fill: none; stroke: var(--accent); stroke-width: 2; stroke-opacity: 0.55; }
+.series:hover { stroke-opacity: 1; stroke-width: 3; }
+.ref { stroke: var(--muted); stroke-dasharray: 4 4; }
+.axis { fill: var(--muted); font-size: 12px; }
+footer { margin-top: 32px; color: var(--muted); font-size: 0.85rem; }
+a { color: var(--accent); }

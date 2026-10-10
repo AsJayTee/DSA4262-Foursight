@@ -1,0 +1,6 @@
+11:19:30 samples: {"A549": 2, "H9": 6, "HEYA8": 5, "Hct116": 3, "HepG2": 2, "K562": 3, "MCF7": 2}
+11:19:30   downloading SGNex_A549_directRNA_replicate5_run1
+11:25:50 SGNex_A549_directRNA_replicate5_run1: 1,008,933 sites, median 2 reads (380s)
+11:25:50   downloading SGNex_A549_directRNA_replicate6_run1
+11:38:09 SGNex_A549_directRNA_replicate6_run1: 1,500,579 sites, median 3 reads (739s)
+11:52:11 A549 pooled: 1,632,577 sites from 2 samples, median 3 reads, 22,015 showcase sites (842s)

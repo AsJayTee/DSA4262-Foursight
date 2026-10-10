@@ -1,0 +1,6 @@
+11:49:30 samples: {"A549": 2, "H9": 6, "HEYA8": 5, "Hct116": 3, "HepG2": 2, "K562": 3, "MCF7": 2}
+11:49:30   downloading SGNex_MCF7_directRNA_replicate3_run1
+11:58:01 SGNex_MCF7_directRNA_replicate3_run1: 1,252,617 sites, median 2 reads (510s)
+11:58:01   downloading SGNex_MCF7_directRNA_replicate4_run1
+12:08:08 SGNex_MCF7_directRNA_replicate4_run1: 1,446,022 sites, median 3 reads (607s)
+12:24:28 MCF7 pooled: 2,698,639 sites from 2 samples, median 3 reads, 40,918 showcase sites (980s)

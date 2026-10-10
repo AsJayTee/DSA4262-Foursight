@@ -1,0 +1,30 @@
+12:28:21 samples: {"A549": 2, "H9": 6, "HEYA8": 5, "Hct116": 3, "HepG2": 2, "K562": 3, "MCF7": 2}
+12:28:59 SGNex_MCF7_directRNA_replicate3_run1: 1,252,617 sites, median 2 reads (38s)
+12:29:46 SGNex_MCF7_directRNA_replicate4_run1: 1,445,533 sites, median 3 reads (46s)
+12:36:27 MCF7 pooled: 1,728,362 sites from 2 samples, median 3 reads, 21,413 showcase sites (402s)
+12:36:28 samples: {"A549": 2, "H9": 6, "HEYA8": 5, "Hct116": 3, "HepG2": 2, "K562": 3, "MCF7": 2}
+12:37:05 SGNex_H9_directRNA_replicate2_run1: 1,242,801 sites, median 2 reads (37s)
+12:37:26 SGNex_H9_directRNA_replicate2_run2: 1,019,529 sites, median 2 reads (21s)
+12:37:59 SGNex_H9_directRNA_replicate3_run1: 1,224,088 sites, median 2 reads (33s)
+12:38:19 SGNex_H9_directRNA_replicate3_run2: 971,752 sites, median 2 reads (20s)
+12:39:07 SGNex_H9_directRNA_replicate4_run1: 1,419,091 sites, median 3 reads (48s)
+12:39:23 SGNex_H9_directRNA_replicate4_run2: 884,082 sites, median 2 reads (16s)
+12:49:13 H9 pooled: 2,029,191 sites from 6 samples, median 4 reads, 22,347 showcase sites (590s)
+12:49:14 samples: {"A549": 2, "H9": 6, "HEYA8": 5, "Hct116": 3, "HepG2": 2, "K562": 3, "MCF7": 2}
+12:50:06 SGNex_HEYA8_directRNA_replicate1_run1: 1,337,788 sites, median 3 reads (52s)
+12:50:24 SGNex_HEYA8_directRNA_replicate1_run2: 832,553 sites, median 2 reads (18s)
+12:51:12 SGNex_HEYA8_directRNA_replicate2_run1: 1,302,093 sites, median 3 reads (48s)
+12:51:50 SGNex_HEYA8_directRNA_replicate2_run2: 1,194,973 sites, median 3 reads (38s)
+12:52:50 SGNex_HEYA8_directRNA_replicate3_run1: 1,405,822 sites, median 3 reads (61s)
+13:05:09 HEYA8 pooled: 1,939,154 sites from 5 samples, median 5 reads, 22,513 showcase sites (738s)
+13:05:10 samples: {"A549": 2, "H9": 6, "HEYA8": 5, "Hct116": 3, "HepG2": 2, "K562": 3, "MCF7": 2}
+13:06:20 SGNex_Hct116_directRNA_replicate3_run1: 1,390,727 sites, median 3 reads (70s)
+13:07:22 SGNex_Hct116_directRNA_replicate3_run4: 1,302,514 sites, median 3 reads (62s)
+13:09:03 SGNex_Hct116_directRNA_replicate4_run3: 1,599,747 sites, median 3 reads (101s)
+13:34:45 Hct116 pooled: 1,963,023 sites from 3 samples, median 5 reads, 22,943 showcase sites (1542s)
+13:34:46 samples: {"A549": 2, "H9": 6, "HEYA8": 5, "Hct116": 3, "HepG2": 2, "K562": 3, "MCF7": 2}
+13:35:31 SGNex_K562_directRNA_replicate4_run1: 1,103,719 sites, median 2 reads (44s)
+13:36:11 SGNex_K562_directRNA_replicate5_run1: 1,051,938 sites, median 2 reads (40s)
+13:37:02 SGNex_K562_directRNA_replicate6_run1: 999,100 sites, median 3 reads (51s)
+13:52:40 K562 pooled: 1,558,416 sites from 3 samples, median 3 reads, 20,446 showcase sites (938s)
+REPOOL_DONE

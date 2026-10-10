@@ -1,0 +1,14 @@
+10:08:50 samples: {"A549": 2, "H9": 6, "HEYA8": 5, "Hct116": 3, "HepG2": 2, "K562": 3, "MCF7": 2}
+10:08:50   downloading SGNex_H9_directRNA_replicate2_run1
+10:17:42 SGNex_H9_directRNA_replicate2_run1: 1,246,688 sites, median 2 reads (531s)
+10:17:42   downloading SGNex_H9_directRNA_replicate2_run2
+10:23:31 SGNex_H9_directRNA_replicate2_run2: 1,023,068 sites, median 2 reads (349s)
+10:23:31   downloading SGNex_H9_directRNA_replicate3_run1
+10:32:04 SGNex_H9_directRNA_replicate3_run1: 1,227,452 sites, median 2 reads (513s)
+10:32:04   downloading SGNex_H9_directRNA_replicate3_run2
+10:37:49 SGNex_H9_directRNA_replicate3_run2: 975,043 sites, median 2 reads (345s)
+10:37:49   downloading SGNex_H9_directRNA_replicate4_run1
+10:49:08 SGNex_H9_directRNA_replicate4_run1: 1,423,053 sites, median 3 reads (679s)
+10:49:08   downloading SGNex_H9_directRNA_replicate4_run2
+10:53:42 SGNex_H9_directRNA_replicate4_run2: 886,969 sites, median 2 reads (275s)
+11:19:06 H9 pooled: 2,033,651 sites from 6 samples, median 4 reads, 22,347 showcase sites (1523s)

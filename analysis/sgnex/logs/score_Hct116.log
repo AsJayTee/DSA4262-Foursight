@@ -1,0 +1,5 @@
+10:08:50 samples: {"A549": 2, "H9": 6, "HEYA8": 5, "Hct116": 3, "HepG2": 2, "K562": 3, "MCF7": 2}
+10:20:06 SGNex_Hct116_directRNA_replicate3_run1: 1,391,230 sites, median 3 reads (676s)
+10:30:31 SGNex_Hct116_directRNA_replicate3_run4: 1,302,514 sites, median 3 reads (625s)
+10:45:44 SGNex_Hct116_directRNA_replicate4_run3: 1,599,747 sites, median 3 reads (913s)
+11:11:27 Hct116 pooled: 1,963,526 sites from 3 samples, median 5 reads, 22,943 showcase sites (1543s)

@@ -1,0 +1,8 @@
+11:11:50 samples: {"A549": 2, "H9": 6, "HEYA8": 5, "Hct116": 3, "HepG2": 2, "K562": 3, "MCF7": 2}
+11:11:50   downloading SGNex_K562_directRNA_replicate4_run1
+11:19:26 SGNex_K562_directRNA_replicate4_run1: 1,104,444 sites, median 2 reads (456s)
+11:19:26   downloading SGNex_K562_directRNA_replicate5_run1
+11:26:38 SGNex_K562_directRNA_replicate5_run1: 1,052,601 sites, median 2 reads (432s)
+11:26:38   downloading SGNex_K562_directRNA_replicate6_run1
+11:34:12 SGNex_K562_directRNA_replicate6_run1: 999,100 sites, median 3 reads (454s)
+11:49:00 K562 pooled: 1,559,321 sites from 3 samples, median 3 reads, 20,446 showcase sites (887s)

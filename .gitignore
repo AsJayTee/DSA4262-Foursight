@@ -70,3 +70,7 @@ analysis/m6anet/inference.log
 # Per-site labels joined to annotation (analysis/newdata/annotation_context.py):
 # unpublished course data, never committed (AGENTS.md section 5).
 analysis/newdata/annotation_context/site_context.csv.gz
+
+# Dashboard (Node): dependencies and build output
+node_modules/
+dashboard/dist/

@@ -1,0 +1,6 @@
+11:31:30 samples: {"A549": 2, "H9": 6, "HEYA8": 5, "Hct116": 3, "HepG2": 2, "K562": 3, "MCF7": 2}
+11:31:30   downloading SGNex_HepG2_directRNA_replicate5_run2
+11:47:12 SGNex_HepG2_directRNA_replicate5_run2: 1,580,887 sites, median 4 reads (942s)
+11:47:12   downloading SGNex_HepG2_directRNA_replicate6_run1
+12:01:46 SGNex_HepG2_directRNA_replicate6_run1: 1,564,890 sites, median 4 reads (874s)
+12:23:32 HepG2 pooled: 1,879,601 sites from 2 samples, median 5 reads, 22,173 showcase sites (1306s)
