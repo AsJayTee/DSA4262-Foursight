@@ -1,0 +1,60 @@
+loaded: dataset0 121,838 sites, data1 90,452
+[scalar_msg pooled_both fold 3 seed 1]
+    kernel decay scale 113.4 nt (fitted to cell line 1 training labels)
+    epoch 1: loss 1.9103, val_ap 0.1419, minutes 0.74, lr 3.31e-04
+    epoch 2: loss 1.5809, val_ap 0.2775, minutes 1.58, lr 6.60e-04
+    epoch 3: loss 1.4474, val_ap 0.3942, minutes 2.35, lr 9.89e-04
+    epoch 4: loss 1.3273, val_ap 0.4295, minutes 3.2, lr 1.00e-03
+    epoch 5: loss 1.2791, val_ap 0.4480, minutes 3.97, lr 1.00e-03
+    epoch 6: loss 1.2517, val_ap 0.4460, minutes 4.78, lr 1.00e-03
+    epoch 7: loss 1.2402, val_ap 0.4566, minutes 5.49, lr 1.00e-03
+    epoch 8: loss 1.2368, val_ap 0.4519, minutes 6.32, lr 1.00e-03
+    epoch 9: loss 1.2238, val_ap 0.4674, minutes 7.11, lr 1.00e-03
+    epoch 10: loss 1.2104, val_ap 0.4714, minutes 7.84, lr 1.00e-03
+    epoch 11: loss 1.2082, val_ap 0.4757, minutes 8.6, lr 1.00e-03
+    epoch 12: loss 1.2022, val_ap 0.4808, minutes 9.36, lr 1.00e-03
+    epoch 13: loss 1.1897, val_ap 0.4826, minutes 10.12, lr 1.00e-03
+    epoch 14: loss 1.1969, val_ap 0.4806, minutes 10.88, lr 1.00e-03
+    epoch 15: loss 1.1865, val_ap 0.4848, minutes 11.68, lr 1.00e-03
+    epoch 16: loss 1.1768, val_ap 0.4881, minutes 12.46, lr 1.00e-03
+    epoch 17: loss 1.1775, val_ap 0.4906, minutes 13.26, lr 1.00e-03
+    epoch 18: loss 1.1831, val_ap 0.4909, minutes 14.02, lr 1.00e-03
+    epoch 19: loss 1.1575, val_ap 0.4965, minutes 14.85, lr 1.00e-03
+    epoch 20: loss 1.1610, val_ap 0.4964, minutes 15.69, lr 1.00e-03
+    epoch 21: loss 1.1636, val_ap 0.4952, minutes 16.47, lr 1.00e-03
+    epoch 22: loss 1.1535, val_ap 0.4985, minutes 17.29, lr 1.00e-03
+    epoch 23: loss 1.1519, val_ap 0.5008, minutes 18.1, lr 1.00e-03
+    epoch 24: loss 1.1510, val_ap 0.4961, minutes 18.89, lr 1.00e-03
+    epoch 25: loss 1.1459, val_ap 0.4974, minutes 19.68, lr 1.00e-03
+    epoch 26: loss 1.1473, val_ap 0.5012, minutes 20.49, lr 1.00e-03
+    epoch 27: loss 1.1486, val_ap 0.4920, minutes 21.3, lr 1.00e-03
+    epoch 28: loss 1.1382, val_ap 0.5021, minutes 22.05, lr 1.00e-03
+    epoch 29: loss 1.1395, val_ap 0.4983, minutes 22.82, lr 1.00e-03
+    epoch 30: loss 1.1426, val_ap 0.5071, minutes 23.64, lr 1.00e-03
+    epoch 31: loss 1.1300, val_ap 0.5045, minutes 24.52, lr 1.00e-03
+    epoch 32: loss 1.1352, val_ap 0.4929, minutes 25.29, lr 1.00e-03
+    epoch 33: loss 1.1262, val_ap 0.4969, minutes 26.13, lr 1.00e-03
+    epoch 34: loss 1.1279, val_ap 0.5032, minutes 26.96, lr 1.00e-03
+    epoch 35: loss 1.1223, val_ap 0.4999, minutes 27.82, lr 1.00e-03
+    epoch 36: loss 1.1207, val_ap 0.4969, minutes 28.74, lr 1.00e-03
+    epoch 37: loss 1.1142, val_ap 0.5060, minutes 29.53, lr 1.00e-03
+    epoch 38: loss 1.1262, val_ap 0.4990, minutes 30.36, lr 1.00e-03
+    epoch 39: loss 1.1255, val_ap 0.5040, minutes 31.2, lr 5.00e-04
+    epoch 40: loss 1.1091, val_ap 0.5048, minutes 32.12, lr 5.00e-04
+    epoch 41: loss 1.0927, val_ap 0.5013, minutes 32.9, lr 5.00e-04
+    epoch 42: loss 1.0999, val_ap 0.5050, minutes 33.73, lr 5.00e-04
+    epoch 43: loss 1.0902, val_ap 0.5001, minutes 34.57, lr 5.00e-04
+    epoch 44: loss 1.0925, val_ap 0.5024, minutes 35.36, lr 5.00e-04
+    epoch 45: loss 1.0944, val_ap 0.5001, minutes 36.16, lr 5.00e-04
+    epoch 46: loss 1.0918, val_ap 0.5034, minutes 36.97, lr 5.00e-04
+    epoch 47: loss 1.0866, val_ap 0.5006, minutes 37.81, lr 5.00e-04
+    epoch 48: loss 1.0941, val_ap 0.4996, minutes 38.63, lr 2.50e-04
+    epoch 49: loss 1.0860, val_ap 0.5004, minutes 39.46, lr 2.50e-04
+    epoch 50: loss 1.0788, val_ap 0.5035, minutes 40.29, lr 2.50e-04
+    epoch 51: loss 1.0784, val_ap 0.4998, minutes 40.98, lr 2.50e-04
+    epoch 52: loss 1.0774, val_ap 0.4993, minutes 41.74, lr 2.50e-04
+    epoch 53: loss 1.0756, val_ap 0.5013, minutes 42.47, lr 2.50e-04
+    epoch 54: loss 1.0688, val_ap 0.5011, minutes 43.26, lr 2.50e-04
+    epoch 55: loss 1.0702, val_ap 0.5028, minutes 44.07, lr 2.50e-04
+    stopping: no validation gain in 25 epochs
+[scalar_msg pooled_both fold 3 seed 1] done (44.9 min)

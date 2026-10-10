@@ -1,0 +1,18 @@
+start baseline
+start fit --model set_transformer --fold 0 --arm dataset0
+start fit --model set_transformer --fold 0 --arm pooled_both
+start fit --model set_transformer --fold 1 --arm dataset0
+start fit --model set_transformer --fold 1 --arm pooled_both
+start fit --model set_transformer --fold 2 --arm dataset0
+start fit --model set_transformer --fold 2 --arm pooled_both
+start fit --model set_transformer --fold 3 --arm dataset0
+start fit --model set_transformer --fold 3 --arm pooled_both
+start fit --model set_transformer --fold 4 --arm dataset0
+start fit --model set_transformer --fold 4 --arm pooled_both
+start fit --model gat --fold 0 --arm dataset0
+start fit --model gat --fold 0 --arm pooled_both
+start fit --model gat --fold 1 --arm dataset0
+start fit --model gat --fold 1 --arm pooled_both
+start fit --model gat --fold 2 --arm dataset0
+done baseline
+start fit --model gat --fold 2 --arm pooled_both

@@ -6,7 +6,7 @@ No torch, no data: every figure reads a CSV/JSON that a named script wrote.
 One colour code throughout: blue = cell line 1 (dataset0), orange = cell line 2
 (data1). Writes report/figures/fig_*.png:
 
-  fig_corroboration_curve   scalar_msg's correction vs its neighbours' scores   (probe_day.py)
+  fig_corroboration_curve   the shipped scalar_drop: site score vs one neighbour's (models/final)
   fig_gps_attention         where the graph transformer attends; cutting it     (probe_day.py)
   fig_radius                gain vs neighbour radius, per cell line              (xsrc_nets.py)
   fig_comodification        co-modification by distance, local vs transcript     (distance_bands.py)
@@ -51,7 +51,13 @@ def figure(ncols: int = 1, width: float = 7.2, height: float = 4.0):
 
 
 def finish(fig, title: str, caption: str, name: str) -> None:
+    import textwrap
+    width = fig.get_size_inches()[0]
+    # ~13 title characters per inch at 10.5 pt: wrap rather than run off the canvas.
+    title = "\n".join(textwrap.wrap(title, int(width * 13)))
     fig.suptitle(title, x=0.012, ha="left", color=F.INK, fontsize=10.5)
+    # ~19 caption characters per inch at 7 pt.
+    caption = "\n".join(line for part in caption.split("\n") for line in textwrap.wrap(part, int(width * 19)))
     fig.text(0.012, 0.01, caption, color=F.MUTED, fontsize=7, va="bottom")
     fig.tight_layout(rect=(0, 0.08 + 0.025 * caption.count("\n"), 1, 0.93))
     fig.savefig(FIGURES / f"{name}.png")
@@ -66,22 +72,36 @@ def labels(ax, x: str, y: str, title: str | None = None) -> None:
 
 
 def corroboration_curve() -> None:
-    c = pd.read_csv(R / "probe_scalar_curve.csv")
-    fig, axes = figure(2, 9, 3.9)
-    arm_style = {"dataset0": ("trained on cell line 1", "-"), "pooled_both": ("trained on both", "--")}
-    for ax, varied in zip(axes, ("neighbour mean score", "best neighbour score within 75 nt")):
-        for arm, (name, ls) in arm_style.items():
-            g = c[(c["trained on"] == arm) & (c.varied == varied)].sort_values("quantile")
-            ax.plot(100 * g["quantile"], g["mean correction (logit)"], ls, color=F.INK, linewidth=1.8, label=name)
-        ax.axhline(0, color=F.MUTED, linewidth=0.8)
-        labels(ax, f"{varied} (percentile across sites)", "correction to own score (logit)",
-               "distance-weighted mean of neighbours" if varied.startswith("neighbour mean") else
-               "best single neighbour within 75 nt")
-    axes[0].legend(frameon=False, fontsize=7.5, labelcolor=F.INK_SOFT)
-    finish(fig, "Corroboration: the more modified the neighbours look, the higher the site's score",
-           "scalar_msg (neighbours pass one number each). One input varied, the rest at their real values, averaged "
-           "over held-out sites with a neighbour (partial dependence).\n+1.8 logits turns probability 0.20 into "
-           "0.61. Source: results/probe_scalar_curve.csv.", "fig_corroboration_curve")
+    """What the SHIPPED scalar_drop networks (models/final, numpy) do for one concrete case: a site
+    whose own reads give probability p, with ONE neighbour (within 75 nt) whose own reads give q.
+    Both have 30 reads. Averaged over the two shipped seeds."""
+    def logit(p):
+        return np.log(p / (1 - p))
+
+    nets = [np.load(common.ROOT / "models" / "final" / f"scalar_drop_s{s}.npz") for s in (0, 1)]
+    q = np.linspace(0.01, 0.95, 120)
+    logn = np.log1p(30.0)
+    fig, axes = figure(1, 7.4, 4.6)
+    ax = axes[0]
+    for own, shade in ((0.05, F.MUTED), (0.20, F.INK_SOFT), (0.50, F.INK)):
+        out = []
+        for w in nets:
+            # One neighbour: the weighted mean and the best neighbour are both its score (scalar messages).
+            feats = np.stack([np.full_like(q, logit(own)), np.full_like(q, logn), logit(q), logit(q),
+                              np.full_like(q, logn), np.ones_like(q)], -1).astype(np.float32)
+            h = np.maximum(feats @ w["c_mlp.0.weight"].T + w["c_mlp.0.bias"], 0)
+            out.append(logit(own) + (h @ w["c_mlp.2.weight"].T + w["c_mlp.2.bias"])[:, 0])
+        final = 1 / (1 + np.exp(-np.mean(out, 0)))
+        ax.plot(100 * q, 100 * final, color=shade, linewidth=2.0)
+        ax.axhline(100 * own, color=shade, linewidth=0.8, linestyle=":")
+        ax.text(96, 100 * final[-1], f"own reads say {own:.0%}", fontsize=7.5, color=shade, va="center")
+    ax.set_xlim(0, 125)
+    ax.set_xticks([0, 20, 40, 60, 80, 100])
+    labels(ax, "neighbour's own-reads score (%)", "site's final score (%)")
+    finish(fig, "Corroboration: a neighbour that looks modified raises a site's score; one that looks unmodified lowers it",
+           "The shipped scalar_drop networks (both seeds, numpy), for a site with one neighbour within 75 nt, both with "
+           "30 reads. Dotted: the site's own-reads score,\ni.e. no neighbour effect. Scores are rankings from networks "
+           "trained with positives up-weighted, not calibrated probabilities.", "fig_corroboration_curve")
 
 
 def gps_attention() -> None:

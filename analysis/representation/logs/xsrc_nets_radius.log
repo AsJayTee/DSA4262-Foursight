@@ -1,0 +1,17 @@
+start baseline
+start fit --model h2gcn_aux_r100 --fold 0 --arm pooled_both
+start fit --model h2gcn_aux_r100 --fold 1 --arm pooled_both
+start fit --model h2gcn_aux_r100 --fold 2 --arm pooled_both
+start fit --model h2gcn_aux_r100 --fold 3 --arm pooled_both
+start fit --model h2gcn_aux_r100 --fold 4 --arm pooled_both
+start fit --model h2gcn_aux_r200 --fold 0 --arm pooled_both
+start fit --model h2gcn_aux_r200 --fold 1 --arm pooled_both
+start fit --model h2gcn_aux_r200 --fold 2 --arm pooled_both
+start fit --model h2gcn_aux_r200 --fold 3 --arm pooled_both
+start fit --model h2gcn_aux_r200 --fold 4 --arm pooled_both
+start fit --model h2gcn_aux_r400 --fold 0 --arm pooled_both
+start fit --model h2gcn_aux_r400 --fold 1 --arm pooled_both
+start fit --model h2gcn_aux_r400 --fold 2 --arm pooled_both
+start fit --model h2gcn_aux_r400 --fold 3 --arm pooled_both
+done baseline
+start fit --model h2gcn_aux_r400 --fold 4 --arm pooled_both

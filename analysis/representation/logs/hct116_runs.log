@@ -1,0 +1,26 @@
+  downloading SGNex_Hct116_directRNA_replicate3_run4/data.json ...
+SGNex_Hct116_directRNA_replicate3_run4: 121,838 of 121,838 dataset0 sites, median depth 42 (66s)
+                                   run  trained on                           model depth in this run  sites  positive %  pr_auc this run  pr_auc dataset0 run, same sites  roc_auc this run
+SGNex_Hct116_directRNA_replicate3_run4    dataset0                       h2gcn_aux               all 121838      4.4937           0.5233                           0.5436            0.9369
+SGNex_Hct116_directRNA_replicate3_run4    dataset0                        res_gate               all 121838      4.4937           0.5623                           0.5841            0.9464
+SGNex_Hct116_directRNA_replicate3_run4    dataset0                      scalar_msg               all 121838      4.4937           0.5394                           0.5602            0.9421
+SGNex_Hct116_directRNA_replicate3_run4    dataset0                             gps               all 121838      4.4937           0.5542                           0.5692            0.9465
+SGNex_Hct116_directRNA_replicate3_run4 pooled_both               h2gcn_twohead_aux               all 121838      4.4937           0.5607                           0.5859            0.9522
+SGNex_Hct116_directRNA_replicate3_run4 pooled_both                       h2gcn_aux               all 121838      4.4937           0.5313                           0.5534            0.9400
+SGNex_Hct116_directRNA_replicate3_run4 pooled_both                        res_gate               all 121838      4.4937           0.5621                           0.5815            0.9486
+SGNex_Hct116_directRNA_replicate3_run4 pooled_both                      scalar_msg               all 121838      4.4937           0.5332                           0.5478            0.9412
+SGNex_Hct116_directRNA_replicate3_run4 pooled_both   shipped (twohead + h2gcn_aux)               all 121838      4.4937           0.5749                           0.5950            0.9518
+SGNex_Hct116_directRNA_replicate3_run4 pooled_both twohead + res_gate + scalar_msg               all 121838      4.4937           0.5844                           0.5993            0.9530
+  downloading SGNex_Hct116_directRNA_replicate4_run3/data.json ...
+SGNex_Hct116_directRNA_replicate4_run3: 121,838 of 121,838 dataset0 sites, median depth 76 (113s)
+                                   run  trained on                           model depth in this run  sites  positive %  pr_auc this run  pr_auc dataset0 run, same sites  roc_auc this run
+SGNex_Hct116_directRNA_replicate4_run3    dataset0                       h2gcn_aux               all 121838      4.4937           0.5327                           0.5436            0.9405
+SGNex_Hct116_directRNA_replicate4_run3    dataset0                        res_gate               all 121838      4.4937           0.5668                           0.5841            0.9484
+SGNex_Hct116_directRNA_replicate4_run3    dataset0                      scalar_msg               all 121838      4.4937           0.5485                           0.5602            0.9452
+SGNex_Hct116_directRNA_replicate4_run3    dataset0                             gps               all 121838      4.4937           0.5510                           0.5692            0.9477
+SGNex_Hct116_directRNA_replicate4_run3 pooled_both               h2gcn_twohead_aux               all 121838      4.4937           0.5600                           0.5859            0.9540
+SGNex_Hct116_directRNA_replicate4_run3 pooled_both                       h2gcn_aux               all 121838      4.4937           0.5358                           0.5534            0.9435
+SGNex_Hct116_directRNA_replicate4_run3 pooled_both                        res_gate               all 121838      4.4937           0.5658                           0.5815            0.9510
+SGNex_Hct116_directRNA_replicate4_run3 pooled_both                      scalar_msg               all 121838      4.4937           0.5439                           0.5478            0.9453
+SGNex_Hct116_directRNA_replicate4_run3 pooled_both   shipped (twohead + h2gcn_aux)               all 121838      4.4937           0.5775                           0.5950            0.9541
+SGNex_Hct116_directRNA_replicate4_run3 pooled_both twohead + res_gate + scalar_msg               all 121838      4.4937           0.5898                           0.5993            0.9555
