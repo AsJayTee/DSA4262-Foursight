@@ -17,7 +17,8 @@ copied off Ronin), every model on the same union gene split (seed 4262):
          sites, seeds rank-averaged; top right is better
 
 Writes results/report_models_folds.csv, results/report_models_pooled.csv and
-report/figures/models_{distribution,scatter}_{cl1,both}.png.
+report/figures/models_distribution_{cl1,both}.png and
+models_scatter_{pr,roc}_{cl1,both}.png.
 """
 
 from __future__ import annotations
@@ -174,31 +175,39 @@ def distribution(folds: pd.DataFrame, version: str):
     from m6a import figures as F
     plt = F._plt()
     keys = [m for m in MODELS if m[0] in set(folds[folds.version == version].model)]
-    fig, axes = plt.subplots(1, 2, figsize=(10, 0.36 * len(keys) + 1.9), dpi=200, sharey=True)
+    fig, axes = plt.subplots(1, 2, figsize=(10.5, 0.5 * len(keys) + 2.0), dpi=200, sharey=True)
     fig.patch.set_facecolor(F.SURFACE)
     rng = np.random.default_rng(4262)
     for ax, (_, fname) in zip(axes, FILES):
         theme(ax)
+        ax.grid(False, axis="y")
         for i, (key, label, colour, control) in enumerate(keys):
             g = folds[(folds.version == version) & (folds.model == key) & (folds["scored on"] == fname)]
             v = g["gain over lightgbm"].to_numpy()
-            yy = i + rng.uniform(-0.18, 0.18, len(v))
-            ax.scatter(v, yy, s=14, facecolors="none" if control else colour, edgecolors=colour,
-                       linewidths=0.9, alpha=0.85, zorder=3)
-            ax.plot([np.median(v)] * 2, [i - 0.3, i + 0.3], color=F.INK, linewidth=1.4, zorder=4)
+            if np.ptp(v) > 1e-9:
+                body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+                body.set_facecolor(colour)
+                body.set_edgecolor("none")
+                body.set_alpha(0.16)
+            yy = i + rng.uniform(-0.13, 0.13, len(v))
+            ax.scatter(v, yy, s=9, facecolors="none" if control else colour, edgecolors=colour,
+                       linewidths=0.8, alpha=0.9, zorder=3)
+            ax.plot([np.median(v)] * 2, [i - 0.32, i + 0.32], color=F.INK, linewidth=1.4, zorder=4)
+            ax.text(1.0, i, f"n={len(v)}", transform=ax.get_yaxis_transform(), fontsize=6, color=F.MUTED,
+                    va="center", ha="left") if fname == "cell line 2" else None
         ax.axvline(0, color=F.INK_SOFT, linewidth=0.9, linestyle="--", zorder=2)
         ax.set_title(f"scored on {fname}" + (" (unseen cell line)" if version == "cl1" and fname == "cell line 2" else ""),
                      color=F.INK, fontsize=9.5, loc="left")
         ax.set_xlabel("PR AUC gain over quantiles + LightGBM, same fold", color=F.INK_SOFT, fontsize=8.5)
     axes[0].set_yticks(range(len(keys)))
     axes[0].set_yticklabels([k[1] for k in keys], fontsize=8, color=F.INK)
-    axes[0].invert_yaxis()
+    axes[0].set_ylim(len(keys) - 0.5, -0.6)
     fig.suptitle(f"Per-fold gain over the LightGBM baseline, {ARMS[version][1]}",
                  x=0.012, ha="left", color=F.INK, fontsize=11)
-    fig.text(0.012, 0.008, "Each point: one fold (of 5) of one seed (up to 3), held-out genes; bar = median. "
-             "Hollow = control. Dashed line = LightGBM.\nColour: grey no neighbours, orange free use of "
-             "neighbours, blue constrained corroboration, aqua ensembles.", color=F.MUTED, fontsize=7.2)
-    fig.tight_layout(rect=(0, 0.05, 1, 0.97))
+    fig.text(0.012, 0.008, "Each point: one fold (of 5) of one seed, held-out genes; violin = their spread; bar = median; "
+             "n = folds x seeds. Hollow = control. Dashed line = LightGBM.\nColour: grey no neighbours, orange free "
+             "use of neighbours, blue constrained corroboration, aqua ensembles.", color=F.MUTED, fontsize=7.2)
+    fig.tight_layout(rect=(0, 0.045, 0.97, 0.97))
     return fig
 
 
@@ -231,44 +240,56 @@ def place_labels(ax, points, fontsize: float = 7.0) -> None:
                                                                   shrinkA=0, shrinkB=3))
 
 
-def scatter(pooled: pd.DataFrame, version: str):
+def scatter(pooled: pd.DataFrame, version: str, metric: str):
     from m6a import figures as F
     plt = F._plt()
     p = pooled[pooled.version == version]
     present = [m for m in MODELS if m[0] in set(p.model)]
     number = {m[0]: i + 1 for i, m in enumerate(present)}
-    fig = plt.figure(figsize=(13, 5.6), dpi=200)
+    name = "PR AUC" if metric == "pr_auc" else "ROC AUC"
+    w = p.pivot_table(index="model", columns="scored on", values=metric)
+    fig = plt.figure(figsize=(10, 6.2), dpi=200)
     fig.patch.set_facecolor(F.SURFACE)
-    grid = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.55], wspace=0.28)
-    axes = [fig.add_subplot(grid[0, 0]), fig.add_subplot(grid[0, 1])]
+    grid = fig.add_gridspec(1, 2, width_ratios=[1.35, 0.65], wspace=0.05)
+    ax = fig.add_subplot(grid[0, 0])
+    theme(ax)
+    x, y = w["cell line 1"], w["cell line 2"]
+    pad = 0.06 * max(np.ptp(x), np.ptp(y))
+    ax.set_xlim(x.min() - pad, x.max() + pad)
+    ax.set_ylim(y.min() - pad, y.max() + pad)
+    ax.set_aspect("equal", adjustable="datalim")      # one unit is the same length on both axes
+    lo, hi = min(ax.get_xlim()[0], ax.get_ylim()[0]), max(ax.get_xlim()[1], ax.get_ylim()[1])
+    ax.plot([lo, hi], [lo, hi], color=F.MUTED, linewidth=0.9, zorder=1)
+    base = w.loc["lightgbm", "cell line 2"]
+    ax.axhline(base, color=F.INK_SOFT, linewidth=0.9, linestyle="--", zorder=1)
     style = {k: (c, ctrl) for k, _, c, ctrl in MODELS}
-    for ax, metric in zip(axes, ("pr_auc", "roc_auc")):
-        theme(ax)
-        w = p.pivot_table(index="model", columns="scored on", values=metric)
-        for key, r in w.iterrows():
-            c, ctrl = style[key]
-            ax.scatter(r["cell line 1"], r["cell line 2"], s=40, facecolors="none" if ctrl else c,
-                       edgecolors=c if ctrl else F.SURFACE, linewidths=1.2 if ctrl else 1.0, zorder=3)
-        name = "PR AUC" if metric == "pr_auc" else "ROC AUC"
-        ax.set_xlabel(f"{name}, cell line 1 (held-out genes)", color=F.INK_SOFT, fontsize=8.5)
-        ax.set_ylabel(f"{name}, cell line 2" + (" (unseen cell line)" if version == "cl1" else " (held-out genes)"),
-                      color=F.INK_SOFT, fontsize=8.5)
-        ax.set_title(name, color=F.INK, fontsize=9.5, loc="left")
-        place_labels(ax, [(r["cell line 1"], r["cell line 2"], str(number[k])) for k, r in w.iterrows()])
-    key_ax = fig.add_subplot(grid[0, 2])
+    for key, r in w.iterrows():
+        c, ctrl = style[key]
+        ax.scatter(r["cell line 1"], r["cell line 2"], s=44, facecolors="none" if ctrl else c,
+                   edgecolors=c if ctrl else F.SURFACE, linewidths=1.2 if ctrl else 1.0, zorder=3)
+    xl, yl = ax.get_xlim(), ax.get_ylim()
+    ax.text(xl[1], base, "  LightGBM on cell line 2", fontsize=6.8, color=F.INK_SOFT, va="bottom", ha="right")
+    if yl[0] < xl[1] and xl[0] < yl[1]:
+        d = min(xl[1], yl[1]) - 0.15 * (min(xl[1], yl[1]) - max(xl[0], yl[0]))
+        ax.text(d, d, "y = x  ", fontsize=6.8, color=F.MUTED, ha="right", va="bottom", rotation=45)
+    place_labels(ax, [(r["cell line 1"], r["cell line 2"], str(number[k])) for k, r in w.iterrows()])
+    ax.set_xlabel(f"{name}, cell line 1 (held-out genes)", color=F.INK_SOFT, fontsize=8.5)
+    ax.set_ylabel(f"{name}, cell line 2" + (" (unseen cell line)" if version == "cl1" else " (held-out genes)"),
+                  color=F.INK_SOFT, fontsize=8.5)
+    key_ax = fig.add_subplot(grid[0, 1])
     key_ax.axis("off")
     for i, (k, label, c, ctrl) in enumerate(present):
-        yy = 1 - i / max(len(present), 18)
-        key_ax.scatter([0.02], [yy], s=30, facecolors="none" if ctrl else c, edgecolors=c, linewidths=1.1,
+        yy = 0.97 - i * 0.052
+        key_ax.scatter([0.04], [yy], s=30, facecolors="none" if ctrl else c, edgecolors=c, linewidths=1.1,
                        transform=key_ax.transAxes, clip_on=False)
-        key_ax.text(0.07, yy, f"{number[k]:>2}  {label.strip()}", transform=key_ax.transAxes, va="center",
-                    fontsize=7.6, color=F.INK)
-    fig.suptitle(f"Models ranked on both cell lines, {ARMS[version][1]} (top right is better)",
+        key_ax.text(0.1, yy, f"{number[k]:>2}  {label.strip()}", transform=key_ax.transAxes, va="center",
+                    fontsize=7.8, color=F.INK)
+    fig.suptitle(f"{name} on both cell lines, {ARMS[version][1]} (top right is better)",
                  x=0.012, ha="left", color=F.INK, fontsize=11)
-    fig.text(0.012, 0.01, "All held-out sites, seeds rank-averaged. Hollow = control. Colour: grey no neighbours, "
-             "orange free use of neighbours, blue constrained corroboration, aqua ensembles.",
-             color=F.MUTED, fontsize=7.2)
-    fig.subplots_adjust(left=0.06, right=0.99, top=0.86, bottom=0.13)
+    fig.text(0.012, 0.01, "All held-out sites, seeds rank-averaged. Equal scale on both axes. Solid line: y = x; dashed: "
+             "LightGBM's score on cell line 2. Hollow = control.\nColour: grey no neighbours, orange free use of "
+             "neighbours, blue constrained corroboration, aqua ensembles.", color=F.MUTED, fontsize=7.2)
+    fig.subplots_adjust(left=0.07, right=0.99, top=0.9, bottom=0.14)
     return fig
 
 
@@ -285,7 +306,8 @@ def main() -> None:
     FIGURES.mkdir(parents=True, exist_ok=True)
     for version in ARMS:
         distribution(folds, version).savefig(FIGURES / f"models_distribution_{version}.png")
-        scatter(pooled, version).savefig(FIGURES / f"models_scatter_{version}.png")
+        for metric, short in (("pr_auc", "pr"), ("roc_auc", "roc")):
+            scatter(pooled, version, metric).savefig(FIGURES / f"models_scatter_{short}_{version}.png")
     print(f"figures -> {FIGURES}")
 
 
