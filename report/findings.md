@@ -1487,6 +1487,28 @@ report/figures/fig_depth.png).
 - Caveat: the depths below 20 are simulated. Real low-depth sites come from
   lowly expressed genes.
 
+**Do dataset0's labels map onto the SG-NEx samples? (10 Oct)**
+`analysis/sgnex/label_mapping_check.py`; analysis/sgnex/label_mapping_check.csv.
+
+- **Where the labels come from:** m6ACE-seq on HCT116, a separate lab
+  experiment. A label describes the cell line's RNA at a position, not one
+  sequencing run.
+- **Why each SG-NEx sample has different reads:** each sample reads
+  different molecules of the same kind of cells.
+- **The coordinates are proven to match.** At every one of dataset0's
+  121,838 labelled sites, in all 22 SG-NEx samples, the 7-mer is identical
+  to dataset0's: 100.0% everywhere. That includes MCF7 replicate 3 after
+  its version suffix is removed. A one-nucleotide offset would change the
+  7-mer.
+- The labelled sites are present in 100% of each HCT116 sample (82-99% in
+  other lines).
+- **Every labelled site has at least 20 reads in all three HCT116 samples**
+  (median 42-76). The labelled set is well-covered sites.
+  - Real low-depth accuracy **cannot** be measured with these labels; the
+    simulated thinning (`fig_depth`) is the only low-depth evidence.
+  - In other cell lines, many labelled positions have few reads (12-74%
+    under 20), but HCT116's labels do not apply there.
+
 **Related work: graph and attention models for m6A (checked 10 Oct).**
 
 | Model | What it does | Status |
