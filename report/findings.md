@@ -1509,6 +1509,58 @@ report/figures/fig_depth.png).
   - In other cell lines, many labelled positions have few reads (12-74%
     under 20), but HCT116's labels do not apply there.
 
+**Task 2, preliminary analyses A-E (10 Oct).** `analysis/sgnex/explore_lines.py`
+-> `analysis/sgnex/explore/summary.md`, `overview.png`. Inputs: the shipped model's
+comparable raw score on all 7 SG-NEx lines, with each line's samples combined.
+
+- **A1. Reads per site:** 34-42% of sites have only 1-2 reads; 14-26% have
+  20+. The median is 3 (A549, K562, MCF7) or 4-5 (H9, HEYA8, HCT116, HepG2).
+- **A2. Two samples of the same line barely agree more than two different
+  lines** (Spearman, by read band):
+
+  | | 1-2 reads | 20+ reads |
+  |---|---|---|
+  | Same line | 0.815 | 0.928 |
+  | Different lines | 0.800 | 0.917 |
+
+  - The model sees the lines as nearly identical at site level.
+  - Single-site differences between lines are within sample noise.
+  - This matches the discordant-site result (12D).
+- **A3. GGACT is the top motif in every line** (GAACT second), as in the
+  labelled data.
+- **B. Known biology appears in every line**, from a model that is never
+  told where a site sits in its gene:
+  - scores peak just after the stop codon;
+  - they are lowest within 50 nt of exon junctions;
+  - they are highest 100-400 nt from a junction.
+- **C. How much m6A.**
+  - **Borrowed cut-offs transfer between the labelled lines.** A cut-off
+    set for 50% precision on cell line 1 gives 53% on cell line 2 (20+
+    reads), and 47% at 1-2 reads.
+  - At 20+ reads, 6.7-9.2% of sites are called modified at that cut-off;
+    the range is 2-19% across cut-offs.
+  - **HCT116 scores highest, partly an artefact.** HCT116 is the training
+    cell line, and its training sites score -0.76 vs -1.30 for its other
+    sites (A549: -1.28 vs -1.47). Excluding training sites shrinks
+    HCT116's lead by about a third. Compare lines on non-training sites.
+- **D. Genes** (5,687 genes with sites >= 10 reads in every line):
+  - 188 genes are in the top 10% in every line (e.g. POLDIP2, TSR3,
+    PSMB1, PTBP1, HSPA5);
+  - almost no line-specific genes (0 in six lines, 1 in HEYA8).
+- **E. Similarity between lines is high everywhere** (0.89-0.93).
+  - K562, the only blood-derived line, is the most distinct. That is
+    plausible.
+  - But the clustering also follows read depth (the lower-depth lines
+    group together), and the differences are about the size of the
+    noise between samples.
+  - Treat it as suggestive only.
+
+**Implication for Task 2:** the defensible story is *what is shared* (motif,
+gene structure, a common core of heavily modified genes, robust cut-offs).
+Differences between lines are small, within noise, or confounded by the
+training cell line and by depth. Report them cautiously, as the brief's
+"limitations" criterion rewards.
+
 **Related work: graph and attention models for m6A (checked 10 Oct).**
 
 | Model | What it does | Status |
