@@ -1533,9 +1533,11 @@ re-checked by us).**
     methylation. **Verified** from the repo docs (docs/Usage.md: "5mC in
     CpG motifs has cluster effect"; `hm_cluster_predict.py`) and a search
     summary of the paper. The improvement it reports (claimed +1-3% AP,
-    +3-5% AUC) is **not** verified. This is essentially our scalar-messages
-    idea in DNA, without the gating, residual design, dropout or
-    cross-domain evaluation. **Cite it.**
+    +3-5% AUC) is **not** verified. Its neighbour stage aggregates a ±25 bp
+    histogram of neighbours' final fractions (no distance, no read counts,
+    trained after stage 1). Its LSTM is the per-read signal model, not the
+    neighbour model. See report/literature.md, "DeepMod vs our model".
+    **Cite it.**
   - **DeepCpG** (Genome Biol 2017), **CpG Transformer** (Bioinformatics
     2022) and GraphCpG (Bioinformatics 2023) impute single-cell CpG states
     from observed neighbouring states. ccsmeth and hifimeth (PacBio) use

@@ -66,7 +66,7 @@ scores a site from its own reads, within a ≤9-21 nt window.
 
 | Work | Relation to our model | Status |
 |---|---|---|
-| **DeepMod**: Liu et al., *Nat Commun* 2019, 10, doi:10.1038/s41467-019-10168-2 | **Closest precedent.** Nanopore DNA 5mC: a second network takes a CpG's predicted methylation percentage plus its neighbouring sites' (both strands) and outputs a revised percentage, for the CpG "cluster effect". Essentially our scalar-messages idea, in DNA. **Must cite** | Verified (repo docs/Usage.md; paper summary). The claimed +1-3% AP / +3-5% AUC gain is **unverified** |
+| **DeepMod**: Liu et al., *Nat Commun* 2019, 10, doi:10.1038/s41467-019-10168-2 | **Closest precedent.** Nanopore DNA 5mC, two stages. (1) A 3-layer bidirectional LSTM reads one read's signal around a cytosine and calls that read: the analogue of our read encoder. (2) An optional "cluster" network re-estimates a CpG's methylation fraction from 14 numbers: its own fraction, its partner's, the number of CpGs within ±25 bp, and an 11-bin histogram of their fractions. **The neighbour stage is a histogram aggregation, not an LSTM.** See [DeepMod vs our model](#deepmod-vs-our-model). **Must cite** | Verified: stage 1 (paper; DeepMod2 comparison); stage 2 input from `DeepMod_tools/hm_cluster_predict.py`. Stage 2's own architecture is not documented (loaded from a checkpoint). The claimed +1-3% AP / +3-5% AUC gain is **unverified** |
 | DeepCpG, *Genome Biol* 2017, doi:10.1186/s13059-017-1189-z | Imputes single-cell CpG methylation from neighbouring CpG states | Reported |
 | CpG Transformer, *Bioinformatics* 2022, 38(3):597 | Sliding-window attention over neighbouring CpGs (imputation) | Reported |
 | GraphCpG, *Bioinformatics* 2023 (btad533) | Graph over neighbouring CpG loci (imputation) | Reported |
@@ -79,6 +79,38 @@ along a transcript in nanopore direct RNA sequencing, and to characterise how
 such propagation behaves when the labels change between cell lines. Analogous
 neighbour-site models exist for DNA methylation (DeepMod; DeepCpG; CpG
 Transformer)."*
+
+### DeepMod vs our model
+
+**Correction (10 Oct):** DeepMod's LSTM is its per-read *signal* model (stage
+1, like our read encoder). Its *neighbour* model (stage 2) aggregates a
+histogram. So "GNN vs LSTM" is **not** the difference.
+
+Both fit one template:
+
+$$z_i = F\big(\text{own}_i,\ \mathrm{AGG}_{j\in\mathcal{N}(i)}\ \psi(\text{evidence}_j, d_{ij})\big)$$
+
+| Component | DeepMod cluster model (DNA 5mC) | Ours (RNA m6A) |
+|---|---|---|
+| Neighbourhood | CpGs within ±25 bp, both strands | Candidate sites on the transcript within 50-150 nt |
+| What a neighbour sends | A final fraction $q_j$ of reads already called methylated | A learned vector $s_j$ from all its reads, or its raw own-reads score $a_j$ plus $\log n_j$ |
+| Distance | Ignored inside the window | Weight $e^{-d_{ij}/\lambda}$, row-normalised, λ ≈ 100 nt fitted to training labels |
+| Message $\psi$ | Fixed: a one-hot bin of $q_j$ | Learned |
+| Aggregation | Normalised histogram | Weighted mean (+ max within 75 nt) |
+| Evidence strength | Lost (1/1 and 50/50 reads both give $q = 1$) | Kept: $n_j$ in messages, $n_i$ in the encoder and the gate |
+| Combination $F$ | A network on 14 numbers (architecture undocumented) | $z_i = a_i + g_i\,\Delta_i\,\mathbb{1}[\deg_i > 0]$, which reduces exactly to $a_i$ with no neighbours |
+| Hops | 1 | 2 (H2GCN design) or 1 (scalar) |
+| Training | Two-stage, on fixed stage-1 outputs | End to end: site $i$'s loss trains neighbour $j$'s read encoder |
+| Missing neighbours | Unit dropout (keep 0.7) | Neighbour dropout (edges and whole sites), our active ingredient |
+| Setting | DNA CpGs: dense, paired strands, strongly correlated | RNA m6A: sparse, single-stranded, moderately clustered (2.2× within 25 nt); label shift between cell lines |
+
+**Agreed wording:** "DeepMod's optional second stage aggregates the
+methylation fractions of CpGs within ±25 bp into a histogram. Our model
+differs in passing learned, read-derived messages; weighting neighbours by
+distance; carrying read-count confidence; combining them through a residual
+correction that reduces to the site's own score; training end to end with
+neighbour dropout; and targeting RNA m6A under label shift between cell
+lines."
 
 ## 4. Labels and agreement between assays
 
