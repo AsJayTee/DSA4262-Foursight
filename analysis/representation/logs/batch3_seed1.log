@@ -16,3 +16,254 @@ start fit --model gat --fold 1 --arm pooled_both
 start fit --model gat --fold 2 --arm dataset0
 done baseline
 start fit --model gat --fold 2 --arm pooled_both
+done fit --model gat --fold 0 --arm dataset0
+start fit --model gat --fold 3 --arm dataset0
+done fit --model gat --fold 1 --arm dataset0
+start fit --model gat --fold 3 --arm pooled_both
+done fit --model gat --fold 2 --arm dataset0
+start fit --model gat --fold 4 --arm dataset0
+done fit --model gat --fold 1 --arm pooled_both
+start fit --model gat --fold 4 --arm pooled_both
+done fit --model gat --fold 2 --arm pooled_both
+start fit --model gcn --fold 0 --arm dataset0
+done fit --model set_transformer --fold 2 --arm dataset0
+start fit --model gcn --fold 0 --arm pooled_both
+done fit --model gat --fold 0 --arm pooled_both
+start fit --model gcn --fold 1 --arm dataset0
+done fit --model set_transformer --fold 3 --arm dataset0
+start fit --model gcn --fold 1 --arm pooled_both
+done fit --model gat --fold 4 --arm dataset0
+start fit --model gcn --fold 2 --arm dataset0
+done fit --model set_transformer --fold 4 --arm dataset0
+start fit --model gcn --fold 2 --arm pooled_both
+done fit --model gcn --fold 0 --arm pooled_both
+start fit --model gcn --fold 3 --arm dataset0
+done fit --model gat --fold 3 --arm dataset0
+start fit --model gcn --fold 3 --arm pooled_both
+done fit --model gat --fold 3 --arm pooled_both
+start fit --model gcn --fold 4 --arm dataset0
+done fit --model gcn --fold 2 --arm dataset0
+start fit --model gcn --fold 4 --arm pooled_both
+done fit --model gcn --fold 1 --arm pooled_both
+start fit --model h2gcn_aux_r400 --fold 0 --arm dataset0
+done fit --model gat --fold 4 --arm pooled_both
+start fit --model h2gcn_aux_r400 --fold 0 --arm pooled_both
+done fit --model gcn --fold 0 --arm dataset0
+start fit --model h2gcn_aux_r400 --fold 1 --arm dataset0
+done fit --model set_transformer --fold 1 --arm pooled_both
+start fit --model h2gcn_aux_r400 --fold 1 --arm pooled_both
+done fit --model set_transformer --fold 0 --arm dataset0
+start fit --model h2gcn_aux_r400 --fold 2 --arm dataset0
+done fit --model gcn --fold 2 --arm pooled_both
+start fit --model h2gcn_aux_r400 --fold 2 --arm pooled_both
+done fit --model set_transformer --fold 2 --arm pooled_both
+start fit --model h2gcn_aux_r400 --fold 3 --arm dataset0
+done fit --model set_transformer --fold 1 --arm dataset0
+start fit --model h2gcn_aux_r400 --fold 3 --arm pooled_both
+done fit --model gcn --fold 1 --arm dataset0
+start fit --model h2gcn_aux_r400 --fold 4 --arm dataset0
+done fit --model gcn --fold 3 --arm pooled_both
+start fit --model h2gcn_aux_r400 --fold 4 --arm pooled_both
+done fit --model gcn --fold 4 --arm dataset0
+start fit --model deepset --fold 0 --arm dataset0
+done fit --model set_transformer --fold 3 --arm pooled_both
+start fit --model deepset --fold 0 --arm pooled_both
+done fit --model gcn --fold 3 --arm dataset0
+start fit --model deepset --fold 1 --arm dataset0
+done fit --model set_transformer --fold 4 --arm pooled_both
+start fit --model deepset --fold 1 --arm pooled_both
+done fit --model h2gcn_aux_r400 --fold 1 --arm dataset0
+start fit --model deepset --fold 2 --arm dataset0
+done fit --model h2gcn_aux_r400 --fold 4 --arm dataset0
+start fit --model deepset --fold 2 --arm pooled_both
+done fit --model set_transformer --fold 0 --arm pooled_both
+start fit --model deepset --fold 3 --arm dataset0
+done fit --model h2gcn_aux_r400 --fold 0 --arm dataset0
+start fit --model deepset --fold 3 --arm pooled_both
+done fit --model gcn --fold 4 --arm pooled_both
+start fit --model deepset --fold 4 --arm dataset0
+done fit --model deepset --fold 1 --arm dataset0
+start fit --model deepset --fold 4 --arm pooled_both
+done fit --model h2gcn_aux_r400 --fold 2 --arm pooled_both
+done fit --model deepset --fold 0 --arm dataset0
+done fit --model h2gcn_aux_r400 --fold 3 --arm dataset0
+done fit --model h2gcn_aux_r400 --fold 1 --arm pooled_both
+done fit --model h2gcn_aux_r400 --fold 2 --arm dataset0
+done fit --model deepset --fold 0 --arm pooled_both
+done fit --model h2gcn_aux_r400 --fold 0 --arm pooled_both
+done fit --model deepset --fold 2 --arm dataset0
+done fit --model deepset --fold 3 --arm dataset0
+done fit --model deepset --fold 1 --arm pooled_both
+done fit --model h2gcn_aux_r400 --fold 3 --arm pooled_both
+done fit --model deepset --fold 4 --arm dataset0
+done fit --model deepset --fold 2 --arm pooled_both
+done fit --model deepset --fold 4 --arm pooled_both
+done fit --model deepset --fold 3 --arm pooled_both
+done fit --model h2gcn_aux_r400 --fold 4 --arm pooled_both
+loaded: dataset0 121,838 sites, data1 90,452
+
+Cross-source: deepset (network) minus lightgbm_quantiles
+--------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+dataset0           +0.0398  [+0.0281, +0.0508]     +0.0116  [+0.0015, +0.0206]    +0.0257     +0.0116      yes
+pooled_both        +0.0579  [+0.0448, +0.0700]     +0.0325  [+0.0226, +0.0420]    +0.0452     +0.0325      yes
+Each row: deepset (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+dataset0              0.5157        0.3834             0.4759          0.3719
+pooled_both           0.5302        0.4242             0.4723          0.3917
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels   gain  ci_low  ci_high
+cell                                               
+A        dataset0  dataset0 0.0352  0.0194   0.0494
+B        dataset0     data1 0.0230  0.0134   0.0324
+C           data1  dataset0 0.0215  0.0052   0.0362
+D           data1     data1 0.0091 -0.0010   0.0194
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain +0.0150 [-0.0076, +0.0412] - compare with cell D for the gene-population effect.
+deepset: worst +0.0116  mean +0.0257  -> /mnt/sdd/DSA4262/analysis/representation/results/deepset_nn__xsrc__seed1.json
+
+Cross-source: set_transformer (network) minus lightgbm_quantiles
+----------------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+dataset0           +0.0421  [+0.0293, +0.0545]     +0.0085  [-0.0010, +0.0173]    +0.0253     +0.0085      yes
+pooled_both        +0.0465  [+0.0320, +0.0583]     +0.0194  [+0.0091, +0.0288]    +0.0330     +0.0194      yes
+Each row: set_transformer (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+dataset0              0.5181        0.3804             0.4759          0.3719
+pooled_both           0.5188        0.4111             0.4723          0.3917
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels   gain  ci_low  ci_high
+cell                                               
+A        dataset0  dataset0 0.0427  0.0278   0.0579
+B        dataset0     data1 0.0218  0.0123   0.0314
+C           data1  dataset0 0.0263  0.0120   0.0422
+D           data1     data1 0.0081 -0.0013   0.0189
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain +0.0093 [-0.0114, +0.0301] - compare with cell D for the gene-population effect.
+
+vs deepset alone (same arms, same genes):
+  dataset0     dataset0 +0.0023  data1 -0.0031  worst -0.0031
+  pooled_both  dataset0 -0.0114  data1 -0.0131  worst -0.0131
+set_transformer: worst +0.0085  mean +0.0253  -> /mnt/sdd/DSA4262/analysis/representation/results/set_transformer_nn__xsrc__seed1.json
+
+Cross-source: gat (network) minus lightgbm_quantiles
+----------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+dataset0           +0.0310  [+0.0128, +0.0464]     +0.0028  [-0.0092, +0.0153]    +0.0169     +0.0028      yes
+pooled_both        +0.0663  [+0.0470, +0.0820]     +0.0094  [-0.0029, +0.0219]    +0.0379     +0.0094      yes
+Each row: gat (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+dataset0              0.5070        0.3746             0.4759          0.3719
+pooled_both           0.5386        0.4011             0.4723          0.3917
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels    gain  ci_low  ci_high
+cell                                                
+A        dataset0  dataset0  0.0070 -0.0144   0.0273
+B        dataset0     data1  0.0112 -0.0040   0.0249
+C           data1  dataset0 -0.0002 -0.0209   0.0209
+D           data1     data1  0.0029 -0.0127   0.0175
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain +0.0048 [-0.0242, +0.0334] - compare with cell D for the gene-population effect.
+
+vs deepset alone (same arms, same genes):
+  dataset0     dataset0 -0.0088  data1 -0.0088  worst -0.0088
+  pooled_both  dataset0 +0.0084  data1 -0.0231  worst -0.0231
+gat: worst +0.0028  mean +0.0169  -> /mnt/sdd/DSA4262/analysis/representation/results/gat_nn__xsrc__seed1.json
+
+Cross-source: gcn (network) minus lightgbm_quantiles
+----------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+dataset0           -0.1372  [-0.1598, -0.1154]     -0.0927  [-0.1072, -0.0768]    -0.1149     -0.1372   VETOED
+pooled_both        -0.1345  [-0.1547, -0.1150]     -0.1030  [-0.1195, -0.0861]    -0.1188     -0.1345   VETOED
+Each row: gcn (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+dataset0              0.3387        0.2792             0.4759          0.3719
+pooled_both           0.3378        0.2887             0.4723          0.3917
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels    gain  ci_low  ci_high
+cell                                                
+A        dataset0  dataset0 -0.1747 -0.2031  -0.1474
+B        dataset0     data1 -0.0899 -0.1062  -0.0730
+C           data1  dataset0 -0.1795 -0.2066  -0.1535
+D           data1     data1 -0.0977 -0.1142  -0.0812
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain -0.0675 [-0.0972, -0.0357] - compare with cell D for the gene-population effect.
+
+vs deepset alone (same arms, same genes):
+  dataset0     dataset0 -0.1770  data1 -0.1042  worst -0.1770
+  pooled_both  dataset0 -0.1925  data1 -0.1355  worst -0.1925
+gcn: worst -0.1372  mean -0.1149  -> /mnt/sdd/DSA4262/analysis/representation/results/gcn_nn__xsrc__seed1.json
+
+Cross-source: h2gcn_aux_r400 (network) minus lightgbm_quantiles
+---------------------------------------------------------------
+             dataset0 gain     dataset0 95% CI  data1 gain        data1 95% CI  mean gain  worst gain eligible
+trained on                                                                                                    
+dataset0           +0.1082  [+0.0940, +0.1207]     +0.0318  [+0.0209, +0.0427]    +0.0700     +0.0318      yes
+pooled_both        +0.0831  [+0.0654, +0.0971]     +0.0232  [+0.0102, +0.0346]    +0.0531     +0.0232      yes
+Each row: h2gcn_aux_r400 (network) and lightgbm_quantiles trained the same way, both scored on the
+held-out genes of each file against that file's labels. Selection rule
+(0032): rank on the worse gain; veto if it is below -0.005.
+Headline arm (what ships today): dataset0.
+
+Raw PR AUC (not comparable across files: positive rates 4.5% vs 7.3%):
+             dataset0 PR AUC  data1 PR AUC  dataset0 baseline  data1 baseline
+trained on                                                                   
+dataset0              0.5841        0.4037             0.4759          0.3719
+pooled_both           0.5554        0.4149             0.4723          0.3917
+
+Crossed test on the sites in both files (trained on dataset0), gain over lightgbm_quantiles:
+     measurements    labels   gain  ci_low  ci_high
+cell                                               
+A        dataset0  dataset0 0.0916  0.0751   0.1076
+B        dataset0     data1 0.0494  0.0370   0.0609
+C           data1  dataset0 0.0755  0.0586   0.0935
+D           data1     data1 0.0352  0.0232   0.0498
+A->B: the labelling changes. A->C: the sequencing run changes. A gain that
+survives A->C but not A->B is tied to dataset0's labelling.
+
+data1 genes absent from dataset0 (12,061 sites): gain +0.0300 [+0.0063, +0.0551] - compare with cell D for the gene-population effect.
+
+vs deepset alone (same arms, same genes):
+  dataset0     dataset0 +0.0684  data1 +0.0202  worst +0.0202
+  pooled_both  dataset0 +0.0252  data1 -0.0093  worst -0.0093
+h2gcn_aux_r400: worst +0.0318  mean +0.0700  -> /mnt/sdd/DSA4262/analysis/representation/results/h2gcn_aux_r400_nn__xsrc__seed1.json

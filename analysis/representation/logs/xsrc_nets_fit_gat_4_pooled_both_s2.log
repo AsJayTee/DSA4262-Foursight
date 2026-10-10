@@ -1,0 +1,36 @@
+loaded: dataset0 121,838 sites, data1 90,452
+[gat pooled_both fold 4 seed 2]
+    epoch 1: loss 1.2323, val_ap 0.1970, minutes 2.72, lr 3.31e-04
+    epoch 2: loss 0.9812, val_ap 0.4311, minutes 5.42, lr 6.60e-04
+    epoch 3: loss 0.8568, val_ap 0.4693, minutes 8.1, lr 9.89e-04
+    epoch 4: loss 0.7987, val_ap 0.4722, minutes 10.71, lr 1.00e-03
+    epoch 5: loss 0.7717, val_ap 0.4667, minutes 13.41, lr 1.00e-03
+    epoch 6: loss 0.7533, val_ap 0.4707, minutes 16.12, lr 1.00e-03
+    epoch 7: loss 0.7333, val_ap 0.5070, minutes 18.8, lr 1.00e-03
+    epoch 8: loss 0.7093, val_ap 0.4977, minutes 21.47, lr 1.00e-03
+    epoch 9: loss 0.6968, val_ap 0.4938, minutes 24.08, lr 1.00e-03
+    epoch 10: loss 0.6661, val_ap 0.4795, minutes 26.68, lr 1.00e-03
+    epoch 11: loss 0.6581, val_ap 0.4816, minutes 29.28, lr 1.00e-03
+    epoch 12: loss 0.6444, val_ap 0.4691, minutes 31.87, lr 1.00e-03
+    epoch 13: loss 0.6179, val_ap 0.4763, minutes 34.42, lr 1.00e-03
+    epoch 14: loss 0.6025, val_ap 0.4696, minutes 36.95, lr 1.00e-03
+    epoch 15: loss 0.5746, val_ap 0.4818, minutes 39.45, lr 1.00e-03
+    epoch 16: loss 0.5623, val_ap 0.4686, minutes 42.05, lr 5.00e-04
+    epoch 17: loss 0.5007, val_ap 0.4697, minutes 44.61, lr 5.00e-04
+    epoch 18: loss 0.4836, val_ap 0.4486, minutes 47.16, lr 5.00e-04
+    epoch 19: loss 0.4654, val_ap 0.4337, minutes 49.66, lr 5.00e-04
+    epoch 20: loss 0.4504, val_ap 0.4543, minutes 52.17, lr 5.00e-04
+    epoch 21: loss 0.4407, val_ap 0.4553, minutes 54.7, lr 5.00e-04
+    epoch 22: loss 0.4240, val_ap 0.4558, minutes 57.26, lr 5.00e-04
+    epoch 23: loss 0.4236, val_ap 0.4342, minutes 59.74, lr 5.00e-04
+    epoch 24: loss 0.4071, val_ap 0.4452, minutes 62.24, lr 5.00e-04
+    epoch 25: loss 0.3989, val_ap 0.4248, minutes 64.76, lr 2.50e-04
+    epoch 26: loss 0.3614, val_ap 0.3952, minutes 67.26, lr 2.50e-04
+    epoch 27: loss 0.3459, val_ap 0.3975, minutes 69.78, lr 2.50e-04
+    epoch 28: loss 0.3376, val_ap 0.4200, minutes 72.28, lr 2.50e-04
+    epoch 29: loss 0.3337, val_ap 0.4021, minutes 74.76, lr 2.50e-04
+    epoch 30: loss 0.3341, val_ap 0.4143, minutes 77.2, lr 2.50e-04
+    epoch 31: loss 0.3262, val_ap 0.4048, minutes 79.66, lr 2.50e-04
+    epoch 32: loss 0.3196, val_ap 0.3891, minutes 82.16, lr 2.50e-04
+    stopping: no validation gain in 25 epochs
+[gat pooled_both fold 4 seed 2] done (83.0 min)

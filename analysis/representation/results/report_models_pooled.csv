@@ -5,18 +5,18 @@ cl1,lightgbm,Quantiles + LightGBM,3,cell line 1,0.47594076977013616,0.9169071293
 cl1,lightgbm,Quantiles + LightGBM,3,cell line 2,0.37187928166628553,0.81494449995369
 cl1,m6anet,m6Anet (pretrained on HCT116),1,cell line 1,0.5032507417156737,0.9321630143618045
 cl1,m6anet,m6Anet (pretrained on HCT116),1,cell line 2,0.35558811805312646,0.8190479641733968
-cl1,deepset,DeepSet (reads only),1,cell line 1,0.5212987525914113,0.9323563151477993
-cl1,deepset,DeepSet (reads only),1,cell line 2,0.38933388094843024,0.8148245026322058
-cl1,set_transformer,Set Transformer (reads only),1,cell line 1,0.5008580476539073,0.929295811324482
-cl1,set_transformer,Set Transformer (reads only),1,cell line 2,0.37717607389668145,0.8086754694362616
-cl1,gcn,GCN,1,cell line 1,0.33613290539615903,0.9045467252787166
-cl1,gcn,GCN,1,cell line 2,0.27692904661729,0.7932161813282345
-cl1,gat,GAT,1,cell line 1,0.5200007420338812,0.9382349290601679
-cl1,gat,GAT,1,cell line 2,0.3711763315919885,0.8286685602486797
+cl1,deepset,DeepSet (reads only),3,cell line 1,0.5305255325533335,0.9332325182842841
+cl1,deepset,DeepSet (reads only),3,cell line 2,0.3954347258339254,0.8171898576328872
+cl1,set_transformer,Set Transformer (reads only),3,cell line 1,0.5258099286794068,0.9357370732910009
+cl1,set_transformer,Set Transformer (reads only),3,cell line 2,0.3896487088566136,0.8211920413874347
+cl1,gcn,GCN,3,cell line 1,0.34472846575399385,0.9076993412638775
+cl1,gcn,GCN,3,cell line 2,0.28240496524650605,0.7977533967746085
+cl1,gat,GAT,3,cell line 1,0.5504382535702586,0.9422817433572794
+cl1,gat,GAT,3,cell line 2,0.3873159389666872,0.8315579526532317
 cl1,h2gcn_aux,H2GCN + own-reads head,3,cell line 1,0.5574510929979555,0.9435764385084198
 cl1,h2gcn_aux,H2GCN + own-reads head,3,cell line 2,0.4119264710263676,0.8303878789158052
-cl1,h2gcn_aux_r400,"H2GCN, 400 nt context",1,cell line 1,0.5839850476766574,0.9515762346117567
-cl1,h2gcn_aux_r400,"H2GCN, 400 nt context",1,cell line 2,0.40415873576847505,0.8379051787245061
+cl1,h2gcn_aux_r400,"H2GCN, 400 nt context",3,cell line 1,0.5940636149507792,0.9535878847396808
+cl1,h2gcn_aux_r400,"H2GCN, 400 nt context",3,cell line 2,0.41117529184798446,0.8399885062198156
 cl1,gps,Graph transformer (GPS),3,cell line 1,0.5849376721530541,0.9530994682558677
 cl1,gps,Graph transformer (GPS),3,cell line 2,0.40918613928918457,0.8423247905908403
 cl1,scalar_msg,Scalar messages,3,cell line 1,0.5707302842510149,0.9482158009946593
@@ -35,18 +35,18 @@ both,lightgbm,Quantiles + LightGBM,3,cell line 1,0.47227920663912526,0.917637484
 both,lightgbm,Quantiles + LightGBM,3,cell line 2,0.39167361585367527,0.8288085918486146
 both,m6anet,m6Anet (pretrained on HCT116),1,cell line 1,0.5032507417156737,0.9321630143618045
 both,m6anet,m6Anet (pretrained on HCT116),1,cell line 2,0.35558811805312646,0.8190479641733968
-both,deepset,DeepSet (reads only),1,cell line 1,0.5191811149859111,0.9322659696194757
-both,deepset,DeepSet (reads only),1,cell line 2,0.41190536931591176,0.833017578123223
-both,set_transformer,Set Transformer (reads only),1,cell line 1,0.5156245535692475,0.9327995761335267
-both,set_transformer,Set Transformer (reads only),1,cell line 2,0.4071676026896827,0.8260102162082589
-both,gcn,GCN,1,cell line 1,0.34325390893945706,0.9068544941065193
-both,gcn,GCN,1,cell line 2,0.29234248950370073,0.8056544103344123
-both,gat,GAT,1,cell line 1,0.5199162211737252,0.9369405690278692
-both,gat,GAT,1,cell line 2,0.3915165464848424,0.8433778421244268
+both,deepset,DeepSet (reads only),3,cell line 1,0.5407223209484221,0.9357879195308242
+both,deepset,DeepSet (reads only),3,cell line 2,0.42882986951095237,0.8402313158517726
+both,set_transformer,Set Transformer (reads only),3,cell line 1,0.5357697703893824,0.936902040563742
+both,set_transformer,Set Transformer (reads only),3,cell line 2,0.42116494601715077,0.8360842702527722
+both,gcn,GCN,3,cell line 1,0.34991775816004744,0.9094525378522421
+both,gcn,GCN,3,cell line 2,0.2948291087508988,0.8092796876253848
+both,gat,GAT,3,cell line 1,0.5659608036761222,0.9444556004225009
+both,gat,GAT,3,cell line 2,0.41421215965461666,0.8534085531629868
 both,h2gcn_aux,H2GCN + own-reads head,3,cell line 1,0.5683147141050222,0.947524199681072
 both,h2gcn_aux,H2GCN + own-reads head,3,cell line 2,0.444455871015989,0.8545163313942602
-both,h2gcn_aux_r400,"H2GCN, 400 nt context",1,cell line 1,0.5847001921434658,0.9494803809696919
-both,h2gcn_aux_r400,"H2GCN, 400 nt context",1,cell line 2,0.42444753026843807,0.8554112695272802
+both,h2gcn_aux_r400,"H2GCN, 400 nt context",3,cell line 1,0.5879512969168158,0.9519578910225704
+both,h2gcn_aux_r400,"H2GCN, 400 nt context",3,cell line 2,0.42885580272652357,0.8573679743779593
 both,gps,Graph transformer (GPS),3,cell line 1,0.5933652651313582,0.9532614389618506
 both,gps,Graph transformer (GPS),3,cell line 2,0.44222912563512257,0.8605789633525556
 both,h2gcn_twohead_aux,Two-head H2GCN,3,cell line 1,0.6055483631062267,0.9582036099676587

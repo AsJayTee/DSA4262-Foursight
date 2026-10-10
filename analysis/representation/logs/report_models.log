@@ -1,12 +1,12 @@
   cl1 logistic: 1 seed(s)
   cl1 lightgbm: 3 seed(s)
   cl1 m6anet: 1 seed(s)
-  cl1 deepset: 1 seed(s)
-  cl1 set_transformer: 1 seed(s)
-  cl1 gcn: 1 seed(s)
-  cl1 gat: 1 seed(s)
+  cl1 deepset: 3 seed(s)
+  cl1 set_transformer: 3 seed(s)
+  cl1 gcn: 3 seed(s)
+  cl1 gat: 3 seed(s)
   cl1 h2gcn_aux: 3 seed(s)
-  cl1 h2gcn_aux_r400: 1 seed(s)
+  cl1 h2gcn_aux_r400: 3 seed(s)
   cl1 gps: 3 seed(s)
   cl1 scalar_msg: 3 seed(s)
   cl1 scalar_random: 3 seed(s)
@@ -16,12 +16,12 @@
   both logistic: 1 seed(s)
   both lightgbm: 3 seed(s)
   both m6anet: 1 seed(s)
-  both deepset: 1 seed(s)
-  both set_transformer: 1 seed(s)
-  both gcn: 1 seed(s)
-  both gat: 1 seed(s)
+  both deepset: 3 seed(s)
+  both set_transformer: 3 seed(s)
+  both gcn: 3 seed(s)
+  both gat: 3 seed(s)
   both h2gcn_aux: 3 seed(s)
-  both h2gcn_aux_r400: 1 seed(s)
+  both h2gcn_aux_r400: 3 seed(s)
   both gps: 3 seed(s)
   both h2gcn_twohead_aux: 3 seed(s)
   both scalar_msg: 3 seed(s)
@@ -37,12 +37,12 @@ version label
 cl1     Logistic regression (baseline)          0.412       0.322       0.901       0.807
         Quantiles + LightGBM                    0.476       0.372       0.917       0.815
         m6Anet (pretrained on HCT116)           0.503       0.356       0.932       0.819
-        DeepSet (reads only)                    0.521       0.389       0.932       0.815
-        Set Transformer (reads only)            0.501       0.377       0.929       0.809
-        GCN                                     0.336       0.277       0.905       0.793
-        GAT                                     0.520       0.371       0.938       0.829
+        DeepSet (reads only)                    0.531       0.395       0.933       0.817
+        Set Transformer (reads only)            0.526       0.390       0.936       0.821
+        GCN                                     0.345       0.282       0.908       0.798
+        GAT                                     0.550       0.387       0.942       0.832
         H2GCN + own-reads head                  0.557       0.412       0.944       0.830
-        H2GCN, 400 nt context                   0.584       0.404       0.952       0.838
+        H2GCN, 400 nt context                   0.594       0.411       0.954       0.840
         Graph transformer (GPS)                 0.585       0.409       0.953       0.842
         Scalar messages                         0.571       0.432       0.948       0.835
           control: random neighbours            0.534       0.398       0.932       0.816
@@ -52,12 +52,12 @@ cl1     Logistic regression (baseline)          0.412       0.322       0.901   
 both    Logistic regression (baseline)          0.415       0.331       0.899       0.813
         Quantiles + LightGBM                    0.472       0.392       0.918       0.829
         m6Anet (pretrained on HCT116)           0.503       0.356       0.932       0.819
-        DeepSet (reads only)                    0.519       0.412       0.932       0.833
-        Set Transformer (reads only)            0.516       0.407       0.933       0.826
-        GCN                                     0.343       0.292       0.907       0.806
-        GAT                                     0.520       0.392       0.937       0.843
+        DeepSet (reads only)                    0.541       0.429       0.936       0.840
+        Set Transformer (reads only)            0.536       0.421       0.937       0.836
+        GCN                                     0.350       0.295       0.909       0.809
+        GAT                                     0.566       0.414       0.944       0.853
         H2GCN + own-reads head                  0.568       0.444       0.948       0.855
-        H2GCN, 400 nt context                   0.585       0.424       0.949       0.855
+        H2GCN, 400 nt context                   0.588       0.429       0.952       0.857
         Graph transformer (GPS)                 0.593       0.442       0.953       0.861
         Scalar messages                         0.562       0.454       0.950       0.858
           control: random neighbours            0.540       0.428       0.936       0.840
@@ -67,4 +67,136 @@ both    Logistic regression (baseline)          0.415       0.331       0.899   
         Two-head H2GCN                          0.606       0.445       0.958       0.859
         Intermediate leaderboard ensemble       0.606       0.454       0.957       0.863
         Final ensemble                          0.607       0.460       0.958       0.865
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+Ignoring fixed y limits to fulfill fixed data aspect with adjustable data limits.
+Ignoring fixed x limits to fulfill fixed data aspect with adjustable data limits.
+Ignoring fixed y limits to fulfill fixed data aspect with adjustable data limits.
+Ignoring fixed x limits to fulfill fixed data aspect with adjustable data limits.
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\analysis\representation\report_models.py:188: MatplotlibDeprecationWarning: vert: bool was deprecated in Matplotlib 3.11 and will be removed in 3.13. Use orientation: {'vertical', 'horizontal'} instead.
+  body = ax.violinplot(v, positions=[i], vert=False, widths=0.8, showextrema=False)["bodies"][0]
+Ignoring fixed y limits to fulfill fixed data aspect with adjustable data limits.
+Ignoring fixed x limits to fulfill fixed data aspect with adjustable data limits.
+Ignoring fixed x limits to fulfill fixed data aspect with adjustable data limits.
+Ignoring fixed x limits to fulfill fixed data aspect with adjustable data limits.
 figures -> C:\Users\Siah Jin Thau\OneDrive\Desktop\Work\Sem 1 AY2627\DSA4262\report\figures
