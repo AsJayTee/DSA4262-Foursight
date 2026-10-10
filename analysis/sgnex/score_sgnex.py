@@ -24,6 +24,10 @@ the read count. For the platform's model explainer, the pooled step also saves
 the reads of a fixed set of showcase transcripts.
 
 Writes data/sgnex_scores/<sample or line>.csv.gz (under the gitignored data/).
+
+Transcript IDs are written without version suffix and spike-in controls are dropped
+(read()). The per-sample files of the first run (10 Oct) predate that: normalise IDs
+and drop non-ENST rows when reading them. Every pooled file has it applied.
 """
 
 from __future__ import annotations
@@ -89,7 +93,14 @@ def read(path: Path, limit: int | None):
         counts.append(len(site.reads))
         chunks.append(np.asarray(site.reads, dtype=np.float32))
     frame = pd.DataFrame({"transcript_id": ids, "transcript_position": pos, "kmer": kmers})
-    return frame, np.concatenate(chunks), np.asarray(counts)
+    values, counts = np.concatenate(chunks), np.asarray(counts)
+    # Checked 10 Oct over all 22 samples: MCF7 replicate 3 writes versioned IDs
+    # (ENST...1) where every other sample writes ENST... - unmatched, its sites never
+    # pooled with replicate 4's. And ~half the samples include spike-in controls
+    # (R2_*, synthetic RNAs, up to 0.3% of sites): not human, dropped.
+    human = frame.transcript_id.str.startswith("ENST").to_numpy()
+    frame = frame[human].assign(transcript_id=lambda f: f.transcript_id.str.split(".").str[0]).reset_index(drop=True)
+    return frame, values[np.repeat(human, counts)], counts[human]
 
 
 def pool(parts):
