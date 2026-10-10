@@ -5,10 +5,10 @@
     # smoke: 5% of genes, one epoch
     python analysis/representation/final_fit.py --model h2gcn_aux --seed 0 --genes 0.05 --epochs 1
 
-The ensemble chosen on cross-source evaluation (decision 0032; analysis in
-xsrc_nets.py, ensemble.py): h2gcn_twohead_aux + h2gcn_aux, two seeds each,
-trained on both files ("pooled_both"). Cross-validated, the two-network
-version scored data1 PR AUC 0.450 against 0.392 for quantiles + LightGBM.
+The ensemble chosen on cross-source evaluation (decisions 0032, 0034; analysis in
+day_significance.py): h2gcn_twohead_aux + res_gate + scalar_drop, two seeds each,
+trained on both files ("pooled_both"). Until 2026-10-10 it was h2gcn_twohead_aux
++ h2gcn_aux (0033).
 
 Training matches every evaluated network except that no fold is held out:
 the same model definitions (xsrc_nets.GRAPH_MODELS), recipe v3, and early
@@ -35,7 +35,11 @@ import common
 import graph
 import xsrc_nets as X
 
-ENSEMBLE = [("h2gcn_twohead_aux", 0), ("h2gcn_twohead_aux", 1), ("h2gcn_aux", 0), ("h2gcn_aux", 1)]
+# Decision 0034 (2026-10-10): h2gcn_twohead_aux + res_gate + scalar_drop, two seeds each, equal
+# weight per model - the ensemble that tied the previous one on cell line 1 and beat it on cell
+# line 2 (+0.006) and data1's new genes (+0.012), every component seed-averaged.
+ENSEMBLE = [("h2gcn_twohead_aux", 0), ("h2gcn_twohead_aux", 1), ("res_gate", 0), ("res_gate", 1),
+            ("scalar_drop", 0), ("scalar_drop", 1)]
 OUT = common.OUT / "final"
 
 
@@ -49,6 +53,12 @@ def fit(model_name: str, seed: int, args, log) -> None:
     kwargs = X.GRAPH_MODELS[model_name]
     model = graph.GraphNet(**kwargs)
     model.obs = (bundle.y_own, bundle.y_other, bundle.file)
+    if kwargs.get("nbr") == "kernel" or kwargs.get("scalar"):
+        # As in xsrc_nets.fit_one: the kernel's decay scale from cell line 1's training labels.
+        ref = fit_rows & (bundle.file == 0)
+        lam = graph.comod_decay_scale(bundle.position[ref], bundle.graph_id[ref], bundle.y_own[ref])
+        model.kernel_nt = torch.tensor(lam, dtype=torch.float32)
+        log(f"    kernel decay scale {lam:.1f} nt (fitted to cell line 1 training labels)")
     log(f"[{model_name} seed {seed}] {int(fit_rows.sum()):,} training sites, {int(val_rows.sum()):,} for early stopping")
     started = time.time()
     history = graph.train(model, graph.graphs_of(np.flatnonzero(fit_rows), bundle.graph_id, bundle.position),
@@ -80,10 +90,13 @@ def main() -> None:
     log = lambda *a: print(*a, flush=True)  # noqa: E731
     if args.all:
         logs = common.ROOT / "analysis" / "representation" / "logs"
+        # Networks already fitted (a file exists) are kept, so adding a model refits only it.
+        todo = [(m, s) for m, s in ENSEMBLE if not (OUT / f"{m}_s{s}{X.suffix(args.genes)}.pt").exists()]
+        log(f"fitting {todo}")
         jobs = [(m, s, subprocess.Popen(
             [sys.executable, "-u", __file__, "--model", m, "--seed", str(s), "--minutes", str(args.minutes),
              "--epochs", str(args.epochs), "--threads", str(args.threads), "--genes", str(args.genes)],
-            stdout=open(logs / f"final_fit_{m}_s{s}.log", "w"), stderr=subprocess.STDOUT)) for m, s in ENSEMBLE]
+            stdout=open(logs / f"final_fit_{m}_s{s}.log", "w"), stderr=subprocess.STDOUT)) for m, s in todo]
         failed = [(m, s) for m, s, job in jobs if job.wait() != 0]
         log("all fitted" if not failed else f"FAILED: {failed} - see logs/final_fit_*.log")
         summary = {f"{m}_s{s}": {k: v for k, v in torch.load(OUT / f"{m}_s{s}{X.suffix(args.genes)}.pt",

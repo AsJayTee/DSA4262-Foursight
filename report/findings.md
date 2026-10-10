@@ -1007,6 +1007,32 @@ that encode one cell line's labelling do not transfer.
 A direct test would be to compare the raw read measurements of each
 discordant site between the two files. Not run.
 
+**The label oracle (10 Oct): a hard bound on transfer.** What if a model
+had learned cell line 1's labelling *perfectly*? On the 67,320 shared
+sites, cell line 1's true labels were used as the score for cell line 2's
+labels (`label_oracle.py`; results/label_oracle.csv):
+
+| Score for cell line 2's labels (positive rate 7.2%) | PR AUC | ROC AUC |
+|---|---|---|
+| Cell line 1's true labels | **0.326** | 0.711 |
+| Cell line 1's true labels, ties broken by `h2gcn_aux`'s score | 0.485 | 0.837 |
+| `h2gcn_aux` trained on cell line 1 (seeds averaged) | **0.422** | 0.823 |
+
+- **Perfect knowledge of cell line 1's labels scores only 0.33 on cell line
+  2**, below our reads-based model (0.42).
+- Even combined with our model's score, it reaches 0.49. Our model already
+  gets 87% of that.
+- The reverse direction: cell line 2's labels score 0.30 on cell line 1's
+  labels (0.63 with tie-breaking), against 0.59 for our model.
+
+So **no amount of learning cell line 1's labelling can close the
+cross-cell-line gap.** The two labellings disagree too much. What our
+model transfers is worth more than the labels themselves. This is the
+strongest single statement that we are "doing what the data allows".
+
+(The tie-broken row is not a strict upper bound: some other combination
+could score higher. The "labels alone" row is exact.)
+
 Source: results/discordant_sites.csv.
 
 ### 12E. Inside the designs: scoring-only probes (9 Oct)

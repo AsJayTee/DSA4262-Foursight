@@ -1,0 +1,7 @@
+scored against,score,sites,positive %,pr_auc,roc_auc
+cell line 2 labels,cell line 1's label alone,67320,7.208853238265004,0.3260292721048179,0.7108251784595265
+cell line 2 labels,"cell line 1's label, ties broken by the model",67320,7.208853238265004,0.48468473588684013,0.8370261327777069
+cell line 2 labels,model trained on cell line 1 (h2gcn_aux),67320,7.208853238265004,0.42219792831307656,0.823240986509783
+cell line 1 labels,cell line 2's label alone,67320,4.888591800356506,0.3028266577257329,0.8033044734899849
+cell line 1 labels,"cell line 2's label, ties broken by the model",67320,4.888591800356506,0.6266724010021103,0.9529412827451577
+cell line 1 labels,model trained on cell line 1 (h2gcn_aux),67320,4.888591800356506,0.5910028577626294,0.9404128799906305
