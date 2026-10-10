@@ -68,6 +68,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--models", default="h2gcn,h2gcn_local,h2gcn_twohead")
     ap.add_argument("--threads", type=int, default=8)
+    ap.add_argument("--arms", default="dataset0,pooled_both", help="only these training arms")
+    ap.add_argument("--out", default="depth_rescore.json", help="results/ file name")
     args = ap.parse_args()
     torch.set_num_threads(args.threads)
     log = lambda *a: print(*a, flush=True)  # noqa: E731
@@ -87,6 +89,8 @@ def main() -> None:
             if not m or m[1] != model:
                 continue
             arm, fold, seed = m[2], int(m[3]), int(m[4] or 0)
+            if arm not in args.arms.split(","):
+                continue
             saved = torch.load(path, weights_only=False)
             net = graph.GraphNet(**X.GRAPH_MODELS[model])
             net.load_state_dict(saved["state_dict"])
@@ -100,6 +104,12 @@ def main() -> None:
                 slot[d][held] = [got[r] for r in held]
             log(f"  scored {path.name}")
 
+    # Per-site scores (2026-10-10), so an ensemble can be scored at depth without torch
+    # (depth_ensembles.py). Rows in bundle order: dataset0's, then data1's.
+    keep = X.OUT / "depth_scores"
+    keep.mkdir(exist_ok=True)
+    for (model, seed, arm), by_depth in scores.items():
+        np.savez(keep / f"{model}_{arm}_s{seed}.npz", **{f"d{d}": v for d, v in by_depth.items()})
     rows = []
     for (model, seed, arm), by_depth in sorted(scores.items()):
         if any(np.isnan(v).any() for v in by_depth.values()):
@@ -115,8 +125,8 @@ def main() -> None:
         log(f"{r['model']:20s} s{r['seed']} {r['arm']:12s} {r['depth']:>2d} reads  {r['source']:8s} "
             f"{r['pr_auc']:.4f} vs LightGBM {r['lgbm_pr_auc']:.4f}  {r['gain']:+.4f} "
             f"[{r['ci_low']:+.4f}, {r['ci_high']:+.4f}]")
-    (common.RESULTS / "depth_rescore.json").write_text(json.dumps(rows, indent=2))
-    log(f"-> {common.RESULTS / 'depth_rescore.json'}")
+    (common.RESULTS / args.out).write_text(json.dumps(rows, indent=2))
+    log(f"-> {common.RESULTS / args.out}")
 
 
 if __name__ == "__main__":

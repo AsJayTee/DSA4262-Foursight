@@ -42,7 +42,8 @@ Terms used throughout:
 12. [Final batch (8 Oct): designs, literature motivation, results](#12-final-batch-8-oct-designs-literature-motivation-results)
 13. [Where the data comes from, and public data beyond the course](#13-where-the-data-comes-from-and-public-data-beyond-the-course)
 14. [Models the report discusses](#14-models-the-report-discusses-agreed-10-oct)
-15. [Appendix: full tables](#appendix-full-tables) - every band, cell line,
+15. [Candidate entries for the AI-use table](#15-candidate-entries-for-the-ai-use-table-recorded-10-oct-choose-later)
+16. [Appendix: full tables](#appendix-full-tables) - every band, cell line,
     threshold and bin for the clustering-by-distance (A), neighbours-per-radius
     (B), 400-nt band-use (C), position-on-transcript (D) and RNA-folding (E)
     analyses, generated from the result files
@@ -1034,6 +1035,42 @@ strongest single statement that we are "doing what the data allows".
 (The tie-broken row is not a strict upper bound: some other combination
 could score higher. The "labels alone" row is exact.)
 
+**The raw-signal check (10 Oct): the reads barely differ where the labels
+do.** This is model-free (`discordant_signal.py`; results/discordant_signal.csv).
+
+Method:
+- Per site and per file: mean and spread of the 9 read measurements, centred
+  on that file's mean for the site's 7-mer.
+- A linear "modification direction" is fitted within one file, on sites
+  *not* shared by both files.
+- Each shared site is scored in both files' reads.
+
+| Direction | Within-file AUC, cell line 1 | Within-file AUC, cell line 2 | Which-line AUC at the 3,872 discordant sites |
+|---|---|---|---|
+| Fitted on cell line 1 | 0.818 | 0.712 | **0.519** |
+| Fitted on cell line 2 | 0.819 | 0.714 | **0.516** |
+| None: centre-position current only | 0.301 (lower = modified) | 0.385 | **0.542** |
+
+- **Within a file, the direction clearly separates modified sites**: AUC
+  0.71-0.82.
+- **Across files, at the sites where the labels disagree, it barely moves**:
+  0.52-0.54, where 0.5 means no difference.
+- So the molecules show at most a faint trace of the label difference. That
+  agrees with every trained model (which-line AUC about 0.5, above).
+
+The cross-cell-line label disagreement is therefore mostly not visible in
+these reads. Two readings remain:
+1. **Labels:** different labelling (m6ACE-seq thresholds, coverage,
+   antibody background).
+2. **Stoichiometry:** small differences in modification fraction below what
+   averaged reads resolve.
+
+Either way, the reads cannot recover it. This is the closest we can come to
+confirming the ceiling from this data.
+
+Caveat: the direction is linear, on site averages. A difference confined to
+a few reads per site would need a read-level test.
+
 Source: results/discordant_sites.csv.
 
 ### 12E. Inside the designs: scoring-only probes (9 Oct)
@@ -1427,6 +1464,24 @@ versions each):
 on both cell lines, the shipped setting. The two-head model and the
 ensembles appear only in `both`. Numbers: results/report_models_pooled.csv,
 report_models_folds.csv.
+
+---
+
+## 15. Candidate entries for the AI-use table (recorded 10 Oct; choose later)
+
+The brief asks for at least two instances where an AI tool's output was
+wrong, misleading, or rested on an unverified assumption: how it was
+detected, and what was done.
+
+| # | What the AI said or did | How it was caught | What was done |
+|---|---|---|---|
+| 1 | Reported that co-modification "fades twice as fast in cell line 2" (decay scale 59 vs 113 nt), from point estimates | A robustness check: the transcript-bootstrap intervals overlap (38-123 vs 82-144 nt), and on shared sites the two labellings give 101 vs 103 nt | Retracted in findings 12A; reported as ~100 nt in both |
+| 2 | A literature summary cited m6Aiso as "Guo et al. 2025, Mol Cell" | Checking each citation against the paper: the paper exists (doi:10.1016/j.molcel.2025.01.014), the first author could not be confirmed | Cited by title and DOI |
+| 3 | Early project documents described data1 as "a second sequencing run, labelled differently" | Course staff, 5 Oct: different cell lines | Every analysis re-framed as cross-cell-line |
+| 4 | AI-written parallel code for the RNA-folding test silently ran the default folding program (RNAplfold) when LinearPartition was requested: Python 3.14's process start method did not pass the setting to workers | The "LinearPartition" results were identical to RNAplfold's | Fixed with a worker initialiser; workers now report the predictor they used; rerun |
+| 5 | Recommended the three-model ensemble on a seed-0 comparison (+0.004 on cell line 1) | Repeating with every component averaged over 3 seeds: +0.001, a tie | Claim restated as "ties on cell line 1, +0.006 on cell line 2" (12F, decision 0034) |
+| 6 | Wrote a wrong number into findings (deep model -0.028; the result file says -0.017) | Re-reading the result file before quoting it | Corrected |
+| 7 | (Agent action, not output) Launched Ronin jobs the user had not approved | The user noticed the extra jobs | Killed; an approval rule was adopted for every compute job |
 
 ---
 

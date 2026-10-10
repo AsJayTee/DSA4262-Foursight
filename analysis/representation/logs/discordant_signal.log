@@ -1,0 +1,10 @@
+shared sites 67,320; modified in cell line 2 only 2,717, modified in cell line 1 only 1,155, modified in both 2,136, modified in neither 61,312
+                                                                     0                             1                                   2
+direction fitted on                       cell line 1 (unshared sites)  cell line 2 (unshared sites)  none: centre-position current mean
+within-file AUC, cell line 1                                     0.818                         0.819                               0.301
+within-file AUC, cell line 2                                     0.712                         0.714                               0.385
+which-line AUC (discordant sites)                                0.519                         0.516                               0.542
+mean shift, modified in cell line 2 only                        -0.012                        -0.009                              -0.076
+mean shift, modified in cell line 1 only                        -0.067                        -0.041                               0.034
+mean shift, modified in both                                    -0.029                        -0.016                               0.082
+mean shift, modified in neither                                 -0.005                        -0.003                              -0.084

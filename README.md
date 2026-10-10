@@ -30,7 +30,7 @@ python scripts/predict.py \
 Expected output:
 
 ```
-1,000 sites scored -> predictions.csv  (1.1s, model=site_graph_ensemble)
+1,000 sites scored -> predictions.csv  (3.0s, model=site_graph_ensemble)
 ```
 
 A full-size file (~120,000 sites) takes about two minutes on a laptop.
@@ -53,21 +53,43 @@ ENST00000000412,2195,0.2705
 ```
 
 One row per site in the input, with `score` in `[0, 1]`: higher means more
-likely m6A. It is the average, over the four networks of the ensemble, of each
-site's rank within the file, so it orders sites correctly but is **not a
-calibrated probability** - do not count modified sites by thresholding it
+likely m6A. It is the average, over the six networks of the ensemble, of each
+site's rank within the file. So it orders sites correctly but is **not a
+calibrated probability**: do not count modified sites by thresholding it
 ([decision 0033](docs/decisions/0033-ship-a-site-graph-ensemble-scored-in-numpy.md)).
 
 ### The shipped model
 
-An ensemble of four graph networks, scored in plain numpy (no torch needed).
-Each site's reads are summarised by a DeepSets encoder, then each site is
-combined with the other candidate sites on its transcript by an H2GCN-style
-graph network (Zhu et al., NeurIPS 2020) that keeps a site's own evidence
-separate from its neighbours'. Trained on both labelled releases (dataset0 and
-data1). On held-out genes, scored against data1's labels, it reaches PR AUC
-0.450 against 0.392 for LightGBM on read quantiles, and stays about 0.10 ahead
-at 3 reads per site. Details: [decision 0033](docs/decisions/0033-ship-a-site-graph-ensemble-scored-in-numpy.md).
+An ensemble of three graph-network designs, two seeds each, scored in plain
+numpy (no torch needed). Every design starts the same way: a DeepSets encoder
+summarises each site's reads (each read is one RNA molecule) into a vector and
+an "own-reads" score. The designs then differ in how the other candidate sites
+on the same transcript (its *neighbours*) are used:
+
+- **Two-head H2GCN:** an H2GCN-style graph network (Zhu et al., NeurIPS 2020)
+  keeps a site's own evidence separate from its neighbours'. It has one output
+  per labelled cell line, and ships their mean.
+- **Residual + dropout (`res_gate`):** the site's own-reads score, plus a
+  correction from its neighbours within 150 nt, weighted by distance.
+- **Scalar messages + dropout (`scalar_drop`):** neighbours pass only one
+  number each, their own-reads score, which corroborates or contradicts the
+  site.
+
+The last two were trained with neighbours randomly dropped, so they do not
+depend on any single neighbour. That is what makes them transfer to a cell
+line they were not trained on.
+
+The model was trained on both labelled releases (dataset0 and data1, which are
+different cell lines). On held-out genes:
+
+| | data1 PR AUC | data1 ROC AUC | dataset0 PR AUC | dataset0 ROC AUC |
+|---|---:|---:|---:|---:|
+| LightGBM on read quantiles | 0.392 | 0.829 | 0.472 | 0.918 |
+| m6Anet (pretrained) | 0.356 | 0.819 | 0.503 | 0.932 |
+| **This model** | **0.460** | **0.865** | **0.607** | **0.958** |
+
+Details: [decision 0034](docs/decisions/0034-ship-constrained-corroboration-designs.md).
+Every model compared, and why: `report/findings.md` (section 14).
 
 ---
 
