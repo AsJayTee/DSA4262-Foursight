@@ -59,21 +59,27 @@ def main() -> None:
     out = out.merge(info, on=["transcript_id", "transcript_position"]).rename(columns={"label": "fraction"})
     own_cols = [c for c in out.columns if c.startswith("own_")]
     out["own"] = out[own_cols].mean(axis=1)
+    # Like for like: the SAME networks (the constrained designs, which have a separate
+    # read-only score) with their neighbour step. The full ensemble also averages in the
+    # two-head networks, which have no read-only score to compare against.
+    out["with_neighbours"] = out[[c.replace("own_", "raw_") for c in own_cols]].mean(axis=1)
     CACHE.parent.mkdir(parents=True, exist_ok=True)
     out.to_csv(CACHE, index=False)
 
-    summary = (out.assign(final_pct=100 * sigmoid(out.score_raw), own_pct=100 * sigmoid(out.own))
+    summary = (out.assign(final_pct=100 * sigmoid(out.with_neighbours), own_pct=100 * sigmoid(out.own))
                .groupby("fraction")
                .agg(sites=("score_raw", "size"), median_reads=("n_reads", "median"),
                     final_median=("final_pct", "median"), final_q25=("final_pct", lambda v: v.quantile(.25)),
                     final_q75=("final_pct", lambda v: v.quantile(.75)),
                     own_median=("own_pct", "median"), own_q25=("own_pct", lambda v: v.quantile(.25)),
                     own_q75=("own_pct", lambda v: v.quantile(.75))).reset_index())
-    rho_final = spearmanr(out.fraction, out.score_raw).statistic
+    rho_final = spearmanr(out.fraction, out.with_neighbours).statistic
     rho_own = spearmanr(out.fraction, out.own).statistic
+    rho_ensemble = spearmanr(out.fraction, out.score_raw).statistic
     summary.to_csv(RESULTS, index=False)
     print(summary.round(2).to_string(index=False))
-    print(f"Spearman (site score vs fraction): final {rho_final:.3f}, own reads {rho_own:.3f}")
+    print(f"Spearman (site score vs fraction): constrained networks with neighbours {rho_final:.3f}, same networks "
+          f"own reads {rho_own:.3f}, full shipped ensemble {rho_ensemble:.3f}")
     draw(out, rho_final, rho_own)
 
 
@@ -84,8 +90,8 @@ def draw(out: pd.DataFrame, rho_final: float, rho_own: float) -> None:
     fig, axes = plt.subplots(1, 2, figsize=(10, 4.4), dpi=200, sharey=True)
     fig.patch.set_facecolor(F.SURFACE)
     rng = np.random.default_rng(4262)
-    for ax, (col, title, rho) in zip(axes, (("score_raw", "final score (site + neighbours)", rho_final),
-                                            ("own", "own-reads score (no neighbours)", rho_own))):
+    for ax, (col, title, rho) in zip(axes, (("with_neighbours", "with neighbours", rho_final),
+                                            ("own", "same networks, own reads only", rho_own))):
         ax.set_facecolor(F.SURFACE)
         ax.grid(True, axis="y", color=F.GRID, linewidth=0.8)
         ax.set_axisbelow(True)
@@ -113,9 +119,10 @@ def draw(out: pd.DataFrame, rho_final: float, rho_own: float) -> None:
     fig.suptitle("dataset2: scores separate unmodified from modified RNA, but plateau above ~50% modified", x=0.012, ha="left",
                  color=F.INK, fontsize=10.5)
     fig.text(0.012, 0.01, "One synthetic RNA sequenced at 7 known modification levels; each point is one of its 189 "
-             "positions. Never used for training. Shipped model (models/final). Scores are uncalibrated\n(training "
-             "up-weighted modified sites); x positions are categories, not to scale. Every neighbour shares the site's "
-             "level here, so neighbours reinforce the trend. Source: results/data2_score_summary.csv.",
+             "positions (one every 10 nt, all DRACH). Never used for training. Both panels: the shipped constrained\n"
+             "networks (res_gate, scalar_drop; 2 seeds each), with and without their neighbour step. By construction "
+             "every neighbour shares the site's level here: a best case for corroboration,\nnot real biology. Scores "
+             "are uncalibrated; x positions are categories. Source: results/data2_score_summary.csv.",
              color=F.MUTED, fontsize=6.8, va="bottom")
     fig.tight_layout(rect=(0, 0.09, 1, 0.93))
     fig.savefig(FIGURE)

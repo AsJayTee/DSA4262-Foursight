@@ -335,33 +335,48 @@ may differ in other ways.
 **Shows:** the shipped model's scores on dataset2, the course's in-vitro
 series. One synthetic RNA was sequenced as seven samples made with a *known*
 share of modified molecules (0, 25, 50, 70, 75, 95, 100%), at the same 189
-positions. Each point is one position.
-- **Left:** the final score (site + neighbours).
-- **Right:** the own-reads score (no neighbours).
+positions (one every 10 nt, all DRACH motifs). Each point is one position.
+Both panels use the **same networks**: the shipped constrained designs
+(res_gate and scalar_drop, two seeds each).
+- **Left:** with their neighbour step.
+- **Right:** their own-reads score only.
 
 **Computed:** scored with `models/final` (numpy); never used for training.
-The final score is the six networks' mean raw output; the own-reads score
-is the constrained designs' read-only output. Both are shown on a 0-100%
-scale (sigmoid).
+Shown on a 0-100% scale (sigmoid of the raw output). The full shipped
+ensemble, which also includes the two-head networks, has no own-reads score
+to compare, so it is quoted in text only (Spearman 0.41).
 
 **Read:**
-- The scores **separate unmodified from modified RNA sharply**: final-score
-  median 21% at 0% vs 88% at 25% and ~96% from 50% up.
+- The scores **separate unmodified from modified RNA sharply**:
+  - with neighbours, median 37% at 0% vs 90% at 25% and ~96% from 50% up;
+  - telling 0% from any modified sample: ROC AUC 0.75 → 0.87 (res_gate)
+    and 0.77 → 0.90 (scalar_drop) when neighbours are added.
 - They **plateau from about 50%**: the model cannot tell a half-modified
-  site from a fully modified one.
-- The own-reads score even dips slightly at 95-100% (median 80% vs 87% at
-  70%).
-- Neighbours sharpen the trend (Spearman with the fraction 0.41 vs 0.24),
-  as expected: every neighbour here shares the site's level, so
-  corroboration reinforces it.
-- Within one sample, some positions score low regardless of level:
-  sequence context matters.
+  site from a fully modified one. The own-reads score even dips slightly at
+  95-100%.
+- **Why neighbours help in synthetic RNA.** Within one sample every position
+  has the same modification level by construction, and each site has 14
+  neighbours within 75 nt. So every neighbour is an independent extra
+  measurement of the same state, and pooling them reduces noise. That is the
+  mechanism learned on real RNA, in the setting where its assumption holds
+  perfectly. Spearman with the fraction: 0.37 vs 0.24.
+- **The neighbour step is outside its training range here.** dataset2 sites
+  have 600-1,200 reads, far above training, and the scalar messages use read
+  counts. That likely explains why neighbours also lift the 0% sample a
+  little (median 26% → 37%).
+- Within one sample, some positions score low regardless of level: sequence
+  context matters.
 
 **Don't claim:**
 - that the score measures the modification *fraction* (stoichiometry). It
   detects presence, then saturates.
-- that the neighbour effect is this large in real transcripts: here every
-  neighbour shares the site's level by construction.
+- that neighbours help this much in real transcripts. Here every neighbour
+  shares the site's level by construction; in real RNA neighbours share it
+  only partly (2.2× within 25 nt, fading by ~200 nt). This is a best-case
+  demonstration of the mechanism, not evidence about biology.
+- that the help comes only from separate sites. At 10 nt apart, neighbours'
+  signals may partly overlap with the site's own (DeepRM: ±10 nt). In real
+  data, neighbours within 20 nt added nothing (findings 12C).
 
 **Source:** `analysis/representation/results/data2_score_summary.csv`
 (`analysis/newdata/data2_scores.py`). Per-site scores are in
