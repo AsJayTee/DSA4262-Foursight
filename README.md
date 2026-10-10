@@ -33,7 +33,7 @@ Expected output:
 1,000 sites scored -> predictions.csv  (3.0s, model=site_graph_ensemble)
 ```
 
-A full-size file (~120,000 sites) takes about two minutes on a laptop.
+A full-size file (~120,000 sites) takes about three minutes on a laptop.
 
 `data/sample/sample.json.gz` is a 1,000-site test dataset included in this repo
 so the above runs immediately. To predict on your own data, point `--input` at

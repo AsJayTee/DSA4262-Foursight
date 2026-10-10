@@ -12,7 +12,7 @@ One colour code throughout: blue = cell line 1 (dataset0), orange = cell line 2
   fig_comodification        co-modification by distance, local vs transcript     (distance_bands.py)
   fig_gene_structure        positive rate around exon junctions and stop codons  (annotation_context.py)
   fig_ceiling               label oracle and the premise test                    (label_oracle.py, data1_arm_eval.py)
-  fig_depth                 PR AUC vs reads per site                             (depth rescoring)
+  fig_depth                 PR AUC vs reads per site, shipped ensemble          (depth_ensembles.py)
   fig_neighbour_count       graph gain by number of neighbours                   (gain_decomposition.py)
 """
 
@@ -246,33 +246,31 @@ def ceiling() -> None:
 
 
 def depth() -> None:
-    rows = []
-    for f in ("depth_rescore_final_batch.json", "depth_rescore_twohead_aux.json"):
-        rows += json.load(open(R / f))
-    d = pd.DataFrame(rows)
-    d = d[d.arm == "pooled_both"]
+    d = pd.read_csv(R / "depth_ensembles.csv")
     full = pd.read_csv(R / "report_models_pooled.csv")
     full = full[full.version == "both"]
-    fig, axes = figure(2, 9.6, 3.9)
-    for ax, (src, line) in zip(axes, (("dataset0", "cell line 1"), ("data1", "cell line 2"))):
-        # Lines are models here, so neither cell-line colour: ink, solid vs dash-dot.
-        for model, ls, name in (("h2gcn_twohead_aux", "o-", "two-head H2GCN"),
-                                ("h2gcn_aux", "s-.", "H2GCN + own-reads head")):
-            g = d[(d.model == model) & (d.source == src)].groupby("depth").pr_auc.mean()
+    fig, axes = figure(2, 9.6, 4.0)
+    # Lines are models here, so neither cell-line colour: ink weights and dash styles.
+    series = (("ens_final", "o-", F.INK, "final ensemble (shipped)"),
+              ("ens_intermediate", "s-.", F.INK_SOFT, "intermediate leaderboard ensemble"),
+              ("lightgbm", "o--", F.MUTED, "quantiles + LightGBM"))
+    for ax, line in zip(axes, ("cell line 1", "cell line 2")):
+        for model, ls, colour, name in series:
+            g = d[(d.model == model) & (d["scored on"] == line)].set_index("reads").pr_auc.sort_index()
             top = full[(full.model == model) & (full["scored on"] == line)].pr_auc.iloc[0]
-            ax.plot(list(g.index) + [40], list(g.values) + [top], ls, color=F.INK, linewidth=1.6, label=name)
-        lg = d[(d.model == "h2gcn_aux") & (d.source == src)].groupby("depth").lgbm_pr_auc.mean()
-        lt = full[(full.model == "lightgbm") & (full["scored on"] == line)].pr_auc.iloc[0]
-        ax.plot(list(lg.index) + [40], list(lg.values) + [lt], "o--", color=F.MUTED, linewidth=1.4, label="LightGBM")
+            ax.plot(list(g.index) + [40], list(g.values) + [top], ls, color=colour, linewidth=1.6, label=name)
         ax.set_xscale("log")
         ax.set_xticks([1, 3, 10, 40])
         ax.set_xticklabels(["1", "3", "10", "all (>=20)"])
+        ax.axvspan(1, 3, color=F.GRID, alpha=0.5, linewidth=0)
         labels(ax, "reads per site at scoring", "PR AUC", line)
-    axes[0].legend(frameon=False, fontsize=7.5, labelcolor=F.INK_SOFT)
-    finish(fig, "Every model loses most of its signal at the read depths SG-NEx actually has",
-           "Trained on both cell lines; scored with each held-out site's reads subsampled. SG-NEx median depth is ~3 "
-           "reads. Seeds averaged where available.\nSources: results/depth_rescore*.json, report_models_pooled.csv.",
-           "fig_depth")
+    axes[0].text(1.7, axes[0].get_ylim()[1], "SG-NEx typical", fontsize=7, color=F.INK_SOFT, ha="center", va="top")
+    axes[0].legend(frameon=False, fontsize=7.5, labelcolor=F.INK_SOFT, loc="lower right")
+    finish(fig, "Every model loses much of its signal at the read depths SG-NEx actually has",
+           "Trained on both cell lines (held-out genes). Below 20 reads is simulated: each site's reads, and its "
+           "neighbours', randomly thinned to 1, 3 or 10 (each read is a separate molecule), scored by models trained "
+           "at full depth. Real low-depth sites come from lowly expressed genes and may differ in other ways. Seeds "
+           "averaged.\nSources: results/depth_ensembles.csv, report_models_pooled.csv.", "fig_depth")
 
 
 def neighbour_count() -> None:

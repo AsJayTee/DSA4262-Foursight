@@ -1465,6 +1465,57 @@ on both cell lines, the shipped setting. The two-head model and the
 ensembles appear only in `both`. Numbers: results/report_models_pooled.csv,
 report_models_folds.csv.
 
+**The shipped ensemble at low read depth (10 Oct).** Reads (and each
+neighbour's reads) were thinned at random to 1, 3 or 10 per site; the models
+were trained at full depth, on both cell lines (held-out genes)
+(`depth_rescore.py`, `depth_ensembles.py`; results/depth_ensembles.csv,
+report/figures/fig_depth.png).
+
+| PR AUC | 1 read | 3 reads | 10 reads | all (>= 20) |
+|---|---|---|---|---|
+| Final ensemble, cell line 1 | 0.333 | 0.451 | 0.534 | 0.607 |
+| Intermediate ensemble, cell line 1 | 0.319 | 0.443 | 0.532 | 0.606 |
+| LightGBM, cell line 1 | 0.140 | 0.221 | 0.368 | 0.472 |
+| Final ensemble, cell line 2 | 0.279 | 0.341 | 0.397 | 0.460 |
+| Intermediate ensemble, cell line 2 | 0.272 | 0.337 | 0.396 | 0.454 |
+| LightGBM, cell line 2 | 0.136 | 0.200 | 0.306 | 0.392 |
+
+- The networks keep roughly twice LightGBM's PR AUC at 1-3 reads, the
+  depths SG-NEx mostly has.
+- The final ensemble is slightly ahead of the intermediate one at every
+  depth.
+- Caveat: the depths below 20 are simulated. Real low-depth sites come from
+  lowly expressed genes.
+
+**Related work: graph and attention models for m6A (checked 10 Oct).**
+
+| Model | What it does | Status |
+|---|---|---|
+| m6Anet (Hendra et al., Nat Methods 2022) | Multiple-instance learning over a site's reads; every site scored independently | Verified |
+| m6ATM (Brief Bioinform 2024, 25(6):bbae529) | Deep network over nanopore reads; its authors note RNA structure is not used | Verified |
+| DeepRM (Kang et al., Nat Commun 2025) | Transformer over current signal and a 21-nt context; co-occurring m6A on single molecules | Verified (12B) |
+| Xron (Genome Res 2024) | Signal-to-methylated-base encoder-decoder; context within a read only | Verified |
+| structRFM (bioRxiv 2025) | Structure-guided RNA foundation model (sequence + secondary structure) | Verified (preprint) |
+| NanoFM | Nanopore signal + structRFM embeddings + cross-attention | GitHub repo verified; it gives no paper, training data or results. Its claimed DOI (10.1016/j.ijbiomac.2026.152629) resolves but could not be read |
+| "m6A-IIN" (claimed Commun Biol 2025, graph wavelet network on RNA structure) | - | **Not found**: treat as unverified. Real models of this type: M6A-SAI (PeerJ), SMART-m6A (PLOS Comput Biol) |
+
+- **None of these shares information between candidate sites on a
+  transcript.** Every nanopore method found scores each site
+  independently. The "graph" models build graphs over nucleotides within
+  one molecule (structure), not over sites.
+- Report wording: "we found no prior nanopore method that ...".
+- **Not pursued, with reasons:**
+  - RNA structure: our folding test was null (section 7).
+  - Expressive pair attention: our graph transformer learns the training
+    line's labelling (12E-12F).
+  - Foundation-model sequence embeddings: they need the reference
+    transcript sequence (outside annotation, ruled out as a model input)
+    and torch on the prediction path.
+- **Future work this suggests:** DeepRM shows co-occurrence *on the same
+  molecule*. The m6Anet data format discards read identities, so we
+  corroborate per site rather than per molecule. Linking reads across
+  sites would enable molecule-level corroboration.
+
 ---
 
 ## 15. Candidate entries for the AI-use table (recorded 10 Oct; choose later)
