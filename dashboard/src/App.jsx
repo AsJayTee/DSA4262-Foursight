@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 
-// Starter template: four views from the Task 2 plan (report/task2_briefing.md).
-// Only "Overview" is wired to data, to show the data flow end to end:
-// analysis/sgnex/export_dashboard_data.py -> public/data/summary.json -> this page.
-const VIEWS = ["Overview", "Search", "How the model works", "What this can't tell you"];
+const VIEWS = ["Row", "Data"];
 
 // import.meta.env.BASE_URL is the GitHub Pages sub-path (vite.config.js `base`).
 const dataUrl = (name) => `${import.meta.env.BASE_URL}data/${name}`;
@@ -12,6 +9,7 @@ export default function App() {
   const [view, setView] = useState(VIEWS[0]);
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState(null);
+  const [selectedLine, setSelectedLine] = useState("");
 
   useEffect(() => {
     fetch(dataUrl("summary.json"))
@@ -27,9 +25,9 @@ export default function App() {
         <p className="lede">
           Predicted m6A sites across seven SG-NEx cell lines, from nanopore direct RNA sequencing.
         </p>
-        <nav>
+        <nav aria-label="Explore cell lines">
           {VIEWS.map((v) => (
-            <button key={v} className={v === view ? "tab active" : "tab"} onClick={() => setView(v)}>
+            <button key={v} type="button" aria-pressed={v === view} className={v === view ? "tab active" : "tab"} onClick={() => setView(v)}>
               {v}
             </button>
           ))}
@@ -37,10 +35,23 @@ export default function App() {
       </header>
       <main>
         {error && <p className="note">Could not load data: {error}</p>}
-        {view === "Overview" && <Overview summary={summary} />}
-        {view === "Search" && <Placeholder text="Type a gene; see its sites in every cell line, coloured by score and marked by read count." />}
-        {view === "How the model works" && <Placeholder text="Pick a site; see its reads, its neighbours, and how its score is built from its own evidence plus its neighbours' correction." />}
-        {view === "What this can't tell you" && <Limitations />}
+        {view === "Row" && <>
+          <h2>Explore one cell line</h2>
+          <p className="note">Choose a cell line to view its read coverage and score profile.</p>
+          {summary && <label className="line-picker">
+            Cell line
+            <select value={selectedLine || summary.reads_per_line[0]?.line || ""} onChange={(event) => setSelectedLine(event.target.value)}>
+              {summary.reads_per_line.map(({ line }) => <option key={line} value={line}>{line}</option>)}
+            </select>
+          </label>}
+          <Overview summary={summary} selectedLine={selectedLine || summary?.reads_per_line[0]?.line} />
+        </>}
+        {view === "Data" && <>
+          <h2>Compare cell lines</h2>
+          <p className="note">View read coverage and score profiles across all seven cell lines.</p>
+          <Overview summary={summary} />
+        </>}
+        <details className="limitations"><summary>What these results can tell you</summary><Limitations /></details>
       </main>
       <footer>
         DSA4262 team Foursight. Model and analysis:{" "}
@@ -50,8 +61,11 @@ export default function App() {
   );
 }
 
-function Overview({ summary }) {
+function Overview({ summary, selectedLine }) {
   if (!summary) return <p className="note">Loading...</p>;
+  const rows = summary.reads_per_line.filter((row) => !selectedLine || row.line === selectedLine);
+  const series = { ...summary.stop_codon_profile,
+    lines: Object.fromEntries(Object.entries(summary.stop_codon_profile.lines).filter(([line]) => !selectedLine || line === selectedLine)) };
   return (
     <>
       <section className="card">
@@ -68,7 +82,7 @@ function Overview({ summary }) {
             </tr>
           </thead>
           <tbody>
-            {summary.reads_per_line.map((r) => (
+            {rows.map((r) => (
               <tr key={r.line}>
                 <td>{r.line}</td>
                 <td className="num">{r.sites.toLocaleString()}</td>
@@ -82,8 +96,8 @@ function Overview({ summary }) {
       </section>
       <section className="card">
         <h2>Around the stop codon</h2>
-        <p className="note">Mean model score by position relative to the stop codon (sites with 10+ reads). Same peak in every line.</p>
-        <LineChart series={summary.stop_codon_profile} />
+        <p className="note">Mean model score by position relative to the stop codon (sites with 10+ reads).{selectedLine ? ` Cell line: ${selectedLine}.` : " All seven cell lines."}</p>
+        <LineChart series={series} />
       </section>
     </>
   );
@@ -107,15 +121,6 @@ function LineChart({ series }) {
       ))}
       <text x={W / 2} y={H - 6} textAnchor="middle" className="axis">position relative to stop codon (nt)</text>
     </svg>
-  );
-}
-
-function Placeholder({ text }) {
-  return (
-    <section className="card">
-      <p>{text}</p>
-      <p className="note">Not built yet: see report/task2_briefing.md.</p>
-    </section>
   );
 }
 

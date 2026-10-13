@@ -39,6 +39,9 @@ nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
   padding: 6px 12px; border-radius: 6px; cursor: pointer; font: inherit;
 }
 .tab.active { border-color: var(--accent); color: var(--ink); }
+.line-picker { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 16px 0; }
+.line-picker select { font: inherit; padding: 8px 12px; background: var(--card); color: var(--ink); border: 1px solid var(--grid); border-radius: 6px; }
+.limitations summary { cursor: pointer; margin-bottom: 12px; }
 .card { background: var(--card); border: 1px solid var(--grid); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
 .note { color: var(--muted); font-size: 0.9rem; }
 table { border-collapse: collapse; width: 100%; }
