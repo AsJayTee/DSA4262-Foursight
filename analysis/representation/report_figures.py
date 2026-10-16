@@ -9,7 +9,7 @@ One colour code throughout: blue = cell line 1 (dataset0), orange = cell line 2
   fig_corroboration_curve   the shipped scalar_drop: site score vs one neighbour's (models/final)
   fig_gps_attention         where the graph transformer attends; cutting it     (probe_day.py)
   fig_radius                gain vs neighbour radius, per cell line              (xsrc_nets.py)
-  fig_comodification        co-modification by distance, local vs transcript     (distance_bands.py)
+  fig_comodification        co-modification by distance, raw vs normalised     (distance_bands.py)
   fig_gene_structure        positive rate around exon junctions and stop codons  (annotation_context.py)
   fig_ceiling               label oracle and the premise test                    (label_oracle.py, data1_arm_eval.py)
   fig_depth                 PR AUC vs reads per site, shipped ensemble          (depth_ensembles.py)
@@ -50,8 +50,16 @@ def figure(ncols: int = 1, width: float = 7.2, height: float = 4.0):
     return fig, list(axes[0])
 
 
-def finish(fig, title: str, caption: str, name: str) -> None:
+def finish(fig, title: str, caption: str, name: str, bare: bool = False) -> None:
+    """Title and caption are drawn into the image unless `bare`: the report's
+    LaTeX supplies its own caption, so a figure placed there should carry
+    neither (the title and caption arguments are then kept as documentation)."""
     import textwrap
+    if bare:
+        fig.tight_layout()
+        fig.savefig(FIGURES / f"{name}.png")
+        print(f"  {name}.png (bare)")
+        return
     width = fig.get_size_inches()[0]
     # ~13 title characters per inch at 10.5 pt: wrap rather than run off the canvas.
     title = "\n".join(textwrap.wrap(title, int(width * 13)))
@@ -101,7 +109,8 @@ def corroboration_curve() -> None:
     finish(fig, "Corroboration: a neighbour that looks modified raises a site's score; one that looks unmodified lowers it",
            "The shipped scalar_drop networks (both seeds, numpy), for a site with one neighbour within 75 nt, both with "
            "30 reads. Dotted: the site's own-reads score,\ni.e. no neighbour effect. Scores are rankings from networks "
-           "trained with positives up-weighted, not calibrated probabilities.", "fig_corroboration_curve")
+           "trained with positives up-weighted, not calibrated probabilities.", "fig_corroboration_curve",
+           bare=True)
 
 
 def gps_attention() -> None:
@@ -131,7 +140,8 @@ def gps_attention() -> None:
     finish(fig, "The graph transformer reads transcript-wide context, and that context is cell-line-specific",
            "gps trained on cell line 1 (seed 0, 5 folds). Half its attention lands beyond 150 nt; cutting it costs "
            "the training line 2.6-3x more than the unseen line.\nCut attention is an input the network never saw - "
-           "read the asymmetry, not the size. Source: results/probe_gps*.csv.", "fig_gps_attention")
+           "read the asymmetry, not the size. Source: results/probe_gps*.csv.", "fig_gps_attention",
+           bare=True)
 
 
 def radius() -> None:
@@ -154,29 +164,65 @@ def radius() -> None:
     ax.legend(frameon=False, fontsize=7.5, labelcolor=F.INK_SOFT)
     finish(fig, "Wider context helps the training cell line; ~100 nt is what transfers",
            "h2gcn_aux with only the radius changed, seed 0. Cell line 2: trained on cell line 1 only. Cell line 1: "
-           "trained on both, held-out genes.\nSource: results/h2gcn_aux*_nn__xsrc.json.", "fig_radius")
+           "trained on both, held-out genes.\nSource: results/h2gcn_aux*_nn__xsrc.json.", "fig_radius",
+           bare=True)
 
 
-def comodification() -> None:
+def comodification(single_panel: bool = True, name: str = "fig_comodification",
+                    log: bool = False) -> None:
+    """Raw co-modification R(d) next to the normalised r(d).
+
+    R(d) compares a pair with the file-wide modification rate (bands.csv `total`);
+    r(d) divides out each transcript's own rate (`local_part`, with its interval).
+    The two cell lines' R(d) differ; their r(d) coincide - that contrast is the
+    point of normalising, so each gets its own panel and scale by default.
+    """
     b = pd.read_csv(NEWDATA / "distance_bands" / "bands.csv")
-    fig, axes = figure(1, 6.8, 4.0)
-    ax = axes[0]
-    for line, key, colour in (("cell line 1", "dataset0 (cell line 1), all sites", CL1),
-                              ("cell line 2", "data1 (cell line 2), all sites", CL2)):
+    keys = (("cell line 1", "dataset0 (cell line 1), all sites", CL1),
+            ("cell line 2", "data1 (cell line 2), all sites", CL2))
+    if single_panel:
+        fig, axes = figure(1, 6.8, 4.0)
+        raw_ax = local_ax = axes[0]
+    else:
+        fig, axes = figure(2, 7.2, 3.4)
+        raw_ax, local_ax = axes
+    for line, key, colour in keys:
         g = b[b.data == key]
         x = np.arange(len(g))
-        ax.plot(x, g.local_part, "o-", color=colour, linewidth=1.8, label=f"{line}: local clustering")
-        ax.fill_between(x, g.local_lo, g.local_hi, color=colour, alpha=0.15, linewidth=0)
-        ax.plot(x, g.transcript_part, ":", color=colour, linewidth=1.4, label=f"{line}: m6A-rich transcripts")
-    ax.set_xticks(x)
-    ax.set_xticklabels(g.band, fontsize=7.5)
-    ax.axhline(1, color=F.MUTED, linewidth=0.8)
-    labels(ax, "distance between two sites on one transcript", "enrichment of modified pairs (x)")
-    ax.legend(frameon=False, fontsize=7, labelcolor=F.INK_SOFT, ncol=2)
-    finish(fig, "Modified sites cluster within ~100-200 nt, the same in both cell lines",
-           "Solid: pairs of modified sites beyond what each transcript's own positive rate predicts\n(95% interval, "
-           "resampled transcripts). Dotted: the part explained by m6A-rich transcripts, which differs\nby cell line "
-           "(3.3x vs 2.0x). Source: analysis/newdata/distance_bands/bands.csv.", "fig_comodification")
+        raw_ax.plot(x, g.total, "o:" if single_panel else "o-", color=colour, linewidth=1.8,
+                    markersize=4 if single_panel else 6, label=f"{line}: raw $R(d)$")
+        local_ax.plot(x, g.local_part, "o-", color=colour, linewidth=1.8, label=f"{line}: normalised $r(d)$")
+        local_ax.fill_between(x, g.local_lo, g.local_hi, color=colour, alpha=0.15, linewidth=0)
+    for ax in axes:
+        ax.set_xticks(x)
+        ax.set_xticklabels(g.band, fontsize=7, rotation=30 if not single_panel else 0)
+        ax.axhline(1, color=F.MUTED, linewidth=0.8)
+        if log:
+            # Ratios: a log axis gives 0.5x and 2x equal room, and turns the
+            # transcript-level factor (R = factor x r) into a vertical offset.
+            from matplotlib.ticker import FixedLocator, FuncFormatter, NullLocator
+            ax.set_yscale("log")
+            ticks = [0.5, 0.75, 1, 1.5, 2, 3, 4, 6, 8]
+            ax.yaxis.set_major_locator(FixedLocator(ticks))
+            ax.yaxis.set_minor_locator(NullLocator())
+            ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}"))
+    if single_panel:
+        from matplotlib.lines import Line2D
+        labels(ax, "distance between two sites on one transcript", "co-modification ratio (x)")
+        # Lines only, no markers: colour says which cell line, style says raw
+        # vs normalised, so four entries cover all four lines.
+        handles = [Line2D([], [], color=CL1, linewidth=2, label="cell line 1"),
+                   Line2D([], [], color=CL2, linewidth=2, label="cell line 2"),
+                   Line2D([], [], color=F.INK_SOFT, linewidth=1.8, linestyle=":", label="raw, $R(d)$"),
+                   Line2D([], [], color=F.INK_SOFT, linewidth=1.8, label="normalised, $r(d)$")]
+        ax.legend(handles=handles, frameon=False, fontsize=8, labelcolor=F.INK_SOFT, ncol=2,
+                  handlelength=2.6)
+    else:
+        labels(raw_ax, "distance between two sites", "co-modification ratio (x)", "raw, $R(d)$")
+        labels(local_ax, "distance between two sites", "", "normalised by each transcript's rate, $r(d)$")
+        local_ax.legend(handles=local_ax.lines[:2], labels=["cell line 1", "cell line 2"], frameon=False,
+                        fontsize=7.5, labelcolor=F.INK_SOFT)
+    finish(fig, "", "", name, bare=True)
 
 
 def _profile(path):
@@ -210,7 +256,8 @@ def gene_structure() -> None:
     finish(fig, "Gene structure shapes where m6A sits, in both cell lines",
            "Ensembl 91 annotation, used for analysis only (never a model input). Exclusion near junctions and "
            "enrichment after the stop codon match the exon-junction-complex\nmodel (Uzonyi 2023, He 2023, Luo 2023). "
-           "Source: analysis/newdata/annotation_context/.", "fig_gene_structure")
+           "Source: analysis/newdata/annotation_context/.", "fig_gene_structure",
+           bare=True)
 
 
 def ceiling() -> None:
@@ -242,7 +289,8 @@ def ceiling() -> None:
     finish(fig, "Part of the cross-cell-line gap cannot be closed from these labels",
            "Left: 67,320 sites in both files; knowing cell line 1's labels perfectly scores below our reads-based model. "
            "Right: seed 0, cell line 2's held-out genes;\nits own labels add 0.007 (constrained) or 0.019 (transformer). "
-           "Sources: results/label_oracle.csv, data1_arm.csv.", "fig_ceiling")
+           "Sources: results/label_oracle.csv, data1_arm.csv.", "fig_ceiling",
+           bare=True)
 
 
 def depth() -> None:
@@ -270,7 +318,8 @@ def depth() -> None:
            "Trained on both cell lines (held-out genes). Below 20 reads is simulated: each site's reads, and its "
            "neighbours', randomly thinned to 1, 3 or 10 (each read is a separate molecule), scored by models trained "
            "at full depth. Real low-depth sites come from lowly expressed genes and may differ in other ways. Seeds "
-           "averaged.\nSources: results/depth_ensembles.csv, report_models_pooled.csv.", "fig_depth")
+           "averaged.\nSources: results/depth_ensembles.csv, report_models_pooled.csv.", "fig_depth",
+           bare=True)
 
 
 def neighbour_count() -> None:
@@ -289,10 +338,11 @@ def neighbour_count() -> None:
     ax.set_xticklabels(order)
     ax.axhline(0, color=F.MUTED, linewidth=0.8)
     labels(ax, "other candidate sites within 50 nt", "PR AUC gain of the graph over reads alone")
-    ax.legend(frameon=False, fontsize=7.5, labelcolor=F.INK_SOFT)
+    ax.legend(frameon=False, fontsize=7.5, labelcolor=F.INK_SOFT, loc="upper left")
     finish(fig, "The graph's gain grows with the number of neighbours on the training line, less on the unseen one",
            "h2gcn_aux minus DeepSet (same read encoder, no graph), trained on cell line 1; 95% gene-resampled "
-           "intervals.\nSource: results/gain_decomposition.csv.", "fig_neighbour_count")
+           "intervals.\nSource: results/gain_decomposition.csv.", "fig_neighbour_count",
+           bare=True)
 
 
 def main() -> None:

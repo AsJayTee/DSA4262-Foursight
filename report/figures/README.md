@@ -23,7 +23,7 @@ copied them off Ronin.)
 
 **Shared conventions.**
 - **Cell line 1** = dataset0 (HCT116, the course's training file). **Cell
-  line 2** = data1 (a different cell line, with its own labels).
+  line 2** = data1 (HEK293T, human embryonic kidney, with its own labels).
 - **"Held-out genes":** every score comes from a model that never saw that
   gene, in either file (gene-grouped 5-fold split, seed 4262).
 - **Two training versions:**
@@ -46,6 +46,29 @@ copied them off Ronin.)
 ---
 
 ## Model comparison
+
+### models_violin_std_both.png (used in the report), models_violin_std_cl1.png
+
+As `models_violin_*` below, but each cell line's gains are divided by the
+standard deviation of the model medians on that cell line (both arm: 0.070 on
+cell line 1, 0.047 on cell line 2). Cell line 1's raw gains are about twice
+cell line 2's, which squeezes cell line 2's ranking on a shared axis. Dividing
+without centring keeps 0 = LightGBM. Compare rankings within a colour, and the
+two colours' rankings with each other; not raw gains across colours.
+
+### models_violin_cl1.png, models_violin_both.png
+
+**Shows:** the same per-fold gains as `models_distribution_*` below, on one
+axis. Each model row has two violins: blue = scored on cell line 1, orange =
+scored on cell line 2. Faint horizontal lines separate the model groups (no
+neighbours, free use of neighbours, constrained corroboration, ensembles),
+named on the right. Bare (no title or caption; the report supplies them).
+
+**Read:** the horizontal distance between a row's blue and orange violins is
+how much more the model gains on cell line 1 than on cell line 2.
+
+**Source:** `analysis/representation/report_models.py --plot-only`
+(`paired_violins`).
 
 ### models_distribution_cl1.png, models_distribution_both.png
 

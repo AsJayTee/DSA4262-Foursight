@@ -211,6 +211,70 @@ def distribution(folds: pd.DataFrame, version: str):
     return fig
 
 
+LINE_COLOURS = {"cell line 1": "#2a78d6", "cell line 2": "#eb6834"}
+GROUP_NAMES = {GREY: "no neighbours", ORANGE: "free use of neighbours",
+               BLUE: "constrained corroboration", AQUA: "ensembles"}
+
+
+def paired_violins(folds: pd.DataFrame, version: str, standardise: bool = False):
+    """One axis, the two cell lines side by side in each row (colour = cell line);
+    model groups separated by faint lines. Bare: the caption lives in the report.
+
+    standardise: divide each cell line's gains by the SD of the model medians on
+    that cell line. Cell line 1's gains are about twice cell line 2's, which on a
+    shared raw axis hides the ranking on cell line 2; dividing (not centring)
+    keeps 0 = LightGBM."""
+    from m6a import figures as F
+    plt = F._plt()
+    keys = [m for m in MODELS if m[0] in set(folds[folds.version == version].model)]
+    fig, ax = plt.subplots(figsize=(7.2, 0.42 * len(keys) + 0.9), dpi=200)
+    fig.patch.set_facecolor(F.SURFACE)
+    theme(ax)
+    ax.grid(False, axis="y")
+    rng = np.random.default_rng(4262)
+    sub = folds[folds.version == version]
+    scale = {f: (sub[sub["scored on"] == f].groupby("model")["gain over lightgbm"].median().std()
+                 if standardise else 1.0) for _, f in FILES}
+    for i, (key, _, _, control) in enumerate(keys):
+        for (_, fname), off in zip(FILES, (-0.19, 0.19)):
+            colour = LINE_COLOURS[fname]
+            g = folds[(folds.version == version) & (folds.model == key) & (folds["scored on"] == fname)]
+            v = g["gain over lightgbm"].to_numpy() / scale[fname]
+            if np.ptp(v) > 1e-9:
+                body = ax.violinplot(v, positions=[i + off], vert=False, widths=0.36,
+                                     showextrema=False)["bodies"][0]
+                body.set_facecolor(colour)
+                body.set_edgecolor("none")
+                body.set_alpha(0.2)
+            ax.scatter(v, i + off + rng.uniform(-0.06, 0.06, len(v)), s=6,
+                       facecolors="none" if control else colour, edgecolors=colour,
+                       linewidths=0.7, alpha=0.9, zorder=3)
+            ax.plot([np.median(v)] * 2, [i + off - 0.15, i + off + 0.15], color=F.INK, linewidth=1.2, zorder=4)
+    # Faint separators between model groups; each group named outside the right
+    # edge, running along it, so the label never sits on a violin.
+    starts = [0] + [i for i in range(1, len(keys)) if keys[i][2] != keys[i - 1][2]]
+    for s, e in zip(starts, starts[1:] + [len(keys)]):
+        if s:
+            ax.axhline(s - 0.5, color=F.GRID, linewidth=0.7, alpha=0.8, zorder=1)
+        ax.text(1.012, (s + e - 1) / 2, GROUP_NAMES[keys[s][2]], transform=ax.get_yaxis_transform(),
+                fontsize=6.5, color=F.MUTED, style="italic", rotation=270, ha="left", va="center")
+    ax.axvline(0, color=F.INK_SOFT, linewidth=0.9, linestyle="--", zorder=2)
+    ax.set_yticks(range(len(keys)))
+    ax.set_yticklabels([k[1].strip() for k in keys], fontsize=7.5, color=F.INK)
+    ax.set_ylim(len(keys) - 0.5, -0.5)
+    ax.set_xlabel("PR AUC gain over quantiles + LightGBM, same fold"
+                  + (", standardised within cell line" if standardise else ""), color=F.INK_SOFT, fontsize=8)
+    if standardise:
+        print("  standardising SD of model medians:", {f: round(v, 4) for f, v in scale.items()})
+    handles = [plt.Line2D([], [], marker="o", linestyle="", markersize=5, color=c,
+                          label=f"scored on {f}" + (" (unseen)" if version == "cl1" and f == "cell line 2" else ""))
+               for f, c in LINE_COLOURS.items()]
+    ax.legend(handles=handles, loc="lower left", bbox_to_anchor=(0, 1.0), ncol=2, frameon=False,
+              fontsize=7.5, handletextpad=0.3, columnspacing=1.5, borderaxespad=0.2)
+    fig.tight_layout()
+    return fig
+
+
 def place_labels(ax, points, fontsize: float = 7.0) -> None:
     """Number each point, nudging numbers apart where they would overlap (greedy,
     in screen space), with a hairline back to the point when nudged."""
@@ -306,6 +370,8 @@ def main() -> None:
     FIGURES.mkdir(parents=True, exist_ok=True)
     for version in ARMS:
         distribution(folds, version).savefig(FIGURES / f"models_distribution_{version}.png")
+        paired_violins(folds, version).savefig(FIGURES / f"models_violin_{version}.png")
+        paired_violins(folds, version, standardise=True).savefig(FIGURES / f"models_violin_std_{version}.png")
         for metric, short in (("pr_auc", "pr"), ("roc_auc", "roc")):
             scatter(pooled, version, metric).savefig(FIGURES / f"models_scatter_{short}_{version}.png")
     print(f"figures -> {FIGURES}")
