@@ -40,6 +40,11 @@ written by a script, never by hand:
 
 Row supports cell-line and transcript selection, transcript search, panning,
 zooming, selectable DRACH candidate sites, read coverage, and a score inspector.
+The collapsible sidebar filters by motif and minimum reads. Drag empty track
+space to pan, or hold Ctrl while scrolling to zoom; buttons and arrow keys
+provide alternatives. The linked table sorts columns and centres selected
+sites. CSV export includes only visible filtered rows and labels synthetic
+examples explicitly. Candidate, coverage and rank tracks share one axis.
 Coordinates are transcript positions, not genome coordinates; exon annotations
 and complete transcript lengths are not available in these exports.
 
