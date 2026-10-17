@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import TranscriptBrowser from "./TranscriptBrowser";
 
 const VIEWS = ["Row", "Data"];
 
@@ -9,7 +10,7 @@ export default function App() {
   const [view, setView] = useState(VIEWS[0]);
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState(null);
-  const [selectedLine, setSelectedLine] = useState("");
+
 
   useEffect(() => {
     fetch(dataUrl("summary.json"))
@@ -35,17 +36,7 @@ export default function App() {
       </header>
       <main>
         {error && <p className="note">Could not load data: {error}</p>}
-        {view === "Row" && <>
-          <h2>Explore one cell line</h2>
-          <p className="note">Choose a cell line to view its read coverage and score profile.</p>
-          {summary && <label className="line-picker">
-            Cell line
-            <select value={selectedLine || summary.reads_per_line[0]?.line || ""} onChange={(event) => setSelectedLine(event.target.value)}>
-              {summary.reads_per_line.map(({ line }) => <option key={line} value={line}>{line}</option>)}
-            </select>
-          </label>}
-          <Overview summary={summary} selectedLine={selectedLine || summary?.reads_per_line[0]?.line} />
-        </>}
+        {view === "Row" && <TranscriptBrowser />}
         {view === "Data" && <>
           <h2>Compare cell lines</h2>
           <p className="note">View read coverage and score profiles across all seven cell lines.</p>
