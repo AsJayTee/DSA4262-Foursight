@@ -494,9 +494,13 @@ scores (the model trained on these labels): dataset0 PR AUC 0.665 / ROC AUC
   do.
 - **Predicted structure** (section 7) is for the unmodified sequence in vitro.
 - **m6Anet** comparison uses the pretrained model (likely its best case on
-  dataset0). A retrained m6Anet on our folds was also run (team, reported
-  16 Oct) and scored below the pretrained model, so the pretrained model is
-  the comparator. TODO: record its numbers and result file here.
+  dataset0). A retrained m6Anet on our folds was also run and scored below
+  the pretrained model, so the pretrained model is the comparator: out of
+  fold over 5 gene folds of dataset0, PR AUC 0.488 (fold mean 0.491, sd
+  0.018) and ROC AUC 0.924, against 0.503 / 0.932 pretrained on the same
+  sites. Source: W&B run m6anet_retrained_ourfolds (8iwst4yg, 25 Sep;
+  analysis/m6anet/run_ronin.sh retrain + score). It predates the union
+  split, so it has no data1 numbers.
 - **Missing neighbours.** Sites with no reported neighbour drop the ensemble
   to LightGBM level (0.391); test data may contain partial transcripts. A
   safeguard (use only `h2gcn_aux` for lone sites) is designed but not shipped.

@@ -1,15 +1,29 @@
 % =============================================================================
 % DSA4262 final report - Group Foursight
 %
-% FIRST DRAFT: deliberately over-long. Everything in report/findings.md,
-% report/theory.md, report/task2_briefing.md, report/literature.md and
-% report/figures/README.md that could plausibly go in the report is here, so it
-% can be cut down to 5 pages rather than written up from scratch.
+% SECOND DRAFT (17 Oct 2026).
+%
+% TO DO before submission (28 Oct):
+%   1. Task 2. Write Methods 3.4 (datasets and how they were analysed),
+%      Results (2), and Discussion 6.2; add one SG-NEx sentence to the
+%      abstract. Each is marked PLACEHOLDER or TASK 2 below, with the earlier
+%      draft kept as comments. Restore the appendix table "Score cut-offs
+%      across cell lines" (commented out at the end) if Task 2 uses it.
+%   2. Page limit. The body must fit 5 pages (title page, contents and
+%      references excluded). Ask the instructors whether the appendix counts,
+%      then cut. Once the content is final, change floats from [H] to [htbp].
+%   3. Use of AI Methods. Add each member's other AI tool use (CHECK in the
+%      first table). In the errors table, choose at least two cases and drop
+%      the caption's instruction.
+%   4. Code availability. Confirm the dashboard's final content and that the
+%      repository README documents prediction (CHECK at that section).
+%   5. Optional: an F1 / threshold table and calibrated scores (CHECKs in 4.1
+%      and in the limitations); otherwise delete those CHECK comments.
 %
 % Compile with XeLaTeX or LuaLaTeX (fontspec + Arial):
 %     cd report && latexmk -xelatex report.tex
 %
-% Conventions used in this draft:
+% Conventions:
 %   - "Cell line 1" = data0 (HCT116, the course's training file).
 %     "Cell line 2" = data1 (HEK293T, embryonic kidney; own labels).
 %     data2 = synthetic sequences. Cell lines confirmed by course staff (14 Oct).
@@ -116,8 +130,7 @@
 \newcommand{\clone}{CL1}
 \newcommand{\cltwo}{CL2}
 
-\title{\textbf{Detection of m6A from Nanopore direct RNA sequencing using a site-graph learning framework}}
-% CHECK: title is a suggestion.
+\title{\textbf{Detection of m6A from nanopore direct RNA sequencing using a site-graph learning framework}}
 \author{
     \textbf{DSA4262 Group Project Report -- Team Foursight} \\
     \vspace{0.3cm} \\
@@ -125,10 +138,10 @@
         \toprule
         \textbf{Student Name} & \textbf{Matriculation Number} \\
         \midrule
+        Crescent Liew Qi En & A0277921W \\
+        Joshua Jules Gladiston & A0272695N \\
+        Robin Ghosh & A0271671A \\
         Siah Jin Thau & A0287931R \\
-        Robin Ghosh & A0000002B \\
-        Crescent Liew Qi En & A0000003C \\
-        Joshua Jules Gladiston & A0000004D \\
         \bottomrule
     \end{tabular} \\
     \vspace{0.3cm}
@@ -226,7 +239,7 @@ the design choices in Section 3.2:
 \label{sec:data}
 
 \paragraph{Datasets.}
-We use two labelled datasets: data0 (HCT116; 121,838 candidate sites, 4.49\% modified) and data1 (HEK293T; 90,810 sites, 7.24\% modified), hereafter cell lines 1 and 2. data0 corresponds to SG-NEx HCT116 replicate 3, run 1, matched site by site. data2, synthetic RNA sequenced at known modification fractions, is reserved for external evaluation. Generalisation across cell lines is essential: an early feature set improved PR AUC by 0.065 within data0 but only 0.016 on data1 and $-0.003$ on genes unique to data1, suggesting overfitting to HCT116-specific labels.
+We use two labelled datasets: data0 (HCT116; 121,838 candidate sites, 4.49\% modified) and data1 (HEK293T; 90,810 sites, 7.24\% modified), hereafter cell lines 1 and 2. data0 corresponds to SG-NEx HCT116 replicate 3, run 1, matched site by site. data2, synthetic RNA sequenced at known modification fractions, is reserved for external evaluation. Generalisation across cell lines is essential: an early feature set that performed well within data0 transferred poorly to data1, suggesting overfitting to HCT116-specific labels.
 
 \paragraph{Gene-held-out and cross-cell-line evaluation.}
 We use five-fold cross-validation grouped by gene, with a single gene partition shared by both cell lines. No gene, transcript, site or read from a test gene appears in training, preventing leakage through overlapping transcripts or neighbouring sites \citep{bbag434}. Within each training fold, 10\% of genes are reserved for early stopping, and label-derived parameters are fitted only on training genes.
@@ -237,7 +250,7 @@ We train each design under two settings: (i) cell line 1 only, to assess transfe
 Although labelled sites have at least 20 reads, SG-NEx sites have a median of only 3--5. To assess robustness, we randomly subsample held-out sites and their neighbours to 1, 3 and 10 reads, evaluating models trained at full depth. We additionally evaluate on two independent SG-NEx HCT116 sequencing runs using data0's labels, and on the held-out synthetic data2. Neither external dataset is used for training.
 
 \paragraph{Model comparison and selection.}
-All comparisons are paired on identical held-out sites and reported as differences in PR AUC. We estimate 95\% confidence intervals and one-sided $p$-values using 1,000 bootstrap resamples of whole genes, preserving within-gene dependence. Every $p$-value in this report is one-sided, testing whether the new design is better than the one it is compared with. Where only fold-level scores are available, we use the one-sided Nadeau--Bengio corrected resampled $t$-test\applink{app:nb} \citep{nadeau2003}. Each design is evaluated with three seeds, averaging within-file ranks; differences below approximately 0.005 (the observed seed spread) are treated as ties. To prioritise cross-cell-line generalisation, models are ranked by their \emph{worst PR AUC gain} over the baseline across the two cell lines, with ties resolved using new-gene performance \citep{gulrajani2021,sagawa2020}.
+All comparisons are paired on identical held-out sites and reported as differences in PR AUC, with 95\% confidence intervals and one-sided $p$-values (testing whether the new design is better) from 1,000 resamples of whole genes. Where only fold-level scores are available, we use the Nadeau--Bengio corrected resampled $t$-test \citep{nadeau2003}. Because transfer to new cell lines is the priority, models are ranked by the smaller of their PR AUC gains over the baseline on the two cell lines.\applink{app:nb}
 % SOURCE: docs/decisions/0029, 0032; analysis/representation/day_significance.py
 % (gene bootstrap; p = fraction of resamples with the wrong sign, i.e. 1 - win
 % rate); scripts/evaluate.py (Nadeau-Bengio); findings.md section 1;
@@ -259,7 +272,7 @@ Existing approaches include fixed per-site statistics, as in our LightGBM baseli
 \paragraph{Representation screening.}
 We screened 14 representations, including hand-crafted statistics, unsupervised encoders (autoencoders, an LSTM across the three ordered pore positions, a masked Set Transformer and contrastive learning), and label-supervised encoders (an autoencoder with a prediction head, attention MIL and DeepSet).
 
-To evaluate representation quality independently of the encoder's own prediction head, each encoder was trained on half the training genes, and its representations were assessed using LightGBM and logistic regression probes trained on the other half. All probes were evaluated on held-out genes (Table~\ref{tab:reads}).
+Each representation was scored by simple probes trained on its output, independently of the encoder's own prediction head (Table~\ref{tab:reads}).
 
 \begin{table}[H]
     \centering\small
@@ -272,7 +285,7 @@ To evaluate representation quality independently of the encoder's own prediction
         \textbf{DeepSet} & \textbf{Supervised per-read encoder with mean and spread pooling} & \textbf{0.479} & \textbf{0.509} \\
         \bottomrule
     \end{tabularx}
-    \caption{PR AUC of downstream probes on three representative encoders (of 14 screened), evaluated on held-out genes of cell line 1. These representation-screen results are not directly comparable to end-to-end model results. Full screen, all 14 representations, in the appendix.\applink{tab:reads_full}}
+    \caption{PR AUC of probes trained on three of the 14 screened representations (held-out genes, cell line 1). Probes see genes the encoder did not; scores are not comparable with end-to-end models.\applink{tab:reads_full}}
     \label{tab:reads}
 \end{table}
 % SOURCE: analysis/representation/results/summary.md (E1); PLAN.md (protocol).
@@ -293,7 +306,7 @@ Figure~\ref{fig:read_umap} supports this interpretation: hand-crafted and unsupe
 \end{figure}
 % SOURCE: analysis/representation/report_umap.py reads; summary.md E4 (effective dims).
 
-DeepSet also outperformed the supervised autoencoder, both in the representation screen (0.479 vs 0.462) and when added to hand-crafted features across 50 cross-fitted comparisons (+0.022 vs +0.020 PR AUC; both $p<0.0001$). Unlike the autoencoder, which compresses individual reads before summarising their codes, DeepSet jointly learns the read encoder and set-level aggregation from site labels. It also avoids a reconstruction objective and can be trained end to end within the subsequent graph model, allowing a site's prediction loss to update its neighbours' read encoders.
+DeepSet also slightly outperformed the supervised autoencoder, both in the screen and when its features were added to the hand-crafted ones.\applink{app:pooling} Unlike the autoencoder, which compresses individual reads before summarising their codes, DeepSet jointly learns the read encoder and set-level aggregation from site labels. It also avoids a reconstruction objective and can be trained end to end within the subsequent graph model, allowing a site's prediction loss to update its neighbours' read encoders.
 % SOURCE: results/r2.md (50 observations, cross-fitted, Nadeau-Bengio corrected).
 
 \paragraph{Finding 2: simple pooling is sufficient.}
@@ -341,7 +354,7 @@ Under this transcript-specific null model, $r(d)=1$ indicates no local clusterin
 \begin{figure}[H]
     \centering
     \reportfig[width=0.85\linewidth]{fig_comodification.png}
-    \caption{Co-modification by distance between candidate sites on the same transcript. Dotted lines show the raw ratio $R(d)$; solid lines show the transcript-normalised ratio $r(d)$, with 95\% confidence intervals from transcript-level resampling. Normalisation reveals a similar distance-dependent pattern in both cell lines, decaying over approximately 100--200\,nt.}
+    \caption{Co-modification by distance between candidate sites on the same transcript: raw ratio $R(d)$ (dotted) and transcript-normalised ratio $r(d)$ (solid; 95\% intervals from resampling transcripts).}
     \label{fig:comod}
 \end{figure}
 
@@ -374,37 +387,23 @@ Neighbouring sites may provide corroborating evidence: a neighbour with strong m
 \paragraph{Graph construction and architecture.}
 Each candidate site is a node connected to the sites on the same transcript within 50\,nt. Graph layers combine its DeepSet representation (Section~\ref{sec:reads}) with its neighbours' representations to predict modification.
 
-Crucially, \emph{the site's own evidence must remain separate from its neighbours'}. Standard graph convolutional networks (GCNs; \citealp{kipf2017}) assume \emph{homophily} --- that linked nodes tend to share a label --- and average the representations of connected nodes. However, modified sites are rare: even within 25\,nt, only about one in three neighbours of a modified site is also modified ($R(d)$ times the positive rate: $7.4\times4.5\%$ and $4.5\times7.2\%$, both $\approx0.33$). Averaging therefore dilutes modification evidence; with four neighbours, the site's own reads retain only one-fifth of the weight.\applink{app:message} Accordingly, a GCN performed worse than the graph-free LightGBM baseline, by 0.14 and 0.10 PR AUC on cell lines 1 and 2.
+Crucially, \emph{the site's own evidence must remain separate from its neighbours'}. Standard graph convolutional networks (GCNs; \citealp{kipf2017}) assume \emph{homophily} --- that linked nodes tend to share a label --- and average the representations of connected nodes. However, modified sites are rare: even within 25\,nt, only about one in three neighbours of a modified site is also modified. Averaging therefore dilutes modification evidence; with four neighbours, the site's own reads retain only one-fifth of the weight.\applink{app:message} Accordingly, a GCN performed worse than the graph-free LightGBM baseline, by 0.14 and 0.10 PR AUC on cell lines 1 and 2.
 
-H2GCN \citep{zhu2020}, designed for graphs without homophily, instead maintains separate channels for the site's own representation and its neighbours' mean. This improved PR AUC by 0.010--0.016 over DeepSet alone, with gene-bootstrap confidence intervals above zero. Adding an auxiliary prediction head trained on each site's own reads improved performance further: when trained on both cell lines, the gain over LightGBM increased from +0.033 to +0.044 on cell line 2, and from +0.019 to +0.029 on its new genes.
+H2GCN \citep{zhu2020}, designed for graphs without homophily, instead maintains separate channels for the site's own representation and its neighbours' mean. This improved PR AUC by 0.010--0.016 over DeepSet alone, and an auxiliary head that predicts each site from its own reads improved it further (on cell line 2, from +0.033 to +0.044 over LightGBM).
 % SOURCE: findings.md section 3 (GCN; h2gcn vs deepset; h2gcn_aux vs h2gcn_local).
 
 \paragraph{Why the graph helps: corroboration.}
-We interpret the graph's benefit as using neighbouring sites as evidence of modification, rather than simply combining more features. Four analyses test this interpretation:
-
-\begin{itemize}
-    \item \textbf{The gain comes from identifying modified neighbourhoods.}
-    On held-out data, sites with a truly modified neighbour within 50\,nt are themselves modified 26\% of the time, compared with 5--6\% otherwise. When sites are stratified by this neighbour status (using labels only for analysis), the graph adds almost no PR AUC within either group. Its overall gain (+0.024, 95\% CI [+0.015, +0.032] on cell line 2) comes primarily from distinguishing the groups.\applink{tab:status}
-
-    \item \textbf{The model needs the correct neighbours and their sequences.}
-    A model trained with unrelated sites' own-read scores in place of its neighbours' gains only +0.017 on the unseen cell line, against +0.055 with the real ones (three seeds each; Section~\ref{sec:constrain}). In a trained network, removing neighbours entirely costs 0.030 PR AUC, but substituting a random site's reads and 7-mer costs 0.126, and pairing the neighbours' real reads with random 7-mers costs 0.163.\applink{tab:swap} This suggests the model interprets each neighbour's current relative to its expected sequence-dependent signal, rather than using current values alone.
-
-    \item \textbf{The benefit depends on local neighbours, not transcript size.}
-    The graph adds approximately zero PR AUC for sites without neighbours, rising to +0.06 with four or more neighbours on cell line 1. The gain does not increase with transcript size, arguing against a coverage artefact.\applink{fig:nbrcount}
-
-    \item \textbf{The graph does not simply re-measure the target site.}
-    Removing neighbours within either 0--10 or 10--20\,nt changes PR AUC by at most 0.001, indicating that the improvement is not driven by overlapping local current signals.\applink{app:assumption}
-\end{itemize}
+We interpret the graph's benefit as using neighbouring sites as evidence of modification, rather than simply combining more features. Four analyses support this interpretation. The gain comes mainly from distinguishing sites in modified neighbourhoods from the rest, not from better predictions within either group.\applink{tab:status} The model depends on the correct neighbours and their sequences: replacing them with random sites removes most of the gain.\applink{tab:swap} The gain rises with the number of neighbours and does not increase with transcript size, which argues against a coverage artefact.\applink{fig:nbrcount} Finally, removing neighbours within 20\,nt has almost no effect, so the graph does not simply re-measure the target site.\applink{app:assumption}
 % SOURCE: results/gain_decomposition.csv (neighbour status, neighbour count),
 % day_summary.md (scalar_msg vs scalar_random, 3 seeds), ablate_graph.csv (swaps),
 % band_ablation.csv (0-10 / 10-20 nt).
 
-Together, these results support \emph{corroboration}: neighbours whose reads suggest modification raise the target site's score, while neighbours suggesting no modification lower it. Figure~\ref{fig:corroboration} illustrates this learned behaviour.
+Together, these results support \emph{corroboration}: neighbours whose reads suggest modification raise the target site's score, while neighbours suggesting no modification lower it. In the final model, a neighbour scoring 90\% raises a target scoring 20\% to about 45\%, and one scoring 5\% lowers it to about 12\% (Figure~\ref{fig:corroboration}).
 
 \begin{figure}[H]
     \centering
     \reportfig[width=0.7\linewidth]{fig_corroboration_curve.png}
-    \caption{Neighbour corroboration learned by the final scalar-message model (Section~\ref{sec:constrain}), evaluated directly from its weights. Both sites have 30 reads and are within 75\,nt. The x-axis shows the neighbour's own-read score; the y-axis shows the target's final score. Curves represent target sites with own-read scores of 5\%, 20\% and 50\%; dotted lines indicate scores without neighbours. For a target scoring 20\%, a neighbour scoring 90\% raises the prediction to approximately 45\%, whereas one scoring 5\% lowers it to 12\%. Because training up-weights positives, these scores illustrate relative effects rather than calibrated probabilities.}
+    \caption{Corroboration learned by the final scalar-message model, computed from its weights: the target's score against its neighbour's own-reads score, for targets scoring 5\%, 20\% and 50\% alone (dotted: no neighbour). Both sites have 30 reads, within 75\,nt; scores are relative, not calibrated.}
     \label{fig:corroboration}
 \end{figure}
 % SOURCE: models/final/scalar_drop_s{0,1}.npz (report_figures.py corroboration_curve).
@@ -435,11 +434,7 @@ same split: nearby neighbours help both cell lines, while neighbours
 \begin{figure}[H]
     \centering
     \reportfig[width=0.6\linewidth]{fig_radius.png}
-    \caption{PR AUC gain over LightGBM as the neighbour radius widens, with
-    only the radius changed (one seed per radius; seed spread
-    $\approx$0.003--0.005). Blue: cell line 1, for models trained on both cell
-    lines. Orange: cell line 2, for models trained on cell line 1 only, so
-    the line is unseen in training.}
+    \caption{PR AUC gain over LightGBM as the neighbour radius widens, with only the radius changed. Blue: cell line 1, trained on both lines; orange: cell line 2, trained on cell line 1 only (unseen).}
     \label{fig:radius}
 \end{figure}
 
@@ -448,14 +443,7 @@ normalised ratio $r(d)$ shows clustering that both cell lines share. Further
 out, a neighbour average mostly reflects how m6A-rich the whole transcript
 is --- the transcript-level enrichment that separates the two raw ratios
 $R(d)$ in Figure~\ref{fig:comod} --- and that differs between the cell lines.
-The shared part matches where m6A can sit in a gene:\applink{fig:genestructure}
-it is almost absent within 25\,nt of an exon junction (0.10$\times$ /
-0.28$\times$ the average rate), enriched 100--400\,nt away (2.2--2.9$\times$)
-and just after the stop codon (2.7$\times$ / 2.4$\times$), with the same shape
-in both cell lines. This is the published exon-junction-complex model, in
-which proteins deposited at splice junctions block m6A over about 100\,nt
-\citep{uzonyi2023,he2023,luo2023}: a rule set by gene structure, which all
-cells share. Predicted RNA folding does not explain the clustering.\applink{app:folding}
+The shared part follows gene structure: in both cell lines, m6A is depleted near exon junctions and enriched further into exons and after the stop codon.\applink{fig:genestructure} This agrees with the exon-junction-complex model, in which proteins deposited at splice junctions block m6A over about 100\,nt \citep{uzonyi2023,he2023,luo2023}. Since this mechanism depends on gene structure rather than cell type, it is expected to transfer between cell lines. Predicted RNA folding does not explain the clustering.\applink{app:folding}
 % SOURCE: analysis/newdata/annotation_context/ (Ensembl 91, analysis only);
 % analysis/newdata/fold_comodification*/.
 
@@ -479,17 +467,17 @@ We gave the model more freedom in four ways: letting it learn how much to trust 
 % the four designs: results/*_nn__xsrc.json (seeds averaged).
 
 \paragraph{Finding 2: additional capacity captures cell-line-specific patterns.}
-This does not appear to be ordinary overfitting. When trained and evaluated within cell line 2, the graph transformer again outperforms H2GCN ($p=0.02$); its advantage disappears when training and test cell lines differ (Figure~\ref{fig:ceiling}, right). One possible explanation is transcript-level modification enrichment (Section~\ref{sec:cluster}): the transcripts enriched for m6A differ between cell lines, and whole-transcript attention may learn these differences. In contrast, H2GCN gains little from training on the unseen line's own labels (+0.007, versus +0.019 for the graph transformer), suggesting that its learned relationships already transfer from cell line 1.
+This does not appear to be ordinary overfitting. When trained and evaluated within cell line 2, the graph transformer again outperforms H2GCN ($p=0.02$); its advantage disappears when training and test cell lines differ (Figure~\ref{fig:ceiling}, right). One possible explanation is transcript-level modification enrichment (Section~\ref{sec:cluster}): the transcripts enriched for m6A differ between cell lines, and whole-transcript attention may learn these differences. In contrast, H2GCN gains little from training on the unseen line's own labels, suggesting that its learned relationships already transfer from cell line 1 (Figure~\ref{fig:ceiling}, right).
 % SOURCE: results/data1_arm.csv (p = 0.02; +0.007 p = 0.07; +0.019 p < 0.001).
 
 \paragraph{Finding 3: part of the cross-cell-line gap cannot be closed.}
-The two cell lines' labels often disagree: of the sites that appear in both files and are modified in either, 64\% are modified in only one. As a result, even a perfect copy of cell line 1's labels would score only 0.326 PR AUC against cell line 2's, below our model's 0.422 (Figure~\ref{fig:ceiling}, left).\applink{app:ceiling} At the sites where the labels disagree, neither our models nor a direct comparison of the raw reads can tell the two cell lines apart. The disagreement is therefore either in how the sites were labelled or too subtle for the reads to show; either way, fitting the training cell line more closely cannot recover it.
+The two cell lines' labels often disagree: of the sites that appear in both files and are modified in either, 64\% are modified in only one. As a result, even a perfect copy of cell line 1's labels would score only 0.326 PR AUC against cell line 2's, below our model's 0.422 (Figure~\ref{fig:ceiling}, left).\applink{app:ceiling} At sites where the labels disagree, neither our models nor the raw reads distinguish the two cell lines, so the disagreement lies either in the labelling or below what the reads resolve. Fitting the training cell line more closely cannot recover it.
 % SOURCE: results/label_oracle.csv, discordant_sites.csv, discordant_signal.csv.
 
 \begin{figure}[H]
     \centering
     \reportfig[width=0.9\linewidth]{fig_ceiling.png}
-    \caption{Left: PR AUC against cell line 2's labels on the 67,320 sites present in both files, using cell line 1's true labels as the prediction (0.326), the same with ties broken by our model (0.485), and our model trained on cell line 1 (0.422). Right: H2GCN and the graph transformer trained on cell line 1, cell line 2 or both, scored on cell line 2's held-out genes (seed 0).}
+    \caption{Left: PR AUC against cell line 2's labels on the 67,320 shared sites, for cell line 1's labels used as predictions (alone, and with ties broken by our model) and for our model. Right: two networks trained on each cell line or both, scored on cell line 2.\applink{app:ceiling}}
     \label{fig:ceiling}
 \end{figure}
 
@@ -523,7 +511,7 @@ Each design builds one property of corroboration into the model rather than leav
         Graph transformer, for contrast (Section~\ref{sec:capacity}) & +0.028 & +0.100 \\
         \bottomrule
     \end{tabular}
-    \caption{PR AUC gain over quantiles\,+\,LightGBM, mean of three seeds. Unseen line: trained on cell line 1, scored on cell line 2. Training line: trained on both cell lines, scored on cell line 1. Every design and control, on all four evaluations, is in the appendix.\applink{tab:batch}}
+    \caption{PR AUC gain over quantiles\,+\,LightGBM, mean of three seeds. Unseen line: trained on cell line 1, scored on cell line 2; training line: trained on both, scored on cell line 1.\applink{tab:batch}}
     \label{tab:batch_short}
 \end{table}
 % SOURCE: analysis/representation/results/day_summary.md (3 seeds).
@@ -532,12 +520,12 @@ Each design builds one property of corroboration into the model rather than leav
 Every constrained design beats the free neighbour mean on the unseen cell line, by +0.010 to +0.022 PR AUC: residual + dropout by +0.017 and scalar messages by +0.020 (each $p<0.001$).\applink{tab:significance} Since the unseen line is always the weaker of the two, the selection measure of Section~\ref{sec:data} rises from +0.033 to +0.051--0.055. Simply reaching further does not explain this: a plain 100\,nt radius gains only +0.004 over 50\,nt, against +0.010 for distance weighting.
 % SOURCE: results/day_significance.csv; day_summary.md (matched differences).
 
-\paragraph{Finding 2: dropping neighbours in training is what matters.}
-Without dropout, the residual design loses 0.010 on the unseen line; without its learned weighting of neighbours by the site's read count, it loses nothing (+0.001). Dropout stops the model leaning on any single neighbour, and with the residual form it also makes the model safe when neighbours are missing: test data may contain partial transcripts, and a site with no reported neighbours then simply keeps its own-reads score.
+\paragraph{Finding 2: neighbour dropout accounts for most of the residual design's advantage.}
+Removing dropout reduces the residual design's gain on the unseen line, whereas removing its weighting of neighbours by read count has no measurable effect.\applink{tab:batch} Dropout prevents the model from relying on any single neighbour. Combined with the residual form, it also keeps predictions stable when neighbours are missing, as in partial transcripts: a site with no neighbours keeps its own-reads score.
 % SOURCE: day_summary.md (res_nodrop, res_nogate, 3 seeds); probe_gate_params.csv.
 
-\paragraph{Finding 3: distance weighting helps, but not because of the measured profile.}
-Reversing the weights of the three distance bands keeps most of the gain (+0.043 against +0.045 on the unseen line). What helps is reaching about 150\,nt while keeping near and far neighbours apart, not the precise shape of the co-modification curve.
+\paragraph{Finding 3: distance weighting helps, but not through its measured profile.}
+Reversing the weights of the three distance bands keeps most of the gain.\applink{tab:batch} The benefit appears to come from reaching about 150\,nt while treating near and far neighbours separately, rather than from the precise shape of the co-modification curve.
 % SOURCE: day_summary.md (fk_band vs fk_band_shuffled, 3 seeds).
 
 \paragraph{Decision.}
@@ -839,10 +827,12 @@ Section~\ref{sec:dev}); and pretrained m6Anet \citep{hendra2022}, run through
 its own pipeline. m6Anet was trained on SG-NEx HCT116 direct RNA with HCT116
 m6ACE-seq labels \citep{koh2019} --- data0's cell line, assay and pipeline, and almost
 certainly many of the same sites --- so its cell line 1 score is not held out.
-We also retrained m6Anet on our folds; it scored below the pretrained model,
-so the pretrained model is the comparator.
-% CHECK: add the retrained m6Anet's numbers and its result file; not yet
-% recorded in findings.md or analysis/m6anet/.
+We also retrained m6Anet on our gene folds of data0; it scored below the
+pretrained model on the same sites (0.488 vs 0.503 PR AUC, 0.924 vs 0.932 ROC
+AUC), so the pretrained model is the comparator.
+% SOURCE: W&B runs m6anet_retrained_ourfolds (8iwst4yg, 25 Sep; oof over 5
+% gene folds of data0, the earlier data0-only split, seed 4262) and the
+% pretrained model on the same sites; analysis/m6anet/run_ronin.sh retrain/score.
 % SOURCE: configs/baseline.yaml (pooled_v1 + logistic); configs/quantiles.yaml;
 % analysis/m6anet/ (pretrained HCT116_RNA002); findings.md section 13.
 
@@ -877,8 +867,6 @@ outputs are ranks (Section~\ref{sec:limits}).
 \end{table}
 % SOURCE: analysis/representation/results/report_models_pooled.csv (version=both);
 % p-values: results/report_significance.csv (report_significance.py).
-% Dropped from the draft: in-sample leaderboard-model scores (0.665 / 0.513 vs
-% 0.606 / 0.454 held out) and the intermediate-model row (compared in Section 3.3).
 % CHECK: if F1 is wanted, compute it at a threshold chosen on cell line 1 and
 % evaluated on cell line 2 (task2_briefing.md section 5c).
 
@@ -940,11 +928,7 @@ values and the evidence for each step are in the appendix.\applink{tab:models18}
 \begin{figure}[H]
     \centering
     \reportfig[width=0.85\linewidth]{models_violin_std_both.png}
-    \caption{PR AUC gain over quantiles\,+\,LightGBM on the same fold, trained
-    on both cell lines, divided by the spread of model medians within each
-    cell line (0.070 on cell line 1, 0.047 on cell line 2) so the two share a
-    scale; 0 is LightGBM. Each point is one fold of one seed; bars are
-    medians; hollow markers are controls.\applink{tab:models18}}
+    \caption{PR AUC gain over quantiles\,+\,LightGBM on the same fold (trained on both cell lines), rescaled within each cell line so the two share a scale; 0 is LightGBM. Points are fold--seed pairs, bars medians, hollow markers controls.\applink{tab:models18}}
     \label{fig:models_dist}
 \end{figure}
 % SOURCE: analysis/representation/report_models.py (paired_violins, standardise=True);
@@ -1243,8 +1227,9 @@ format discards read identities, so we corroborate per site; linking reads
 across sites would let evidence flow along each molecule. (2) \emph{Testing the
 label ceiling}: HEK293T, our cell line 2, has been mapped by several assays
 (GLORI, miCLIP, m6ACE-seq), so re-scoring its sites against each would show
-how much of the cross-cell-line disagreement is the assay; its public METTL3
-knock-out direct RNA data (ENA PRJEB40872) give a label-free test in which
+how much of the cross-cell-line disagreement is the assay; public direct RNA
+data from wild-type and METTL3 knock-out HEK293T \citep{pratanwanich2021}
+(ENA PRJEB40872) give a label-free test in which
 scores should collapse when the writer enzyme is gone. (3) \emph{Is local
 clustering general?} The normalised clustering $r(d)$ agrees between our two
 cell lines, but two is too few to call it a regular phenomenon. Labelled data
@@ -1273,12 +1258,11 @@ comparison of SG-NEx lines, which long reads uniquely allow.
     Angermueller, C., Lee, H.\,J., Reik, W., and Stegle, O. (2017).
     \newblock DeepCpG: accurate prediction of single-cell DNA methylation states using deep learning.
     \newblock \textit{Genome Biology}, 18, 67. doi:10.1186/s13059-017-1189-z.
-    % CHECK: "Reported" in literature.md.
 
-    \bibitem[Anonymous(2026)]{bbag434}
-    Single-cell DNA methylation imputation benchmark (2026).
-    \newblock \textit{Briefings in Bioinformatics}, 27(4), bbag434.
-    % CHECK: author list and title.
+    \bibitem[Liang et~al.(2026)]{bbag434}
+    Liang, H., Hua, H., Li, S., and Chen, S. (2026).
+    \newblock A systematic benchmarking framework and dual-view optimization strategy for single-cell DNA methylation imputation.
+    \newblock \textit{Briefings in Bioinformatics}, 27(4), bbag434. doi:10.1093/bib/bbag434.
 
     \bibitem[Caruana(1997)]{caruana1997}
     Caruana, R. (1997).
@@ -1298,8 +1282,7 @@ comparison of SG-NEx lines, which long reads uniquely allow.
     \bibitem[De~Waele et~al.(2022)]{dewaele2022}
     De~Waele, G., Clauwaert, J., Menschaert, G., and Waegeman, W. (2022).
     \newblock CpG Transformer for imputation of single-cell methylomes.
-    \newblock \textit{Bioinformatics}, 38(3), 597--603.
-    % CHECK: "Reported" in literature.md.
+    \newblock \textit{Bioinformatics}, 38(3), 597--603. doi:10.1093/bioinformatics/btab746.
 
     \bibitem[Feng et~al.(2020)]{feng2020}
     Feng, W. et~al. (2020).
@@ -1327,10 +1310,11 @@ comparison of SG-NEx lines, which long reads uniquely allow.
     \newblock \textit{ICLR}. arXiv:2010.13993.
 
     \bibitem[Kang et~al.(2025)]{kang2025}
-    Kang, Hwang, and Baek (2025).
+    Kang, G., Hwang, H., et~al. (2025).
     \newblock Comprehensive discovery of m6A sites in the human transcriptome at single-molecule resolution (DeepRM).
     \newblock \textit{Nature Communications}. doi:10.1038/s41467-025-67417-w.
-    % CHECK: full first names.
+    % 17 authors (Nature Index); co-first authors Gihyeon Kang and Hyeonseo
+    % Hwang, corresponding author Daehyun Baek.
 
     \bibitem[Ilse et~al.(2018)]{ilse2018}
     Ilse, M., Tomczak, J.\,M., and Welling, M. (2018).
@@ -1350,8 +1334,7 @@ comparison of SG-NEx lines, which long reads uniquely allow.
     \bibitem[Koh et~al.(2019)]{koh2019}
     Koh, C.\,W.\,Q., Goh, Y.\,T., and Goh, W.\,S.\,S. (2019).
     \newblock Atlas of quantitative single-base-resolution N6-methyl-adenine methylomes.
-    \newblock \textit{Nature Communications}, 10, 5636.
-    % CHECK: citation details (literature.md records only "Koh et al., m6ACE-seq, 2019").
+    \newblock \textit{Nature Communications}, 10, 5636. doi:10.1038/s41467-019-13561-z.
 
     \bibitem[Lee et~al.(2019)]{lee2019}
     Lee, J., Lee, Y., Kim, J., Kosiorek, A., Choi, S., and Teh, Y.\,W. (2019).
@@ -1374,9 +1357,9 @@ comparison of SG-NEx lines, which long reads uniquely allow.
     \newblock \textit{Algorithms for Molecular Biology}, 6, 26.
 
     \bibitem[Luo et~al.(2023)]{luo2023}
-    Luo et~al. (2023).
+    Luo, Z. et~al. (2023).
+    \newblock Exon-intron boundary inhibits m6A deposition, enabling m6A distribution hallmark, longer mRNA half-life and flexible protein coding.
     \newblock \textit{Nature Communications}, 14, 4172. doi:10.1038/s41467-023-39897-1.
-    % CHECK: title and first author.
 
     \bibitem[m6Aiso(2025)]{m6aiso2025}
     Single-molecule m6A detection empowered by endogenous labeling unveils complexities across RNA isoforms (m6Aiso) (2025).
@@ -1388,10 +1371,15 @@ comparison of SG-NEx lines, which long reads uniquely allow.
     \newblock Inference for the generalization error.
     \newblock \textit{Machine Learning}, 52, 239--281.
 
-    \bibitem[ORCA(2026)]{orca2026}
-    ORCA (2026).
+    \bibitem[Dong et~al.(2026)]{orca2026}
+    Dong, H. et~al. (2026).
+    \newblock Comprehensive mapping of RNA modification dynamics and crosstalk via deep learning and nanopore direct RNA-sequencing (ORCA).
     \newblock \textit{Nature Communications}. doi:10.1038/s41467-026-68419-y.
-    % CHECK: "Reported" in literature.md; add title and authors.
+
+    \bibitem[Pratanwanich et~al.(2021)]{pratanwanich2021}
+    Pratanwanich, P.\,N. et~al. (2021).
+    \newblock Identification of differential RNA modifications from nanopore direct RNA sequencing with xPore.
+    \newblock \textit{Nature Biotechnology}. doi:10.1038/s41587-021-00949-w.
 
     \bibitem[Rampášek et~al.(2022)]{rampasek2022}
     Rampášek, L. et~al. (2022).
@@ -1640,7 +1628,7 @@ here.
 \end{table}
 
 \phantomsection
-\subsection*{Why fold-level comparisons need a corrected $t$-test\texorpdfstring{\appmark{app:nb}}{}}
+\subsection*{Statistical tests and model selection\texorpdfstring{\appmark{app:nb}}{}}
 \label{app:nb}
 \paragraph{The problem: cross-validation folds are not independent.}
 When comparing two models using $k$-fold cross-validation, we obtain one paired performance difference per fold, $d_1,\ldots,d_k$. A conventional paired $t$-test assumes these differences are independent and estimates the variance of their mean as $\hat{\sigma}^2/n$, where $n$ is the number of paired observations.
@@ -1698,6 +1686,16 @@ Importantly, repeating cross-validation does not eliminate dependence between tr
 % --repeats 10 --compare-features pooled_v1; +0.0148 at 5 folds, naive p 1.1e-20
 % at 50). Two-sided harness values (0.3095, 0.0465, 0.1305, 1.1e-20, 9.5e-5)
 % halved to one-sided; src/m6a/features/{pooled,quantiles}.py (feature definitions).
+
+\paragraph{Seeds, ties and model selection.}
+Each design is trained with three seeds, and their within-file ranks are
+averaged; differences below about 0.005, the observed seed spread, are treated
+as ties. Models are ranked by their worse PR AUC gain over the baseline across
+the two cell lines, with ties broken on data1's new genes
+\citep{gulrajani2021,sagawa2020}. The rule guards against gains that hold in
+one cell line only: an early feature set improved PR AUC by 0.065 within data0
+but by only 0.016 on data1, and by $-0.003$ on genes unique to data1.
+% SOURCE: docs/decisions/0029, 0032; findings.md section 1.
 
 \phantomsection
 \subsection*{Read-encoder screen, all representations\texorpdfstring{\appmark{tab:reads_full}}{}}
@@ -1782,9 +1780,7 @@ not in the screen table, is included.
 Figure~\ref{fig:pooling_umap} repeats the view of Figure~\ref{fig:read_umap}
 for four ways of pooling reads, all trained on the labels. Every variant
 learns the same single ``how modified'' axis, and nearest-neighbour PR AUC
-differs by at most 0.03. Across 50 cross-fitted comparisons, a wider DeepSet
-(+0.020), attention MIL (+0.022) and DeepSet (+0.022) add the same to the
-hand-made features (each corrected $p<0.0001$). Three later variants inside
+differs by at most 0.03. Across 50 cross-fitted comparisons, a wider DeepSet (+0.020), the supervised autoencoder (+0.020), attention MIL (+0.022) and DeepSet (+0.022) add about the same to the hand-made features (each corrected $p<0.0001$). In the screen itself, DeepSet scored 0.479 against the autoencoder's 0.462 (Table~\ref{tab:reads_full}). Three later variants inside
 the full model also failed to beat mean and spread: quantiles of the read
 encodings ($-0.009$), the hand-made features fed in alongside the reads
 ($-0.021$), and a graph linking each read to its four most similar reads,
@@ -1875,6 +1871,10 @@ conservative end.
 $h_i'=\phi\bigl(W\frac{h_i+\sum_j h_j}{\deg_i+1}\bigr)$ gives a site with 4
 neighbours one fifth of the weight on its own evidence, whereas in the
 posterior $\log L_i$ keeps its full weight however many neighbours there are.
+Averaging is also a poor fit because the graph is not homophilous for the rare
+class: within 25\,nt, a modified site's neighbour is itself modified with
+probability about $R(d)\,\pi$, that is $7.4\times4.5\%$ and $4.5\times7.2\%$,
+both $\approx0.33$ in the two cell lines.
 
 \phantomsection
 \subsection*{Graph gain by neighbour status\texorpdfstring{\appmark{tab:status}}{}}
@@ -1898,6 +1898,13 @@ posterior $\log L_i$ keeps its full weight however many neighbours there are.
 
 \phantomsection
 \subsection*{What neighbours provide, and depth asymmetry\texorpdfstring{\appmark{tab:swap}}{}}
+Removing neighbours costs 0.030 PR AUC, but substituting a random site's reads
+and 7-mer costs 0.126, and pairing the neighbours' real reads with random
+7-mers costs 0.163. This suggests the model reads each neighbour's current
+relative to the signal expected for its sequence, rather than the current
+values alone. A trained control that replaces neighbours' scores with those of
+unrelated sites gains only +0.017 on the unseen cell line, against +0.055 with
+the real ones (Table~\ref{tab:batch}).
 \begin{table}[H]
     \centering\small
     \begin{tabular}{lcc}
@@ -1971,8 +1978,7 @@ or 10--20\,nt changes PR AUC by at most 0.001 (Section~\ref{sec:graph}).
         \bottomrule
     \end{tabular}
     \caption{Radius test (\mdl{h2gcn_aux}, only the radius changed, seed 0).
-    Crossed-test drop: loss when the labels change cell line on shared sites,
-    a measure of cell-line specificity.}
+    Crossed-test drop: loss when the labels change cell line on shared sites, a measure of cell-line specificity. Seed spread $\approx$0.003--0.005.}
     \label{tab:radius}
 \end{table}
 
@@ -2425,8 +2431,7 @@ Table~\ref{tab:models18}).
     \end{tabularx}
     \caption{The 18 models in Figure~\ref{fig:models_dist}, with the raw
     values behind it: median PR AUC gain over quantiles\,+\,LightGBM on the
-    same fold (15 fold $\times$ seed points; 5 for the logistic baseline and
-    m6Anet), trained on both cell lines.}
+    same fold (15 fold $\times$ seed points; 5 for the logistic baseline and m6Anet), trained on both cell lines. Figure~\ref{fig:models_dist} divides each cell line's gains by the standard deviation of the model medians (0.070 on cell line 1, 0.047 on cell line 2).}
     \label{tab:models18}
 \end{table}
 % SOURCE: results/report_models_folds.csv (version=both), medians of

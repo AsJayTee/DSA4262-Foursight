@@ -35,9 +35,9 @@ Related files:
 |---|---|---|
 | Uzonyi et al., *Mol Cell* 2023, 83(2):237-251, doi:10.1016/j.molcel.2022.12.026 | The exon junction complex excludes m6A within ~100 nt of splice junctions. Explains our near-junction depletion (fig_gene_structure) and why ~100 nt of context transfers between cell lines | Verified |
 | He et al., *Science* 2023, doi:10.1126/science.abj9090 | Exon junction complexes suppress m6A over average-length internal exons, not long internal or last exons. Fits our enrichment after the stop codon and in long exons | Verified |
-| Luo et al., *Nat Commun* 2023, 14:4172, doi:10.1038/s41467-023-39897-1 | The exon-intron boundary represses 12-34% of m6A at adjacent exons, over ~100 nt | Verified |
+| Luo, Z. et al., *Exon-intron boundary inhibits m6A deposition, enabling m6A distribution hallmark, longer mRNA half-life and flexible protein coding*, *Nat Commun* 2023, 14:4172, doi:10.1038/s41467-023-39897-1 | The exon-intron boundary represses 12-34% of m6A at adjacent exons, over ~100 nt | Verified |
 | m6Aiso: *Single-molecule m6A detection empowered by endogenous labeling unveils complexities across RNA isoforms*, *Mol Cell* 2025, doi:10.1016/j.molcel.2025.01.014 (Jinkai Wang's group; bioRxiv 10.1101/2024.01.30.577990) | "Relatively weak but nonnegligible" single-molecule linkage between m6A sites below 200 bp, fading with distance, gone beyond 1 kb; 39.1% of sites have another within 50 bp. The biological basis for corroboration and for a distance-decaying neighbour weight | Verified (numbers). **First author not confirmed**: cite by title and DOI |
-| DeepRM: Kang, Hwang & Baek, *Nat Commun* 2025, doi:10.1038/s41467-025-67417-w | (a) "4819 pairs of significantly co-occurring m6A sites", e.g. 40.0% of reads vs 21.8% expected: co-occurrence on the same molecule. (b) Signal changes "up to ±10 nts from m6A"; two m6As within 20 nt "interfere". Motivates our 0-10 / 10-20 nt band check | Verified (PMC full text) |
+| DeepRM: Kang, Hwang et al. (17 authors; corresponding author Baek), *Nat Commun* 2025, doi:10.1038/s41467-025-67417-w | (a) "4819 pairs of significantly co-occurring m6A sites", e.g. 40.0% of reads vs 21.8% expected: co-occurrence on the same molecule. (b) Signal changes "up to ±10 nts from m6A"; two m6As within 20 nt "interfere". Motivates our 0-10 / 10-20 nt band check | Verified (PMC full text) |
 | Nanocompore: Leger et al., *Nat Commun* 2021, doi:10.1038/s41467-021-27393-3 | ~5 nucleotides sit in the R9 pore at once, so one modification shifts several overlapping k-mers. Why each site's input covers three overlapping 5-mers | Verified |
 
 ## 2. Nanopore m6A detection: the methods we position against
@@ -54,7 +54,7 @@ scores a site from its own reads, within a ≤9-21 nt window.
 | CHEUI, *Nat Commun* 2024, doi:10.1038/s41467-024-47953-7 | 9-mer per-site model; m6A-m5C co-occurrence analysed after prediction | Reported |
 | TandemMod, *Nat Commun* 2024, doi:10.1038/s41467-024-48437-4 | Per-read 5-mer features, aggregated per site | Reported |
 | SingleMod, *Nat Commun* 2025, doi:10.1038/s41467-025-60447-4 | Multiple-instance regression per site; describes m6A as "additive, position-independent" | Reported |
-| ORCA, *Nat Commun* 2026, doi:10.1038/s41467-026-68419-y | 9-nt Bi-LSTM per site, with domain-adversarial training; neighbouring-site interplay analysed after prediction | Reported |
+| ORCA: Dong et al., *Comprehensive mapping of RNA modification dynamics and crosstalk via deep learning and nanopore direct RNA-sequencing*, *Nat Commun* 2026, doi:10.1038/s41467-026-68419-y | 9-nt Bi-LSTM per site, with domain-adversarial training; neighbouring-site interplay analysed after prediction | Title, first author and abstract verified 17 Oct (Nature Index, abstract); architecture details Reported |
 | MINES: Lorenz et al., *RNA* 2020, doi:10.1261/rna.072785.119 | Random forest per DRACH site | Reported |
 | MultiNano (bioRxiv 10.1101/2025.08.04.668591), RNANO (bioRxiv 10.1101/2025.03.01.640267) | Per-site multiple-instance models | Reported |
 | NanoFM (github.com/zhangjun640/NanoFM) | Nanopore signal + structRFM embeddings + cross-attention. The repo exists; it gives no paper, training data or results. A claimed DOI (10.1016/j.ijbiomac.2026.152629) resolves but could not be read | Unverified (repo only) |
@@ -67,8 +67,8 @@ scores a site from its own reads, within a ≤9-21 nt window.
 | Work | Relation to our model | Status |
 |---|---|---|
 | **DeepMod**: Liu et al., *Nat Commun* 2019, 10, doi:10.1038/s41467-019-10168-2 | **Closest precedent.** Nanopore DNA 5mC, two stages. (1) A 3-layer bidirectional LSTM reads one read's signal around a cytosine and calls that read: the analogue of our read encoder. (2) An optional "cluster" network re-estimates a CpG's methylation fraction from 14 numbers: its own fraction, its partner's, the number of CpGs within ±25 bp, and an 11-bin histogram of their fractions. **The neighbour stage is a histogram aggregation, not an LSTM.** See [DeepMod vs our model](#deepmod-vs-our-model). **Must cite** | Verified: stage 1 (paper; DeepMod2 comparison); stage 2 input from `DeepMod_tools/hm_cluster_predict.py`. Stage 2's own architecture is not documented (loaded from a checkpoint). The claimed +1-3% AP / +3-5% AUC gain is **unverified** |
-| DeepCpG, *Genome Biol* 2017, doi:10.1186/s13059-017-1189-z | Imputes single-cell CpG methylation from neighbouring CpG states | Reported |
-| CpG Transformer, *Bioinformatics* 2022, 38(3):597 | Sliding-window attention over neighbouring CpGs (imputation) | Reported |
+| DeepCpG: Angermueller, Lee, Reik & Stegle, *Genome Biol* 2017, 18:67, doi:10.1186/s13059-017-1189-z | Imputes single-cell CpG methylation from neighbouring CpG states | Citation verified 17 Oct (PMC5387360); content Reported |
+| CpG Transformer: De Waele, Clauwaert, Menschaert & Waegeman, *Bioinformatics* 2022, 38(3):597-603, doi:10.1093/bioinformatics/btab746 | Sliding-window attention over neighbouring CpGs (imputation) | Verified 17 Oct (PMC8756163 abstract) |
 | GraphCpG, *Bioinformatics* 2023 (btad533) | Graph over neighbouring CpG loci (imputation) | Reported |
 | ccsmeth, *Nat Commun* 2023, 14:4054, doi:10.1038/s41467-023-39784-9; hifimeth (bioRxiv 10.1101/2024.08.14.607879) | PacBio 5mC: neighbouring CpGs' read-level calls feed a site's call | Reported |
 | HEPeak (BMC Genomics 2015), MeTPeak (*Bioinformatics* 2016), BaySeqPeak (2018) | MeRIP-seq peak callers with HMMs across neighbouring bins: coarse region smoothing | Reported |
@@ -116,7 +116,7 @@ lines."
 
 | Work | What we use | Status |
 |---|---|---|
-| Koh et al., m6ACE-seq, 2019 | The assay behind dataset0's labels (docs/project-requirements.md) | Verified (course brief) |
+| Koh, Goh & Goh, *Atlas of quantitative single-base-resolution N6-methyl-adenine methylomes*, *Nat Commun* 2019, 10:5636, doi:10.1038/s41467-019-13561-z (m6ACE-seq) | The assay behind dataset0's labels (docs/project-requirements.md) | Verified (course brief; citation checked 17 Oct, PMC6904561) |
 | GLORI: Liu et al., *Nat Biotechnol* 2023 | Absolute single-base m6A quantification; reportedly among the most accurate assays (HEK293T) | Reported |
 | NP-mFinder (claimed *Front Genet* 2026, doi:10.3389/fgene.2026.1770769) | Against GLORI v2.0: 28% site-level vs 85% gene-level concordance. Site-level agreement between assays is low | Verified (abstract, via a mirror); venue not confirmed |
 | m6AConquer (bioRxiv 10.1101/2024.09.10.612173; NAR) | Cross-technique reproducibility; treats nanopore (m6Anet) and m6ACE-seq as non-independent | Reported |
@@ -145,14 +145,14 @@ paper's title and abstract state.
 | Gulrajani & Lopez-Paz, ICLR 2021; V-REx: Krueger et al., ICML 2021; group DRO: Sagawa et al., ICLR 2020 | Domain generalisation; select on the worst domain | Ranking on the worse gain (decision 0032) | Standard reference |
 | GOOD benchmark: Gui et al., NeurIPS 2022 | Graph out-of-distribution benchmark | Context for the capacity result | Verified (proceedings listing) |
 | Niv & Rabin, *Exploring Graph-Transformer Out-of-Distribution Generalization Abilities*, arXiv:2506.20575 (2025) | GPS generalised better than message passing on 4 of 6 GOOD benchmarks, but "vGIN leads by roughly 2% on the size shift and 5% on the scaffold shift ... locality in message passing can be better suited for certain distribution shifts". So "capacity hurts out of distribution" is **not** a general law; our result is about label shift in this domain | Verified (arXiv full text) |
-| Single-cell DNA methylation imputation benchmark, *Brief Bioinform* 2026, 27(4):bbag434 | Neighbour-reliant models (CpG Transformer, MambaCpG) collapse when the split separates neighbouring sites: "random splitting inevitably places highly similar neighboring sites in both training and test sets". **Our gene-grouped split keeps a site and its neighbours together** (worth a sentence in Methods) | Verified (PMC) |
+| Liang, Hua, Li & Chen, *A systematic benchmarking framework and dual-view optimization strategy for single-cell DNA methylation imputation*, *Brief Bioinform* 2026, 27(4):bbag434, doi:10.1093/bib/bbag434 | Neighbour-reliant models (CpG Transformer, MambaCpG) collapse when the split separates neighbouring sites: "random splitting inevitably places highly similar neighboring sites in both training and test sets". **Our gene-grouped split keeps a site and its neighbours together** (worth a sentence in Methods) | Verified (PMC) |
 
 ## 6. Data and tools we used
 
 | Source | Use | Status |
 |---|---|---|
 | SG-NEx (Singapore Nanopore Expression project), public bucket `s3://sg-nex-data`; github.com/GoekeLab/sg-nex-data; *Nat Methods* 2025 | Source of dataset0 (HCT116 replicate 3 run 1, matched exactly: findings 13), the extra HCT116 runs, and the Task 2 cell lines | Verified (bucket listing; exact match) |
-| ENA PRJEB44348 (SG-NEx HCT116), PRJEB40872 (HEK293T + METTL3 knock-out), PRJEB32782 (Arabidopsis), GEO GSE124309 (curlcake) | Accessions named in the m6Anet paper, for possible external tests | Verified (as given in m6Anet) |
+| ENA PRJEB44348 (SG-NEx HCT116), PRJEB40872 (xPore study, Pratanwanich et al., *Nat Biotechnol* 2021, doi:10.1038/s41587-021-00949-w: HEK293T WT x3, KO x3, KD x3 with controls, an in-vitro WT mixing series at 0-100%, and myeloma patients; checked against ENA's run list 17 Oct), PRJEB32782 (Arabidopsis), GEO GSE124309 (curlcake) | Accessions named in the m6Anet paper, for possible external tests | Verified (as given in m6Anet) |
 | nanopolish eventalign; m6Anet dataprep | Produce the course's input format | Verified (course brief, m6Anet) |
 | RNAplfold (ViennaRNA); LinearPartition | Folding test (findings 7) | Tools used directly |
 | Ensembl 91 | Gene-structure analysis only, never a model input (fig_gene_structure) | Used directly |
