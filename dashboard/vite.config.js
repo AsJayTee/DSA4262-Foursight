@@ -1,9 +1,9 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// GitHub Pages serves this repository's site at /<repo name>/, so every asset
-// path must start there. Change it if the repository is renamed.
 export default defineConfig({
   plugins: [react()],
-  base: "/DSA4262-Foursight/",
+  base: '/DSA4262-Foursight/',
+  server: { host: '127.0.0.1' },
+  preview: { host: '127.0.0.1' }
 });

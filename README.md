@@ -208,6 +208,64 @@ context. Reading the source yourself is always an option, never a prerequisite.
 
 ---
 
+## Interactive dashboard (Task 2)
+
+The [m6A Explorer](dashboard/README.md) is a React/Vite dashboard for exploring
+model-scored candidate m6A sites and transcript annotations. It includes an
+overview, cross-cell-line comparisons, biological-discovery visualizations, and
+a genome/transcript explorer. Some views or metrics may still use synthetic
+examples; inspect the dashboard's data-mode labels before interpreting a plot.
+
+```bash
+cd dashboard
+npm install
+npm run dev
+```
+
+The public GitHub Pages site is designed to run as a **synthetic-data demo**
+without requiring the full SG-NEx prediction exports. The full-data workflow
+is separate and must not be assumed to be publicly hosted. See
+[dashboard/README.md](dashboard/README.md) for deployment and data-mode details.
+
+### Dashboard data preprocessing and validation
+
+The scripts under [`scripts/dashboard/`](scripts/dashboard/) are separate from
+`scripts/predict.py`: they **do not train or score the model**. Instead, they
+transform existing pooled prediction CSVs and Ensembl 91 GTF annotations into
+files suitable for interactive browsing.
+
+| Script | Purpose |
+|---|---|
+| `build_full.py` | Process all seven SG-NEx pooled prediction CSVs, map transcript-relative sites to genomic coordinates, and export a gene index and per-gene JSON files. |
+| `build_pilot.py` | Build smaller gene-level exports for initial development and debugging, if retained in the repository. |
+| `validate_coordinates.py` | Check sampled transcript positions and sequence windows against the reference transcriptome. |
+| `validate_exons.py` | Independently compare exported transcript exon coordinates, chromosome, strand, and gene IDs with the Ensembl 91 GTF. |
+
+For the current local full-data run, the input files were under
+`data/prediction/data/`, and the generated outputs were written to the active
+dashboard's `public/data/processed/` directory. From the repository root, an
+example invocation is:
+
+```bash
+python scripts/dashboard/build_full.py \
+  --input-dir data/prediction/data \
+  --output-dir dashboard/public/data/processed
+```
+
+The local run reported **12,730,324 input site records**, **12,318,601 mapped
+records**, **411,723 unmatched records**, and **26,321 genes with exported
+predictions**, occupying approximately **3.27 GB** across gene JSON files.
+The Ensembl 91 annotation parser reported **58,302 genes** and **200,310
+transcripts** in the GTF; these are annotation totals, not the number of genes
+with model predictions. Unmatched records are counted but are not present in
+the gene-specific exports.
+
+Validation to date includes **38/38 exact GTF exon-annotation matches** and
+**1,750/1,750 sampled reference k-mer matches**. These checks do not prove that
+every genomic marker, chart, or biological interpretation is correct.
+
+---
+
 ## Repository layout
 
 ```
@@ -222,10 +280,12 @@ src/m6a/              the package — production code
   feature_cache.py    disk cache for extracted features, in .cache/features/
   registry.py         name -> implementation lookup
 scripts/              command-line entry points
+  dashboard/          dashboard preprocessing and validation tools
 configs/              one YAML per experiment
 models/final/         the model used for grading
 data/sample/          the committed test dataset
 analysis/             exploratory work: SG-NEx (Task 2), m6Anet benchmark
+dashboard/            React/Vite interactive m6A Explorer
 tests/                guardrails, including an end-to-end smoke test
 docs/                 setup, data dictionary, workflow
   decisions/          why the shared pipeline is shaped the way it is
