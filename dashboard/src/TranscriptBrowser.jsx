@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const root = `${import.meta.env.BASE_URL}data/browser/`;
+export async function readHostedJson(response, missingMessage) {
+  if (!response.ok || !response.headers.get("content-type")?.toLowerCase().includes("application/json")) {
+    throw new Error(missingMessage);
+  }
+  try { return await response.json(); }
+  catch { throw new Error("This prediction file is not valid JSON. Regenerate the transcript export and reload it."); }
+}
 const example = { cell_line: "Synthetic example", transcript_id: "DEMO_TRANSCRIPT", sites: Array.from({ length: 32 }, (_, i) => ({ transcript_position: 100 + i * 57 + (i % 3) * 9, kmer: ["AAGACCA", "GGGACTT", "TAGACTG"][i % 3], n_reads: 2 + (i * 13) % 97, score_rank: ((i * 23) % 100) / 100, score_raw: -3 + ((i * 17) % 50) / 10 })) };
 
 export function validateTranscript(data) {
@@ -29,7 +36,10 @@ export default function TranscriptBrowser() {
   const drag = useRef(null), tracks = useRef(null);
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${root}index.json`, { signal: controller.signal }).then(r => { if (!r.ok) throw new Error("No hosted per-site data loaded yet."); return r.json(); }).then(d => { setCatalog(d.transcripts || []); setLine(d.transcripts?.[0]?.cell_line || ""); }).catch(e => { if (e.name !== "AbortError") setStatus(e.message); });
+    fetch(`${root}index.json`, { signal: controller.signal }).then(r => readHostedJson(r, "No SG-NEx site predictions loaded yet. Load a transcript export or try the synthetic example.")).then(d => {
+      if (!Array.isArray(d.transcripts) || d.transcripts.some(t => !t || typeof t.cell_line !== "string" || typeof t.transcript_id !== "string" || typeof t.path !== "string")) throw new Error("The transcript catalogue is invalid. Regenerate the browser export.");
+      setCatalog(d.transcripts); setLine(d.transcripts[0]?.cell_line || "");
+    }).catch(e => { if (e.name !== "AbortError") setStatus(e.message); });
     return () => controller.abort();
   }, []);
   function show(d, demo = false) {
@@ -42,7 +52,7 @@ export default function TranscriptBrowser() {
     if (!record) return;
     const controller = new AbortController();
     setData(null); setError(""); setStatus("Loading transcript…");
-    fetch(`${root}${record}`, { signal: controller.signal }).then(r => { if (!r.ok) throw new Error("Could not load this transcript."); return r.json(); }).then(d => { show(d); setStatus(""); }).catch(e => { if (e.name !== "AbortError") { setError(e.message); setStatus(""); } });
+    fetch(`${root}${record}`, { signal: controller.signal }).then(r => readHostedJson(r, "This transcript export is missing. Regenerate the browser export or load its JSON file directly.")).then(d => { show(d); setStatus(""); }).catch(e => { if (e.name !== "AbortError") { setError(e.message); setStatus(""); } });
     return () => controller.abort();
   }, [record]);
   const matches = useMemo(() => catalog.filter(t => t.cell_line === line && `${t.gene_name || ""} ${t.gene_id || ""} ${t.transcript_id}`.toLowerCase().includes(query.toLowerCase())), [catalog, line, query]);
