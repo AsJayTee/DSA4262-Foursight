@@ -1,5 +1,11 @@
 # m6A Explorer (Task 2 dashboard)
 
+> **Work in progress.** The site currently published, and described below, is
+> the early template on `main`, with only the Overview view wired to data. The
+> full dashboard is being built on the `feat/dashboard` branch, which adds the
+> remaining views and data-building scripts in `scripts/dashboard/`. This
+> README will be updated when that branch is merged.
+
 A static React site (Vite), published to GitHub Pages from this repository
 ([decision 0035](../docs/decisions/0035-dashboard-is-a-static-react-site-on-github-pages.md)).
 The plan for its views is in [report/task2_briefing.md](../report/task2_briefing.md).
