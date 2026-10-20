@@ -1,10 +1,4 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App.jsx";
-import "./styles.css";
-
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+// Preserve the supplied standalone dashboard exactly while real data is prepared.
+// The original Row/Data implementation remains in App.jsx and TranscriptBrowser.jsx.
+import "./reference/dashboard.css";
+import "./reference/dashboard.js";
