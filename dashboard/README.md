@@ -2,6 +2,18 @@
 
 ## Current interface: supplied reference (20 October 2026)
 
+The Explorer now mounts `ConnectedExplorer.jsx`, retaining the reference CSS
+and navigation while reading real SG-NEx preview exports in `public/data/preview`.
+`analysis/sgnex/subset_dashboard_archive.py` prepares 1,000 sites per line from
+the supplied public prediction archive, and `connect_preview_subsets.py`
+creates the browser JSON from those CSVs and matching GTF annotations.
+All seven lines are available; scores are preserved, not recomputed.
+The first-N selection is not suitable for representative biological comparisons.
+The Explorer deliberately uses original transcript coordinates; genome mapping
+and reference sequence remain unverified. Gene metadata is from Ensembl 91.
+Other tabs still contain the reference's labelled demo analyses and real aggregate
+summaries; they are not recalculated from these subsets.
+
 At Josh's request, the active interface matches the supplied standalone
 `index.html` from Telegram Desktop. Its original bundled JavaScript and CSS
 are preserved in `src/reference/` and loaded by `src/main.jsx`. This preserves
