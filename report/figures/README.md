@@ -9,21 +9,25 @@ A guide for whoever writes or presents with these figures. Each entry covers:
 
 The full results and their context are in [../findings.md](../findings.md).
 
-**Regenerating.** No Ronin, no torch, no data download needed: every figure
-reads committed result tables.
+**Regenerating.** The `models_*` and most `fig_*` figures read committed
+result tables, so they need no Ronin, no torch and no data download:
 
 ```bash
 python analysis/representation/report_models.py --plot-only   # models_* figures
-python analysis/representation/report_figures.py              # fig_* figures
+python analysis/representation/report_figures.py              # most fig_* figures
 ```
 
 (`report_models.py` without `--plot-only` recomputes its tables from the cached
 predictions in `.cache/representation/`, which live only on the machine that
 copied them off Ronin.)
 
+The exceptions are the UMAP figures, which need cached site vectors
+([Site representations](#site-representations)), and `sgnex_overview.png`,
+which is written by the SG-NEx analysis ([SG-NEx](#sg-nex-task-2)).
+
 **Shared conventions.**
 - **Cell line 1** = dataset0 (HCT116, the course's training file). **Cell
-  line 2** = data1 (a different cell line, with its own labels).
+  line 2** = data1 (HEK293T, human embryonic kidney, with its own labels).
 - **"Held-out genes":** every score comes from a model that never saw that
   gene, in either file (gene-grouped 5-fold split, seed 4262).
 - **Two training versions:**
@@ -46,6 +50,29 @@ copied them off Ronin.)
 ---
 
 ## Model comparison
+
+### models_violin_std_both.png (used in the report), models_violin_std_cl1.png
+
+As `models_violin_*` below, but each cell line's gains are divided by the
+standard deviation of the model medians on that cell line (both arm: 0.070 on
+cell line 1, 0.047 on cell line 2). Cell line 1's raw gains are about twice
+cell line 2's, which squeezes cell line 2's ranking on a shared axis. Dividing
+without centring keeps 0 = LightGBM. Compare rankings within a colour, and the
+two colours' rankings with each other; not raw gains across colours.
+
+### models_violin_cl1.png, models_violin_both.png
+
+**Shows:** the same per-fold gains as `models_distribution_*` below, on one
+axis. Each model row has two violins: blue = scored on cell line 1, orange =
+scored on cell line 2. Faint horizontal lines separate the model groups (no
+neighbours, free use of neighbours, constrained corroboration, ensembles),
+named on the right. Bare (no title or caption; the report supplies them).
+
+**Read:** the horizontal distance between a row's blue and orange violins is
+how much more the model gains on cell line 1 than on cell line 2.
+
+**Source:** `analysis/representation/report_models.py --plot-only`
+(`paired_violins`).
 
 ### models_distribution_cl1.png, models_distribution_both.png
 
@@ -103,6 +130,63 @@ within-file rank.
 gene-resampled intervals in `results/day_significance.csv` (findings 12D).
 
 **Source:** `analysis/representation/results/report_models_pooled.csv`.
+
+---
+
+## Site representations
+
+### fig_read_umap.png (used in the report)
+
+**Shows:** 2-D UMAP maps of four ways to turn a site's reads into one vector:
+hand-made summaries, DeepSet, a per-read autoencoder with a prediction head,
+and an LSTM autoencoder trained without labels. Top row coloured by
+modification label; bottom row by the motif's positive rate.
+
+**Computed:** the same held-out sites (fold 0) and UMAP settings and seed for
+every column. Each column's title gives a 30-nearest-neighbour classifier's PR
+AUC on the full vector and on the 2-D map.
+
+**Read:**
+- Hand-made and unsupervised maps are organised mainly by **motif** (bottom
+  row structured, top row mixed).
+- Supervised maps are organised by **modification** (top row structured).
+  DeepSet's vector is close to one-dimensional (effective dimension 1.8 of
+  32), which is visible even in 2-D.
+- The two PR AUCs in each title tell a map that hides structure (high on the
+  vector, low on the map) from one that lacks it (low on both).
+
+**Don't claim:** anything from cluster sizes or distances between clusters.
+UMAP does not preserve either; read the colour organisation and the titles'
+PR AUCs.
+
+**Source:** `analysis/representation/report_umap.py reads`. Needs each
+model's site vectors in `.cache/representation/<name>/fold0.npz` (not
+committed).
+
+### fig_pooling_umap.png (appendix)
+
+**Shows:** the same kind of map for alternatives to DeepSet's specific form:
+a wider DeepSet, gated-attention MIL, and DeepSet without the 7-mer.
+
+**Read:** whether the modification-organised map depends on DeepSet's exact
+design or on supervision in general.
+
+**Source:** `analysis/representation/report_umap.py pooling`. The attention
+MIL and wide DeepSet vectors were made on Ronin; regenerating them needs
+`learn.py --model <name> --folds 0` there first (see the script's docstring).
+
+### fig_read_umap_full_{1,2,3}.png (appendix)
+
+**Shows:** all 15 screened representations, five rows per image. Each row is
+coloured by label, by the motif's positive rate, and by read depth.
+
+**Computed:** nothing new. `analysis/representation/figures/umap.png`
+(written by `visualise.py`) is cut into three parts because at 15 rows it is
+too tall for a page. Same sites and UMAP settings as `fig_read_umap.png`.
+
+**Source:** `analysis/representation/report_umap_full.py`. Regenerating
+`umap.png` itself needs every representation's site vectors, two of which
+(`set_masked`, `contrastive`) exist only on Ronin.
 
 ---
 
@@ -382,6 +466,29 @@ to compare, so it is quoted in text only (Spearman 0.41).
 (`analysis/newdata/data2_scores.py`). Per-site scores are in
 `.cache/representation/data2_scores.csv` (they carry course labels, so they
 are not committed); the script regenerates them in about a minute.
+
+---
+
+## SG-NEx (Task 2)
+
+### sgnex_overview.png (not currently in the report)
+
+**Shows:** the preliminary comparison of the seven SG-NEx cell lines, made
+from the shipped model's scores on every m6Anet-processed sample.
+
+**Computed:** a copy of `analysis/sgnex/explore/overview.png`, written by
+`analysis/sgnex/explore_lines.py` from the pooled per-line scores. It uses
+`score_raw` (comparable across samples), compared within read-count bands.
+
+**Read:** with [analysis/sgnex/explore/summary.md](../../analysis/sgnex/explore/summary.md),
+which has the numbers and the reasoning behind each panel.
+
+**Don't claim:** differences between lines at single sites. At 1-2 reads, two
+samples of the same line agree only slightly more than samples of two
+different lines (Spearman 0.815 vs 0.800, summary A2).
+
+**Source:** `analysis/sgnex/explore_lines.py`; see
+[analysis/sgnex/README.md](../../analysis/sgnex/README.md).
 
 ---
 

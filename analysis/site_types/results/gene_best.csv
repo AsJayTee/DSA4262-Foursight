@@ -1,0 +1,51 @@
+evaluated on,cell_line,gene's best site,genes,share with a modified site,mean modified sites,mean sites
+full reads,HEK293T (cell line 2),top 1%,243.0000,0.9712,5.5350,27.5556
+full reads,HEK293T (cell line 2),1-5%,967.0000,0.8273,2.5129,27.0589
+full reads,HEK293T (cell line 2),5-10%,599.0000,0.5576,1.0601,26.4307
+full reads,HEK293T (cell line 2),10-25%,805.0000,0.3416,0.5379,23.7491
+full reads,HEK293T (cell line 2),below top 25%,301.0000,0.2027,0.2392,16.0864
+full reads,HCT116 (cell line 1),top 1%,331.0000,0.9366,5.2900,31.6707
+full reads,HCT116 (cell line 1),1-5%,1288.0000,0.6941,1.6856,30.5978
+full reads,HCT116 (cell line 1),5-10%,715.0000,0.2895,0.4238,29.3175
+full reads,HCT116 (cell line 1),10-25%,924.0000,0.0617,0.0747,23.4275
+full reads,HCT116 (cell line 1),below top 25%,336.0000,0.0268,0.0268,15.4018
+"10 reads (thinned, 5 draws)",HEK293T (cell line 2),top 1%,265.4000,0.9630,5.0666,28.2593
+"10 reads (thinned, 5 draws)",HEK293T (cell line 2),1-5%,893.0000,0.7968,2.4431,26.6975
+"10 reads (thinned, 5 draws)",HEK293T (cell line 2),5-10%,591.2000,0.5624,1.1940,27.8261
+"10 reads (thinned, 5 draws)",HEK293T (cell line 2),10-25%,898.6000,0.3804,0.6670,23.3102
+"10 reads (thinned, 5 draws)",HEK293T (cell line 2),below top 25%,266.8000,0.2421,0.3137,14.7106
+"10 reads (thinned, 5 draws)",HCT116 (cell line 1),top 1%,364.4000,0.9089,4.9098,29.3942
+"10 reads (thinned, 5 draws)",HCT116 (cell line 1),1-5%,1160.6000,0.6825,1.6954,30.9006
+"10 reads (thinned, 5 draws)",HCT116 (cell line 1),5-10%,744.8000,0.3081,0.5094,29.8328
+"10 reads (thinned, 5 draws)",HCT116 (cell line 1),10-25%,1025.0000,0.1153,0.1567,23.9339
+"10 reads (thinned, 5 draws)",HCT116 (cell line 1),below top 25%,299.2000,0.0202,0.0209,14.5598
+"3 reads (thinned, 5 draws)",HEK293T (cell line 2),top 1%,229.2000,0.9391,4.8738,28.2843
+"3 reads (thinned, 5 draws)",HEK293T (cell line 2),1-5%,891.4000,0.7702,2.4653,27.2036
+"3 reads (thinned, 5 draws)",HEK293T (cell line 2),5-10%,587.8000,0.5759,1.3037,27.6799
+"3 reads (thinned, 5 draws)",HEK293T (cell line 2),10-25%,943.0000,0.4206,0.7863,23.1005
+"3 reads (thinned, 5 draws)",HEK293T (cell line 2),below top 25%,263.6000,0.2618,0.3498,14.6804
+"3 reads (thinned, 5 draws)",HCT116 (cell line 1),top 1%,322.8000,0.8918,4.8227,30.6816
+"3 reads (thinned, 5 draws)",HCT116 (cell line 1),1-5%,1161.2000,0.6458,1.7156,30.6267
+"3 reads (thinned, 5 draws)",HCT116 (cell line 1),5-10%,747.0000,0.3285,0.5914,29.8035
+"3 reads (thinned, 5 draws)",HCT116 (cell line 1),10-25%,1093.4000,0.1666,0.2705,24.0111
+"3 reads (thinned, 5 draws)",HCT116 (cell line 1),below top 25%,269.6000,0.0433,0.0599,13.6871
+"1 reads (thinned, 5 draws)",HEK293T (cell line 2),top 1%,230.6000,0.8973,4.3788,28.4996
+"1 reads (thinned, 5 draws)",HEK293T (cell line 2),1-5%,764.2000,0.7626,2.5440,28.6150
+"1 reads (thinned, 5 draws)",HEK293T (cell line 2),5-10%,488.0000,0.6141,1.5445,27.3704
+"1 reads (thinned, 5 draws)",HEK293T (cell line 2),10-25%,1158.2000,0.4624,0.9364,23.2123
+"1 reads (thinned, 5 draws)",HEK293T (cell line 2),below top 25%,274.0000,0.2964,0.4480,14.5238
+"1 reads (thinned, 5 draws)",HCT116 (cell line 1),top 1%,317.6000,0.8156,4.0046,31.1820
+"1 reads (thinned, 5 draws)",HCT116 (cell line 1),1-5%,956.4000,0.6105,1.8586,32.2600
+"1 reads (thinned, 5 draws)",HCT116 (cell line 1),5-10%,656.2000,0.4341,0.9690,29.5313
+"1 reads (thinned, 5 draws)",HCT116 (cell line 1),10-25%,1365.6000,0.2386,0.4305,24.3975
+"1 reads (thinned, 5 draws)",HCT116 (cell line 1),below top 25%,298.2000,0.0784,0.1032,14.1800
+other HCT116 run: replicate3_run4,HCT116 (cell line 1),top 1%,332.0000,0.9127,5.0602,31.1205
+other HCT116 run: replicate3_run4,HCT116 (cell line 1),1-5%,1281.0000,0.6870,1.7252,30.4520
+other HCT116 run: replicate3_run4,HCT116 (cell line 1),5-10%,774.0000,0.2881,0.4289,27.8333
+other HCT116 run: replicate3_run4,HCT116 (cell line 1),10-25%,893.0000,0.0739,0.0851,24.6226
+other HCT116 run: replicate3_run4,HCT116 (cell line 1),below top 25%,314.0000,0.0159,0.0159,15.3025
+other HCT116 run: replicate4_run3,HCT116 (cell line 1),top 1%,329.0000,0.9149,5.3222,31.7173
+other HCT116 run: replicate4_run3,HCT116 (cell line 1),1-5%,1274.0000,0.6860,1.6813,30.3265
+other HCT116 run: replicate4_run3,HCT116 (cell line 1),5-10%,811.0000,0.2799,0.3896,28.4538
+other HCT116 run: replicate4_run3,HCT116 (cell line 1),10-25%,851.0000,0.0834,0.1058,23.9048
+other HCT116 run: replicate4_run3,HCT116 (cell line 1),below top 25%,329.0000,0.0122,0.0122,15.7660

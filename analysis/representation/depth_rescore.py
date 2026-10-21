@@ -29,7 +29,7 @@ import xsrc_nets as X
 from m6a import crosssource as xs
 from m6a import registry
 from m6a.config import Config
-from m6a.data import subsample_blocks
+from m6a.data import SUBSAMPLE_SEED, subsample_blocks
 
 DEPTHS = (1, 3, 10)
 WEIGHTS = re.compile(r"(.+)_(dataset0|pooled_both)_fold(\d)(?:_s(\d+))?\.pt$")
@@ -70,16 +70,20 @@ def main() -> None:
     ap.add_argument("--threads", type=int, default=8)
     ap.add_argument("--arms", default="dataset0,pooled_both", help="only these training arms")
     ap.add_argument("--out", default="depth_rescore.json", help="results/ file name")
+    ap.add_argument("--subsample-seed", type=int, default=SUBSAMPLE_SEED,
+                    help="which reads are kept; another value is another random draw. Per-site "
+                         "scores only: the LightGBM comparison is cached for the default draw")
     args = ap.parse_args()
     torch.set_num_threads(args.threads)
     log = lambda *a: print(*a, flush=True)  # noqa: E731
+    redraw = args.subsample_seed != SUBSAMPLE_SEED
     sources, bundle = X.load(1.0)
     n0 = len(sources["dataset0"])
     keys = list(sources["dataset0"].index) + list(sources["data1"].index)
     started = time.time()
-    thinned = {d: subsample_blocks(bundle.reads, keys, d) for d in DEPTHS}
-    log(f"thinned reads to {DEPTHS} ({time.time() - started:.0f}s)")
-    base = lgbm_at_depths(sources, log)
+    thinned = {d: subsample_blocks(bundle.reads, keys, d, seed=args.subsample_seed) for d in DEPTHS}
+    log(f"thinned reads to {DEPTHS}, draw {args.subsample_seed} ({time.time() - started:.0f}s)")
+    base = None if redraw else lgbm_at_depths(sources, log)
 
     # (model, seed, arm) -> {depth: scores over every row}
     scores: dict = {}
@@ -106,10 +110,15 @@ def main() -> None:
 
     # Per-site scores (2026-10-10), so an ensemble can be scored at depth without torch
     # (depth_ensembles.py). Rows in bundle order: dataset0's, then data1's.
-    keep = X.OUT / "depth_scores"
+    # A repeated draw (2026-10-20, Task 2 site-type analysis) gets its own folder, so the
+    # default draw's files - which recorded results were computed from - are never overwritten.
+    keep = X.OUT / ("depth_scores" if not redraw else f"depth_scores_draw{args.subsample_seed}")
     keep.mkdir(exist_ok=True)
     for (model, seed, arm), by_depth in scores.items():
         np.savez(keep / f"{model}_{arm}_s{seed}.npz", **{f"d{d}": v for d, v in by_depth.items()})
+    if redraw:
+        log(f"-> {keep}")
+        return
     rows = []
     for (model, seed, arm), by_depth in sorted(scores.items()):
         if any(np.isnan(v).any() for v in by_depth.values()):

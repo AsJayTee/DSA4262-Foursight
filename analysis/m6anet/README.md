@@ -1,73 +1,100 @@
 # m6Anet benchmark
 
-The handout requires us to benchmark our method against m6Anet. This is a
-separate environment from the main package — do not add m6Anet to
-`pyproject.toml`.
+The handout asks us to benchmark our method against m6Anet (Hendra et al.,
+2022). This directory holds everything that benchmark needed: converting our
+data into m6Anet's input format, running the pretrained model, retraining it on
+our own folds, and scoring its predictions with the same code that scores ours.
 
-**Owner: lane C. Start this in week 1, not week 5.** Two things below can each
-cost a day if discovered late.
-
----
-
-## Trap 1: `data.info` is not `data.info.labelled`
-
-m6Anet inference needs **two** files in its input directory:
-
-| File | What it is | Do we have it? |
-|---|---|---|
-| `data.json` | Signal features | Yes — this is `dataset0.json.gz` |
-| `data.info` | **A byte-offset index** with read counts, for fast random access | **No** |
-
-The course gave us `data.info.labelled`, which is
-`gene_id,transcript_id,transcript_position,label` — the m6ACE-Seq **labels**.
-Same name prefix, completely different format and purpose. Pointing m6Anet at
-it produces an unhelpful error.
-
-The index is derivable: scan `data.json` once and record each line's byte
-offset, length and read count. Write that as `scripts/make_m6anet_index.py`
-here when you get to it.
-
-In m6Anet ≥ 2.0 this single `data.info` replaced the older separate
-`data.index` / `data.readcount` pair. Documentation written for v1 will
-describe the old layout; `m6anet convert` bridges them.
+m6Anet runs in its **own environment**, separate from the main package. Do not
+add it to `pyproject.toml`.
 
 ---
 
-## Trap 2: a venv cannot give you Python 3.8
+## Results
 
-`python3 -m venv` clones the **system** interpreter. On Ubuntu 24.04 that is
-3.12, so a venv can never be 3.8. Options, in order of how little they cost:
+| | Cell line 1 (HCT116) PR AUC | ROC AUC | Cell line 2 (HEK293T) PR AUC | ROC AUC |
+|---|---:|---:|---:|---:|
+| m6Anet, pretrained (`HCT116_RNA002`) | 0.503\* | 0.932\* | 0.356 | 0.819 |
+| m6Anet, retrained on our gene folds of cell line 1 | 0.488 | 0.924 | — | — |
 
-1. **Try a modern Python first.** Upstream m6Anet claims Python 3.7+, while the
-   handout says 3.8-via-conda. The handout may simply be dated. If m6Anet
-   installs on 3.10+, use that and skip the rest.
-2. `uv venv --python 3.8` — uv downloads the interpreter for you. Lighter than
-   a full conda install, and only lane C needs it.
-3. Miniforge / conda, as the handout says. The safe fallback.
+\* Not held out. The pretrained model was trained on SG-NEx HCT116 with HCT116
+m6ACE-seq labels: the same cell line, assay and pipeline as our training file
+(dataset0), and almost certainly many of the same sites. Its cell line 1 score
+is therefore an upper bound for m6Anet, not a fair held-out number.
 
-Record which one worked in this file, so nobody re-derives it.
-
----
-
-## If m6Anet cannot be installed at all
-
-Say so early. The fallback is benchmarking against m6Anet's published figures
-on comparable data, which is a materially weaker claim and has to be stated
-honestly in the report. That is a decision for the whole team, not a silent
-substitution — and it needs to be made in week 1, not the week before the
-deadline.
+Retraining on our folds scored slightly below the pretrained model, so the
+report uses the pretrained model as the comparator. Its cell line 2 score
+closely matches the HEK293T result published for m6Anet (0.35 PR AUC / 0.83
+ROC AUC), which indicates it was run as intended. The comparison with our
+models, including the fair test on a cell line neither was trained on, is in
+the report (Results 1) and in `report/findings.md` section 13.
 
 ---
 
-## What this directory should end up containing
+## Files
 
+| File | What it does |
+|---|---|
+| `run_ronin.sh` | The whole benchmark on one Linux instance, in stages (below) |
+| `make_m6anet_index.py` | Converts `dataset0.json.gz` into the `data.json` + `data.info` pair m6Anet reads |
+| `prepare_cv.py` | Lays out our gene-grouped, seed-4262 folds in the form m6Anet's trainer expects |
+| `score_m6anet.py` | Scores m6Anet's `data.site_proba.csv` with `m6a.evaluation`, optionally paired against one of our runs |
+| `xsrc_m6anet.py` | Puts m6Anet on the cross-source split (decisions 0029, 0032) and measures every model against it |
+| `m6anet_pretrained__xsrc.json` | The committed output of `xsrc_m6anet.py` |
+
+## Running it
+
+```bash
+bash analysis/m6anet/run_ronin.sh setup       # install m6Anet in its own venv, ~5 min
+bash analysis/m6anet/run_ronin.sh convert     # build data.json + data.info, ~2 min
+bash analysis/m6anet/run_ronin.sh pretrained  # pretrained inference, ~1.5 h
+bash analysis/m6anet/run_ronin.sh probe       # time 2 epochs before committing to a retrain
+bash analysis/m6anet/run_ronin.sh retrain     # 5 folds; hours (read the probe first)
+bash analysis/m6anet/run_ronin.sh score       # metrics, logged to W&B
 ```
-environment.yml           the working environment, once you find one
-make_m6anet_index.py      builds m6Anet's data.info from data.json
-run_m6anet.sh             inference over our test split
-results/                  m6Anet scores, for comparison in evaluation.py
-README.md                 this file — record what actually worked
-```
+
+`bash analysis/m6anet/run_ronin.sh all` runs every stage unattended, scoring
+the pretrained model before the retrain starts so that a late failure still
+leaves half the benchmark recorded. It needs the main package installed in
+`.venv/` (the helper scripts import `m6a` for the split, labels and metrics)
+and the training data downloaded. Everything it generates goes under `data/`,
+which is gitignored.
+
+### The install that worked
+
+`uv venv --python 3.8` followed by `m6anet==2.1.0`. `setup` does this for you.
+
+- A plain `python3 -m venv` cannot give Python 3.8: it copies the system
+  interpreter (3.12 on Ubuntu 24.04). `uv` downloads 3.8 itself, which is
+  lighter than installing conda.
+- m6Anet pins `torch==1.6.0`. Where that has no wheel, `setup` installs m6Anet
+  without dependencies and adds a modern torch; this was verified on torch
+  2.4.1.
+- m6Anet imports `pkg_resources` and `ujson` without declaring them, so
+  `setup` always installs `setuptools` and `ujson` explicitly.
+
+---
+
+## Two traps in m6Anet's input format
+
+Both were found by reading m6Anet's source (`m6anet/utils/data_utils.py`), and
+`make_m6anet_index.py` handles both.
+
+**1. `data.info` is not `data.info.labelled`.** m6Anet needs a `data.info` next
+to `data.json`: a byte-offset index with read counts, so it can seek to each
+site. The course's `data.info.labelled` has a similar name but is the m6ACE-seq
+**labels** (`gene_id,transcript_id,transcript_position,label`). Because m6Anet
+seeks into the file, `data.json` must also be uncompressed (625 MB).
+
+**2. Every read needs a trailing id column.** m6Anet treats the last value of
+each read as a read identifier. Our reads are nine signal values with no id,
+so the converter appends one. The nine signal values themselves already match
+m6Anet's layout (dwell time, standard deviation, mean, per position) and need
+no rescaling.
+
+In m6Anet 2.0 and later, `data.info` replaced the older separate `data.index`
+and `data.readcount` files, so documentation written for version 1 describes a
+different layout.
 
 ## Reference
 

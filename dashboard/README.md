@@ -20,11 +20,10 @@ are preserved in `src/reference/` and loaded by `src/main.jsx`. This preserves
 the four reference tabs, layout, interactions, demo data and source labels.
 The earlier Row/Data React components remain available but are not mounted.
 
-This is a visual baseline pending real site data. The supplied interface's
-synthetic tracks and placeholders are not real predictions. Its aggregate view
+The Explorer uses real preview subsets. Other labelled synthetic panels
+and placeholders are not real predictions. Its aggregate view
 reads the existing `public/data/summary.json`; its local-development data URLs
-are not connected to a backend here. Use its synthetic demo for now. Import
-formats must be checked against the real files when supplied. No model code or
+are not connected to a backend here. The Explorer loads its generated preview data automatically. No model code or
 weights were changed. Google Fonts requires connectivity to match typography.
 
 The original attachment contains compiled code, not editable component sources.
@@ -32,6 +31,9 @@ Future substantial changes should recover those sources or split the interface
 into maintainable components while preserving the reference appearance.
 
 The Row browser documentation below describes the preserved previous interface.
+
+Parallel dashboard development also exists on `feat/dashboard`, including
+data-building scripts in `scripts/dashboard/`; that branch is not merged here.
 
 A static React site (Vite), published to GitHub Pages from this repository
 ([decision 0035](../docs/decisions/0035-dashboard-is-a-static-react-site-on-github-pages.md)).

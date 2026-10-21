@@ -150,8 +150,10 @@ def showcase_transcripts() -> set[str]:
     return {s.split(".")[0] for s in keep.index}
 
 
-def run_line(line: str, names: list[str], limit: int | None) -> None:
+def run_line(line: str, names: list[str], limit: int | None, out_name: str | None = None,
+             showcase: bool = True) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
+    out_name = out_name or f"{line}_pooled"
     model = SiteGraphEnsemble.load(ROOT / "models" / "final")
     suffix = f"_limit{limit}" if limit else ""
     parts = []
@@ -166,8 +168,12 @@ def run_line(line: str, names: list[str], limit: int | None) -> None:
     started = time.time()
     frame, values, counts = pool(parts)
     del parts
-    score(model, frame, values, counts).to_csv(OUT / f"{line}_pooled{suffix}.csv.gz", index=False,
+    score(model, frame, values, counts).to_csv(OUT / f"{out_name}{suffix}.csv.gz", index=False,
                                                  float_format="%.5g")
+    if not showcase:
+        log(f"{out_name}: {len(frame):,} sites from {len(names)} samples, median {np.median(counts):.0f} reads "
+            f"({time.time() - started:.0f}s)")
+        return
     keep = frame.transcript_id.str.split(".").str[0].isin(showcase_transcripts()).to_numpy()
     offsets = np.r_[0, np.cumsum(counts)]
     rows = np.flatnonzero(keep)
@@ -187,9 +193,20 @@ def main() -> None:
     ap.add_argument("--all", action="store_true", help="every line, one process each")
     ap.add_argument("--jobs", type=int, default=3)
     ap.add_argument("--limit", type=int, help="first N sites of each sample (smoke)")
+    ap.add_argument("--batch", help="one batch of cells, LINE_replicateN (e.g. H9_replicate2): its runs pooled")
     args = ap.parse_args()
     lines = samples()
     log("samples: " + json.dumps({k: len(v) for k, v in lines.items()}))
+    if args.batch:
+        # A "replicate" in SG-NEx is a separately grown batch of cells; its runs are the same
+        # RNA re-sequenced. The dashboard's "holds up?" check counts batches, so a batch with
+        # several runs needs one ranking of its own (report/task2_plan.md, 3.3).
+        line, rep = args.batch.split("_", 1)
+        names = [n for n in lines[line] if f"_directRNA_{rep}_" in n]
+        if not names:
+            raise SystemExit(f"No {line} samples for {rep}; see `python analysis/sgnex/survey.py catalogue`.")
+        run_line(line, names, args.limit, out_name=f"{line}_{rep}_pooled", showcase=False)
+        return
     if args.line:
         run_line(args.line, lines[args.line], args.limit)
         return

@@ -1,6 +1,7 @@
 """Does the shipped model's score rise with the share of modified molecules? (dataset2, 10 Oct)
 
     python analysis/newdata/data2_scores.py
+    python analysis/newdata/data2_scores.py --plot-only   # redraw from the cached scores
 
 dataset2 (the course's in-vitro series): one synthetic RNA, sequenced as seven
 samples made with a KNOWN share of modified molecules - 0, 25, 50, 70, 75, 95 and
@@ -116,18 +117,23 @@ def draw(out: pd.DataFrame, rho_final: float, rho_own: float) -> None:
         ax.set_title(f"{title}\nSpearman with the fraction: {rho:.2f}", color=F.INK, fontsize=9, loc="left")
     axes[0].set_ylabel("model score (%)", color=F.INK_SOFT, fontsize=8.5)
     axes[0].legend(frameon=False, fontsize=7.5, loc="upper left")
-    fig.suptitle("dataset2: scores separate unmodified from modified RNA, but plateau above ~50% modified", x=0.012, ha="left",
-                 color=F.INK, fontsize=10.5)
-    fig.text(0.012, 0.01, "One synthetic RNA sequenced at 7 known modification levels; each point is one of its 189 "
-             "positions (one every 10 nt, all DRACH). Never used for training. Both panels: the shipped constrained\n"
-             "networks (res_gate, scalar_drop; 2 seeds each), with and without their neighbour step. By construction "
-             "every neighbour shares the site's level here: a best case for corroboration,\nnot real biology. Scores "
-             "are uncalibrated; x positions are categories. Source: results/data2_score_summary.csv.",
-             color=F.MUTED, fontsize=6.8, va="bottom")
-    fig.tight_layout(rect=(0, 0.09, 1, 0.93))
+    # Bare: no title or footnote; the report's LaTeX caption carries them. For the
+    # record - one synthetic RNA at 7 known modification levels, 189 DRACH positions,
+    # never trained on; both panels are the shipped constrained networks (res_gate,
+    # scalar_drop; 2 seeds each) with and without their neighbour step; every
+    # neighbour shares the site's level by construction (a best case for
+    # corroboration); scores uncalibrated; x positions are categories.
+    fig.tight_layout()
     fig.savefig(FIGURE)
-    print(f"-> {FIGURE}")
+    print(f"-> {FIGURE} (bare)")
+
+
+def plot_only() -> None:
+    """Redraw from the per-site scores main() cached, without rescoring."""
+    out = pd.read_csv(CACHE)
+    draw(out, spearmanr(out.fraction, out.with_neighbours).statistic,
+         spearmanr(out.fraction, out.own).statistic)
 
 
 if __name__ == "__main__":
-    main()
+    plot_only() if "--plot-only" in sys.argv else main()

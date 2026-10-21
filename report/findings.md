@@ -10,7 +10,9 @@ file), so any number can be regenerated or checked. Recorded 2026-10-03 to
 > different cell lines - different reads AND different labels (course staff,
 > 2026-10-05). Early project documents describe data1 as "a second sequencing
 > run, labelled differently"; that interpretation was wrong. Throughout this
-> file, "cell line 1" = dataset0 and "cell line 2" = data1. The final test
+> file, "cell line 1" = dataset0 = **HCT116** (colon cancer) and "cell line 2"
+> = data1 = **HEK293T** (human embryonic kidney); dataset2 is synthetic
+> sequences (all three confirmed by the course staff, 2026-10-14). The final test
 > data includes data that is not dataset0, may contain partial transcripts
 > (positions without enough reads are not reported), and is scored on
 > ranking only (ROC AUC, PR AUC).
@@ -159,7 +161,10 @@ the signature of a model trained on dataset0-like data.
 **data2 (in vitro, never trained on):** one synthetic sequence, 189 positions,
 sequenced at 0/25/50/70/75/95/100% modified molecules. Mean ensemble score
 rises 0.14 (0%) -> 0.43 (25%) -> 0.57 (50%) -> 0.60 (70%), then plateaus
-(0.57-0.60 to 100%). Earlier LightGBM models were non-monotone here (their
+(0.57-0.60 to 100%). Recomputed on the shipped model (16 Oct; mean submitted
+score, `score_rank` in .cache/representation/data2_scores.csv from
+analysis/newdata/data2_scores.py): 0.15 -> 0.44 -> 0.57 -> 0.60, plateau
+0.56-0.60. The report quotes these. Earlier LightGBM models were non-monotone here (their
 read-count features are confounded by the samples' different depths,
 550-1,205 median reads).
 
@@ -489,7 +494,13 @@ scores (the model trained on these labels): dataset0 PR AUC 0.665 / ROC AUC
   do.
 - **Predicted structure** (section 7) is for the unmodified sequence in vitro.
 - **m6Anet** comparison uses the pretrained model (likely its best case on
-  dataset0); a retrained m6Anet on our folds was not run.
+  dataset0). A retrained m6Anet on our folds was also run and scored below
+  the pretrained model, so the pretrained model is the comparator: out of
+  fold over 5 gene folds of dataset0, PR AUC 0.488 (fold mean 0.491, sd
+  0.018) and ROC AUC 0.924, against 0.503 / 0.932 pretrained on the same
+  sites. Source: W&B run m6anet_retrained_ourfolds (8iwst4yg, 25 Sep;
+  analysis/m6anet/run_ronin.sh retrain + score). It predates the union
+  split, so it has no data1 numbers.
 - **Missing neighbours.** Sites with no reported neighbour drop the ensemble
   to LightGBM level (0.391); test data may contain partial transcripts. A
   safeguard (use only `h2gcn_aux` for lone sites) is designed but not shipped.
@@ -1295,10 +1306,12 @@ read counts. Labels: HCT116 m6ACE-seq (docs/project-requirements.md).
 - No run matches more than 1.4% of its read counts.
 - That rules out A549, H9, HEYA8, HCT116, HepG2, K562 and MCF7 as processed
   in the bucket.
-- The course says only that it is a different cell line. A natural guess
-  is HEK293T: it is the other line with public m6ACE-seq labels, and
-  m6Anet's own test line. This is **unconfirmed**; course staff could be
-  asked.
+- **data1 is HEK293T** (human embryonic kidney), confirmed by the course
+  staff on 2026-10-14. This was the natural guess: the other line with
+  public m6ACE-seq labels, and m6Anet's own cross-cell-line test line. So
+  m6Anet's data1 score (0.356 / 0.819) is directly comparable with its
+  published HEK293T result (0.35 / 0.83). Which assay produced data1's
+  labels is still not stated.
 
 **What m6Anet trained and tested on** (Hendra et al., Nat Methods 2022,
 doi:10.1038/s41592-022-01666-1; full text checked 9 Oct):
