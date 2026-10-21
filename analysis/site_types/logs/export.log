@@ -1,0 +1,32 @@
+annotation: 200,310 transcripts
+/mnt/sdd/DSA4262/analysis/sgnex/export_site_shortlist.py:160: Pandas4Warning: Starting with pandas version 4.0 all arguments of mean will be keyword-only.
+  d["own_rank"] = d[OWN].mean(1).rank(pct=True)
+A549: 1,564,706 copies placed, 67,871 dropped (transcript not in Ensembl 91)
+A549: 858,724 sites, batches ['replicate5', 'replicate6']
+/mnt/sdd/DSA4262/analysis/sgnex/export_site_shortlist.py:160: Pandas4Warning: Starting with pandas version 4.0 all arguments of mean will be keyword-only.
+  d["own_rank"] = d[OWN].mean(1).rank(pct=True)
+H9: 2,029,191 copies placed, 0 dropped (transcript not in Ensembl 91)
+H9: 1,107,027 sites, batches ['replicate2', 'replicate3', 'replicate4']
+/mnt/sdd/DSA4262/analysis/sgnex/export_site_shortlist.py:160: Pandas4Warning: Starting with pandas version 4.0 all arguments of mean will be keyword-only.
+  d["own_rank"] = d[OWN].mean(1).rank(pct=True)
+HEYA8: 1,939,154 copies placed, 0 dropped (transcript not in Ensembl 91)
+HEYA8: 1,008,316 sites, batches ['replicate1', 'replicate2', 'replicate3']
+/mnt/sdd/DSA4262/analysis/sgnex/export_site_shortlist.py:160: Pandas4Warning: Starting with pandas version 4.0 all arguments of mean will be keyword-only.
+  d["own_rank"] = d[OWN].mean(1).rank(pct=True)
+Hct116: 1,868,554 copies placed, 94,469 dropped (transcript not in Ensembl 91)
+Hct116: 969,250 sites, batches ['replicate3', 'replicate4']
+/mnt/sdd/DSA4262/analysis/sgnex/export_site_shortlist.py:160: Pandas4Warning: Starting with pandas version 4.0 all arguments of mean will be keyword-only.
+  d["own_rank"] = d[OWN].mean(1).rank(pct=True)
+HepG2: 1,783,858 copies placed, 95,743 dropped (transcript not in Ensembl 91)
+HepG2: 945,329 sites, batches ['replicate5', 'replicate6']
+/mnt/sdd/DSA4262/analysis/sgnex/export_site_shortlist.py:160: Pandas4Warning: Starting with pandas version 4.0 all arguments of mean will be keyword-only.
+  d["own_rank"] = d[OWN].mean(1).rank(pct=True)
+K562: 1,480,925 copies placed, 77,491 dropped (transcript not in Ensembl 91)
+K562: 795,255 sites, batches ['replicate4', 'replicate5', 'replicate6']
+/mnt/sdd/DSA4262/analysis/sgnex/export_site_shortlist.py:160: Pandas4Warning: Starting with pandas version 4.0 all arguments of mean will be keyword-only.
+  d["own_rank"] = d[OWN].mean(1).rank(pct=True)
+MCF7: 1,652,213 copies placed, 76,149 dropped (transcript not in Ensembl 91)
+MCF7: 898,868 sites, batches ['replicate3', 'replicate4']
+1,508,095 physical sites over 26,321 genes
+-> /mnt/sdd/DSA4262/data/dashboard: 26,321 genes, 93.3 MB
+exit 0

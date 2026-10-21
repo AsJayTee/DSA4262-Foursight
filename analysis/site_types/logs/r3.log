@@ -1,0 +1,23 @@
+SGNex_Hct116_directRNA_replicate3_run4: 121,838 of 121,838 dataset0 sites, median depth 42 (34s)
+  h2gcn_twohead_aux s0 (70s)
+  h2gcn_twohead_aux s1 (118s)
+  h2gcn_twohead_aux s2 (169s)
+  res_gate s0 (212s)
+  res_gate s1 (248s)
+  res_gate s2 (283s)
+  scalar_drop s0 (317s)
+  scalar_drop s1 (351s)
+  scalar_drop s2 (384s)
+-> /mnt/sdd/DSA4262/.cache/representation/xsrc_nets/hct116_runs_sites/SGNex_Hct116_directRNA_replicate3_run4.npz
+SGNex_Hct116_directRNA_replicate4_run3: 121,838 of 121,838 dataset0 sites, median depth 76 (52s)
+  h2gcn_twohead_aux s0 (91s)
+  h2gcn_twohead_aux s1 (132s)
+  h2gcn_twohead_aux s2 (174s)
+  res_gate s0 (216s)
+  res_gate s1 (259s)
+  res_gate s2 (301s)
+  scalar_drop s0 (343s)
+  scalar_drop s1 (384s)
+  scalar_drop s2 (427s)
+-> /mnt/sdd/DSA4262/.cache/representation/xsrc_nets/hct116_runs_sites/SGNex_Hct116_directRNA_replicate4_run3.npz
+exit 0
