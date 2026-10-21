@@ -21,7 +21,8 @@ Writes data/dashboard/ (gitignored; plan 5.3 on why it is not committed):
   genes.json.gz            search index: id, name, location, per line site count and best rank
   shards/NNN.json.gz       per gene: its sites and each line's numbers, 256 files
   trust.json               pairwise accuracy by motif x read band (worse of the two
-                           labelled cell lines), from analysis/site_types/results/by_type.csv
+                           labelled cell lines) and each motif's modification rate,
+                           from analysis/site_types/results/by_type.csv
   meta.json                cell lines, batches, column meanings
 Only model outputs on public SG-NEx data and aggregate label statistics: never a
 course label or read (AGENTS.md section 5).
@@ -137,14 +138,19 @@ def merge(df: pd.DataFrame, value_cols: list[str]) -> pd.DataFrame:
 
 
 def trust_table() -> dict:
+    """Pairwise accuracy by motif x read band, and each motif's modification rate.
+
+    The rate (mean over the two labelled lines, full depth) is what the dashboard's
+    "rank by DNA letters alone" orders by: the rule of thumb the model is compared with."""
     t = pd.read_csv(BY_TYPE)
     t = t[t.family == "motif"]
-    out = {}
+    acc = {}
     for (motif, depth), x in t.groupby(["type", "depth"]):
         judged = x[x.note.isna() | (x.note == "")]
         # Worse of the two labelled cell lines, the same rule models are chosen by (decision 0032).
-        out.setdefault(motif, {})[depth] = None if len(judged) < 2 else round(float(judged.pair_acc.min()), 3)
-    return out
+        acc.setdefault(motif, {})[depth] = None if len(judged) < 2 else round(float(judged.pair_acc.min()), 3)
+    rate = t[t.depth == "full"].groupby("type").base_rate.mean().round(4).to_dict()
+    return {"read_bands": READ_BANDS, "pair_accuracy": acc, "motif_rate": rate}
 
 
 def main() -> None:
@@ -216,7 +222,7 @@ def main() -> None:
             json.dump(content, fh, separators=(",", ":"))
     with gzip.open(OUT / "genes.json.gz", "wt", compresslevel=9) as fh:
         json.dump(genes_index, fh, separators=(",", ":"))
-    (OUT / "trust.json").write_text(json.dumps({"read_bands": READ_BANDS, "pair_accuracy": trust_table()}, indent=1))
+    (OUT / "trust.json").write_text(json.dumps(trust_table(), indent=1))
     (OUT / "meta.json").write_text(json.dumps({
         "model": "models/final (decision 0034): h2gcn_twohead_aux + res_gate + scalar_drop, 2 seeds each",
         "annotation": "Ensembl 91 (GRCh38)", "lines": lines, "batches": {k: list(v) for k, v in BATCHES.items()},
