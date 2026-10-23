@@ -82,7 +82,7 @@ export default function HowItWorks() {
       </Step>
 
       <Step n="3" title="Sites inform each other: a graph"
-        summary="Modified sites tend to occur near each other. So each RNA becomes a graph: candidate sites are nodes, and sites within 150 letters are connected, more strongly when closer. Each site receives its neighbours' evidence and updates its score. Press 'Pass messages' to see the scores change."
+        summary="Modified sites tend to occur near each other. So each RNA becomes a graph: candidate sites are nodes, and sites within 150 letters are connected, more strongly when closer. Each site receives its neighbours' evidence and updates its score. Click a site in the graph to pass its neighbours' evidence to it and see the scores change."
         detail={
           <>
             <p>
