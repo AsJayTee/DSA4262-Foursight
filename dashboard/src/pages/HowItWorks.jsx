@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { useJson, topPercent } from "../lib/data.js";
 import { RnaText, ReadNetwork, SiteGraph } from "../components/ModelViz.jsx";
 import Doors from "../components/Doors.jsx";
 
+// The method detail sits behind a quiet link at the end of each step's text, and opens
+// in place under it, so it reads as a footnote to the step rather than a separate block.
 function Step({ n, title, summary, children, detail }) {
+  const [open, setOpen] = useState(false);
   return (
     <section className="story-step" id={`step-${n}`}>
       <div className="step-head">
@@ -10,15 +14,21 @@ function Step({ n, title, summary, children, detail }) {
         <div>
           <h2>{title}</h2>
           <p className="summary">{summary}</p>
+          {detail && (
+            <>
+              <button type="button" className={open ? "method-link open" : "method-link"} aria-expanded={open}
+                aria-controls={`method-${n}`} onClick={() => setOpen(!open)}>
+                Method notes
+                <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+              </button>
+              <div className={open ? "method-notes open" : "method-notes"} id={`method-${n}`} hidden={!open}>
+                <div>{detail}</div>
+              </div>
+            </>
+          )}
         </div>
       </div>
       {children}
-      {detail && (
-        <details className="tech">
-          <summary>Technical detail</summary>
-          {detail}
-        </details>
-      )}
     </section>
   );
 }
@@ -33,7 +43,7 @@ export default function HowItWorks() {
     <div className="story">
       <header className="story-intro page-narrow">
         <p className="eyebrow">How it works</p>
-        <h1>How the model ranks a site.</h1>
+        <h1>How the model ranks a site</h1>
         <p className="lede">
           The model treats an RNA as text and each candidate site on it as a small table of measurements. It scores
           a site from its own table, then refines the score using the sites around it. Each step below runs on real
@@ -41,8 +51,8 @@ export default function HowItWorks() {
         </p>
       </header>
 
-      <Step n="1" title="The input: text and tables"
-        summary="An RNA is a string of four letters. Some positions are candidate sites, where the modification can occur. For each candidate site we get a table: one row per molecule measured there, and nine numbers per row describing the signal around that position. The number of rows differs from site to site, from one to several hundred, so the model must accept a table of any height."
+      <Step n="1" title="Input: sequence and signal per molecule"
+        summary="An RNA is a string of four letters. Some positions are candidate sites, where the modification can occur. For each candidate site we get a table: one row per sequenced molecule that contains the site, and nine numbers per row describing the signal around that position. The number of rows differs from site to site, from one to several hundred, so the model must accept a table of any height."
         detail={
           <>
             <p>
@@ -60,7 +70,7 @@ export default function HowItWorks() {
         <RnaText text={data.text} sites={sites} />
       </Step>
 
-      <Step n="2" title="Reading one site: one network for every row"
+      <Step n="2" title="Scoring a site from its molecules"
         summary="Every row passes through the same small neural network. The outputs are averaged over the rows, so their order does not matter and any number of rows works. A second network turns that average into a score. Press play to feed the molecules in one at a time and watch the score settle as evidence accumulates."
         detail={
           <>
@@ -81,7 +91,7 @@ export default function HowItWorks() {
         <ReadNetwork network={network} table={network.inputs} site={slider} />
       </Step>
 
-      <Step n="3" title="Sites inform each other: a graph"
+      <Step n="3" title="Adding evidence from nearby sites"
         summary="Modified sites tend to occur near each other. So each RNA becomes a graph: candidate sites are nodes, and sites within 150 letters are connected, more strongly when closer. Each site receives its neighbours' evidence and updates its score. Click a site in the graph to pass its neighbours' evidence to it and see the scores change."
         detail={
           <>

@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Tip } from "./Tip.jsx";
+import { Popup, Tip } from "./Tip.jsx";
 
 // SVG charts for the Model stats page (public/data/model_stats.json).
 
@@ -33,8 +33,14 @@ export function Legend({ series, className = "" }) {
   );
 }
 
-export function LineChart({ x, series, yLabel, xLabel, yMax, yTicks, xTicks, refY, refX, height = 280, legend = true, xFormat = fmt }) {
+// points: mark each measured value, and on hover show every series' value at that x
+// (popTitle names the x, valueFormat formats the values). Lines between points are drawn
+// for reading only; the points are what was measured.
+export function LineChart({ x, series, yLabel, xLabel, yMax, yTicks, xTicks, refY, refX, height = 280, legend = true, xFormat = fmt,
+  points = false, popTitle, valueFormat = (v) => v }) {
   const [ref, W] = useWidth();
+  const svg = useRef(null);
+  const [hover, setHover] = useState(null);           // {i, name, at}: the point under the pointer
   const H = Math.round(clamp((W * height) / 640, height * 0.85, height * 1.3)), L = 52, R = 16, T = 14, B = 42;
   const vals = series.flatMap((s) => s.values.filter((v) => v != null));
   const top = yMax ?? Math.max(...vals) * 1.08;
@@ -52,7 +58,7 @@ export function LineChart({ x, series, yLabel, xLabel, yMax, yTicks, xTicks, ref
   return (
     <figure className="stat-chart" ref={ref}>
       {legend && <Legend series={series} />}
-      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${yLabel} by ${xLabel}`}>
+      <svg ref={svg} viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${yLabel} by ${xLabel}`}>
         {ticks.map((v) => (
           <g key={v}>
             <line className="grid" x1={L} x2={W - R} y1={sy(v)} y2={sy(v)} />
@@ -67,7 +73,34 @@ export function LineChart({ x, series, yLabel, xLabel, yMax, yTicks, xTicks, ref
         <text className="axis-label" x={(L + W - R) / 2} y={H - 4} textAnchor="middle">{xLabel}</text>
         <text className="axis-label" transform={`translate(13,${(T + H - B) / 2}) rotate(-90)`} textAnchor="middle">{yLabel}</text>
         {series.map((s, i) => <path key={i} className={`series-line ${s.style}`} d={path(s.values)} />)}
+        {points && hover && <line className="hover-guide" x1={sx(x[hover.i])} x2={sx(x[hover.i])} y1={T} y2={H - B} />}
+        {points && series.filter((s) => s.name).map((s) => s.values.map((v, i) => {
+          if (v == null) return null;
+          const on = hover?.i === i && hover.name === s.name;
+          const enter = () => {
+            const r = svg.current.getBoundingClientRect();
+            setHover({ i, name: s.name, at: { x: r.left + sx(x[i]) + 4, y: r.top + sy(v) - 4 } });
+          };
+          // A visible dot, and a larger invisible circle around it that takes the pointer.
+          return (
+            <g key={`${s.name}${i}`} className={`series-pt-g${on ? " on" : ""}`}
+              onPointerEnter={enter} onPointerLeave={() => setHover(null)}>
+              <circle className={`series-pt ${s.style}`} cx={sx(x[i])} cy={sy(v)} r={on ? 7 : 5} />
+              <circle className="series-hit" cx={sx(x[i])} cy={sy(v)} r="11" />
+            </g>
+          );
+        }))}
       </svg>
+      {points && hover && (
+        <Popup at={hover.at}>
+          <strong>{popTitle ? popTitle(x[hover.i]) : xFormat(x[hover.i])}</strong>
+          {series.filter((s) => s.name && s.values[hover.i] != null).map((s) => (
+            <span key={s.name} className={s.name === hover.name ? "pop-row on" : "pop-row"}>
+              <i className={`sw ${s.style}`} />{s.name}<b>{valueFormat(s.values[hover.i])}</b>
+            </span>
+          ))}
+        </Popup>
+      )}
     </figure>
   );
 }
@@ -206,10 +239,26 @@ export function LineSelect({ value, onChange, label = "Cell line", search = fals
 const SHORT = { "Logistic regression": "Logistic reg.", "Quantiles + LightGBM": "LightGBM", "m6Anet (pretrained)": "m6Anet",
   "DeepSet (reads only)": "DeepSet", "This model": "This model" };
 const LEFT = new Set(["Quantiles + LightGBM"]);
+// What each method is, for the details card under the scatter.
+const METHOD_INFO = {
+  "Logistic regression": "The required simple baseline. Each site's reads are summarised by the mean and standard deviation of the nine signal measurements; with the site's DRACH motif, these feed a logistic regression.",
+  "Quantiles + LightGBM": "Each measurement is summarised by five quantiles across the site's reads (5th to 95th percentile), so a minority of modified reads still shows in the tails. Gradient-boosted trees (LightGBM) classify the site.",
+  "m6Anet (pretrained)": "The published m6Anet model (Hendra et al., 2022), used with its released HCT116 (RNA002) weights and not retrained. Its training data overlap the HCT116 evaluation set, so its HCT116 values are not held out.",
+  "DeepSet (reads only)": "This model's read encoder on its own: one network applied to every read, then pooled across the site's reads. It does not use neighbouring sites.",
+  "This model": "Six site-graph networks (three designs, two random starts each). Each scores a site from its own reads, then adjusts the score using candidate sites within 150 nt on the same transcript. The reported score is the mean of the six within-sample ranks.",
+};
+const f3 = (v) => (v == null ? "–" : v.toFixed(3));
 // m6Anet's HCT116 value is not held out; the two-line mean includes it.
 const hollowIn = (lines) => lines.includes("HCT116") || lines.includes("both");
 export function AucScatter({ rows, lines }) {
   const [ref, W] = useWidth();
+  const [hover, setHover] = useState(null);           // {r, at}
+  const [open, setOpen] = useState(null);             // method whose details card is shown
+  const show = (r, e) => {
+    const b = e.currentTarget.querySelector("circle").getBoundingClientRect();
+    setHover({ r, at: { x: b.right, y: b.top + b.height / 2 } });
+  };
+  const toggle = (m) => setOpen((o) => (o === m ? null : m));
   const H = Math.round(clamp(W * 0.5, 320, 440)), L = 52, R = 16, T = 16, B = 46;
   const pts = rows.filter((r) => r.method !== "Random");
   const xs = pts.flatMap((r) => lines.map((l) => r.roc[l])), ys = pts.flatMap((r) => lines.map((l) => r.pr[l]));
@@ -238,10 +287,14 @@ export function AucScatter({ rows, lines }) {
           const left = LEFT.has(r.method) || x + 11 + text.length * 7.5 > W - R;
           const hollow = r.note && hollowIn(lines);
           return (
-            <g key={r.method} className={ours ? "pt ours" : "pt"}>
-              <circle cx={x} cy={y} r="6.5" className={hollow ? "hollow" : ""}>
-                <title>{`${r.method}: PR AUC ${r.pr[l].toFixed(3)}, ROC AUC ${r.roc[l].toFixed(3)}`}</title>
-              </circle>
+            <g key={r.method} className={`pt${ours ? " ours" : ""}${open === r.method ? " sel" : ""}`}
+              tabIndex="0" role="button" aria-expanded={open === r.method}
+              aria-label={`${r.method}: PR AUC ${f3(r.pr[l])}, ROC AUC ${f3(r.roc[l])}. Show details.`}
+              onPointerEnter={(e) => show(r, e)} onPointerLeave={() => setHover(null)}
+              onFocus={(e) => show(r, e)} onBlur={() => setHover(null)}
+              onClick={() => toggle(r.method)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(r.method); } }}>
+              <circle cx={x} cy={y} r="6.5" className={hollow ? "hollow" : ""} />
               <text className="pt-label" x={left ? x - 11 : x + 11} y={y + 4} textAnchor={left ? "end" : "start"}>
                 {SHORT[r.method]}{hollow ? " †" : ""}
               </text>
@@ -249,7 +302,81 @@ export function AucScatter({ rows, lines }) {
           );
         })}
       </svg>
+      {hover && (
+        <Popup at={hover.at}>
+          <strong>{hover.r.method}</strong>
+          <span className="pop-row">PR AUC<b>{f3(hover.r.pr[lines[0]])}</b></span>
+          <span className="pop-row">ROC AUC<b>{f3(hover.r.roc[lines[0]])}</b></span>
+          {hover.r.note && hollowIn(lines) && <span className="pop-note">† Not held out on HCT116</span>}
+          <span className="pop-hint">{open === hover.r.method ? "Click to close details" : "Click for details"}</span>
+        </Popup>
+      )}
+      {open && (
+        <MethodPanel rows={pts} method={open} line={lines[0]} onMove={setOpen} onClose={() => setOpen(null)} />
+      )}
     </figure>
+  );
+}
+
+/* A method's details in a panel on the right, the same panel as a site's in Explore:
+   previous / next through the methods, Escape or the backdrop to close. */
+const LINE_NAME = { HCT116: "HCT116", HEK293T: "HEK293T", both: "Both cell lines (mean)" };
+function MethodPanel({ rows, method, line, onMove, onClose }) {
+  const ref = useRef(null);
+  const i = rows.findIndex((r) => r.method === method);
+  const r = rows[i], prev = rows[i - 1], next = rows[i + 1];
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft" && prev) onMove(prev.method);
+      if (e.key === "ArrowRight" && next) onMove(next.method);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose, onMove, prev, next]);
+  useEffect(() => { ref.current?.focus(); }, [method]);
+  return (
+    <>
+      <div className="scrim" onClick={onClose} />
+      <aside className="site-panel method-panel" role="dialog" aria-modal="true" aria-labelledby="method-title" tabIndex="-1" ref={ref}>
+        <div className="sp-top">
+          <span className="muted small">Discrimination · {LINE_NAME[line] || line}</span>
+          <div className="sp-nav">
+            <button onClick={() => prev && onMove(prev.method)} disabled={!prev} aria-label="Previous method">‹</button>
+            <span className="small">{i + 1} / {rows.length}</span>
+            <button onClick={() => next && onMove(next.method)} disabled={!next} aria-label="Next method">›</button>
+            <button onClick={onClose} aria-label="Close" className="sp-close">×</button>
+          </div>
+        </div>
+        <header className="sp-head">
+          <h2 id="method-title">{r.method}</h2>
+          <div className="sp-badges">
+            {r.method === "This model" && <span className="badge ours">Shipped model</span>}
+            {r.note && <span className="badge warn">HCT116 not held out</span>}
+          </div>
+        </header>
+        <section className="sp-block">
+          <div className="sp-label">Method</div>
+          <p className="mp-text">{METHOD_INFO[r.method]}</p>
+        </section>
+        <section className="sp-block">
+          <div className="sp-label">Held-out performance</div>
+          <table className="mc-table">
+            <thead><tr><th /><th className="num">HCT116{r.note ? " †" : ""}</th><th className="num">HEK293T</th><th className="num">Mean</th></tr></thead>
+            <tbody>
+              {[["PR AUC", "pr"], ["ROC AUC", "roc"]].map(([t, k]) => (
+                <tr key={k}><th scope="row">{t}</th>
+                  {["HCT116", "HEK293T", "both"].map((c) => <td key={c} className={c === line ? "num on" : "num"}>{f3(r[k][c])}</td>)}</tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="mp-note">
+            Five-fold cross-validation grouped by gene. A random ranking has PR AUC 0.045 (HCT116) and 0.072 (HEK293T).
+            {r.note && " † m6Anet was trained on HCT116 data, so its HCT116 values are not held out."}
+          </p>
+        </section>
+      </aside>
+    </>
   );
 }
 

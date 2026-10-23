@@ -113,7 +113,7 @@ export function RnaText({ text, sites }) {
             <p className="panel-kmer"><code>{rna(table.kmer)}</code>, position {table.position} of {text.length.toLocaleString()}</p>
             <dl>
               <dt>Rows</dt>
-              <dd>{table.depth} rows, one per molecule measured at this site.</dd>
+              <dd>{table.depth} rows, one per sequenced molecule that contains this site.</dd>
               <dt>Columns</dt>
               <dd><RowFormula /></dd>
             </dl>

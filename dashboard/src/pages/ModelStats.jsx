@@ -76,9 +76,11 @@ export default function ModelStats() {
   const sourceNote = source === "SG-NEx"
     ? `SG-NEx sites with ≥ ${sg.min_reads} reads; positive = top ${sg.top * 100}% of each cell line.`
     : `Held-out sites; model and m6Anet positive = top ${pct(lab.base_rate)}% of the file, the labelled positive rate.`;
+  const depthTitle = (v) => ["1 read per site", "3 reads per site", "10 reads per site", "All reads (≥ 20 per site)"][v];
   const topkChart = (line, legend = true) => (
     <LineChart key={line} x={[1, 2, 3, 4, 5]} xTicks={[1, 2, 3, 4, 5]} xLabel="Sites tested (top k)" yLabel="Genes recovered (%)"
       yMax={100} yTicks={[0, 25, 50, 75, 100]} legend={legend}
+      points popTitle={(k) => `Top ${k} site${k > 1 ? "s" : ""} tested`} valueFormat={(v) => `${v.toFixed(1)}%`}
       series={[["This model", "model", "accent"], ["m6Anet", "m6Anet (pretrained)", "fg"], ["Motif rule", "motif rule", "dash"], ["Random", "random", "mid"]]
         .map(([name, key, style]) => ({ name, values: s.topk[key][line].map(pct), style }))} />
   );
@@ -118,6 +120,7 @@ export default function ModelStats() {
         ]} />}
         {dvm ? (
           <LineChart x={[0, 1, 2, 3]} xTicks={[0, 1, 2, 3]} xFormat={(v) => ["1", "3", "10", "≥ 20"][v]}
+            points popTitle={depthTitle} valueFormat={depthMetric === "top3" ? (v) => `${v}%` : (v) => v.toFixed(3)}
             xLabel="Reads per site" yLabel={{ pr_auc: "PR AUC", pair_acc: "ROC AUC", top3: "Genes recovered (%)" }[depthMetric]}
             yMax={{ pr_auc: 0.7, pair_acc: 1, top3: 100 }[depthMetric]}
             yTicks={{ pr_auc: [0, 0.2, 0.4, 0.6], pair_acc: [0, 0.25, 0.5, 0.75, 1], top3: [0, 25, 50, 75, 100] }[depthMetric]}
@@ -127,6 +130,7 @@ export default function ModelStats() {
             }))} />
         ) : (
           <LineChart x={[0, 1, 2, 3]} xTicks={[0, 1, 2, 3]} xFormat={(v) => ["1", "3", "10", "≥ 20"][v]}
+            points popTitle={depthTitle} valueFormat={(v) => v.toFixed(3)}
             xLabel="Reads per site" yLabel="PR AUC" yMax={0.7} yTicks={[0, 0.2, 0.4, 0.6]}
             series={[{ name: "This model", values: depthOrder.map((d) => s.depth[depthLine][d].pr_auc), style: "accent" }]} />
         )}
@@ -175,12 +179,12 @@ export default function ModelStats() {
 
       <Section id="limitations" title="Limitations">
         <ul className="plain-list">
-          <li><strong>Ranks, not probabilities.</strong> Scores are within-sample percentiles: uncalibrated and not comparable across samples.</li>
-          <li><strong>Presence, not stoichiometry.</strong> Trained on binary site labels; the score does not estimate the modified fraction.</li>
-          <li><strong>Low depth is simulated.</strong> All labelled sites have ≥ 20 reads; performance at 1–3 reads is estimated by subsampling.</li>
-          <li><strong>No differential calls.</strong> Rank agreement between replicates of one line matches that between lines.</li>
-          <li><strong>Junction-proximal sites.</strong> Sites within ~75 nt of an exon junction are likely under-ranked.</li>
-          <li><strong>Label noise.</strong> m6ACE-seq misses true sites, so reported accuracy is likely an underestimate.</li>
+          <li><strong>The model outputs ranks instead of probabilities.</strong> Scores are within-sample percentiles; they are uncalibrated and cannot be compared across samples.</li>
+          <li><strong>The model does not estimate stoichiometry.</strong> It was trained on binary site labels, so the score carries no information on the modified fraction.</li>
+          <li><strong>Performance at low depth is estimated by subsampling.</strong> Every labelled site has at least 20 reads; results at 1–10 reads come from randomly thinned reads.</li>
+          <li><strong>The model cannot detect differences between cell lines.</strong> Rank agreement between replicates of one cell line is no higher than agreement between cell lines.</li>
+          <li><strong>Sites near exon junctions are likely under-ranked.</strong> Within about 75 nt of a junction, the model depletes sites more strongly than the labels do.</li>
+          <li><strong>Reported accuracy is likely an underestimate.</strong> m6ACE-seq misses some true sites, and these count against the model in evaluation.</li>
         </ul>
       </Section>
       <Doors to={["explore", "how"]} />

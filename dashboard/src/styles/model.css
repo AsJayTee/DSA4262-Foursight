@@ -10,10 +10,6 @@
 .step-head .step-n { margin: 4px 0 0; }
 .summary { margin-top: 12px; color: var(--fg-soft); font-size: 1.08rem; }
 
-.tech { max-width: 720px; margin: 24px 0 0 56px; border-left: 2px solid var(--line); padding-left: 16px; }
-.tech summary { cursor: pointer; font-weight: 500; color: var(--muted); font-size: 0.92rem; }
-.tech[open] summary { margin-bottom: 10px; }
-.tech p { color: var(--fg-soft); font-size: 0.95rem; margin-bottom: 10px; }
 .source { font-size: 0.82rem; color: var(--muted); }
 
 /* Charts */
@@ -57,7 +53,6 @@
 .chart { max-width: 760px; }
 .two-charts { display: grid; gap: 48px; margin-bottom: 48px; }
 .chart.compact { max-width: 620px; }
-@media (max-width: 760px) { .tech { margin-left: 0; } }
 
 /* Pipeline diagram */
 .box { fill: var(--surface); stroke: var(--line); }
@@ -223,3 +218,15 @@
   .step-head { grid-template-columns: 32px minmax(0, 1fr); gap: 10px; }
   .story-step { padding: 44px 20px; }
 }
+
+/* Method notes: a quiet link under each step's summary; the notes open in place. */
+.method-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; padding: 0; border: 0; background: none;
+  font: inherit; font-size: 0.86rem; color: var(--muted); cursor: pointer; text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--muted) 40%, transparent); text-underline-offset: 3px; transition: color 0.15s; }
+.method-link:hover, .method-link:focus-visible { color: var(--fg); text-decoration-color: currentColor; }
+.method-link svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s; }
+.method-link.open svg { transform: rotate(180deg); }
+.method-notes { margin-top: 10px; animation: fade 0.2s ease-out; }
+.method-notes > div { padding: 2px 0 2px 14px; border-left: 2px solid var(--line); }
+.method-notes p { color: var(--fg-soft); font-size: 0.9rem; line-height: 1.6; margin: 0 0 10px; }
+.method-notes p:last-child { margin-bottom: 0; }

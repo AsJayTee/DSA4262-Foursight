@@ -45,12 +45,17 @@ export function Tip({ text, children, className = "", label, as = "span", ...res
         onClick={(e) => { e.stopPropagation(); close(); rest.onClick?.(e); }}>
         {children}
       </Tag>
-      {at && createPortal(<TipPopup at={at} text={text} />, document.body)}
+      {at && <TipPopup at={at} text={text} />}
     </>
   );
 }
 
 function TipPopup({ at, text }) {
+  return <Popup at={at} id="tip-pop">{text}</Popup>;
+}
+
+// The same popup, opened directly at a screen point (charts use it on hover, no delay).
+export function Popup({ at, children, id }) {
   const ref = useRef(null);
   const [style, setStyle] = useState({ left: at.x + 14, top: at.y + 16, visibility: "hidden" });
   // Keep it on screen: flip left or up when it would overflow.
@@ -60,7 +65,7 @@ function TipPopup({ at, text }) {
     const top = at.y + 16 + r.height > window.innerHeight - 8 ? at.y - 12 - r.height : at.y + 16;
     setStyle({ left: Math.max(8, left), top: Math.max(8, top) });
   }, [at]);
-  return <div id="tip-pop" role="tooltip" ref={ref} className="tip-pop" style={style}>{text}</div>;
+  return createPortal(<div id={id} role="tooltip" ref={ref} className="tip-pop" style={style}>{children}</div>, document.body);
 }
 
 // The small "i" next to a column heading.

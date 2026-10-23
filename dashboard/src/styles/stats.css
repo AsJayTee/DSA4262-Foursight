@@ -190,3 +190,40 @@
   .depth-table .bar-col, .depth-table .sites-col { display: none; }
   .depth-table th, .depth-table td { padding: 8px 5px; }
 }
+
+/* Measured points on line charts, and the hover readout. */
+.series-pt { stroke: var(--bg); stroke-width: 1.8; fill: var(--mid); transition: r 0.15s; pointer-events: none; }
+.series-hit { fill: transparent; cursor: pointer; }
+.series-pt.accent, .series-pt.accent-dash { fill: var(--accent); }
+.series-pt.fg, .series-pt.dash, .series-pt.fg-dash { fill: var(--fg); }
+.hover-guide { stroke: var(--fg); stroke-opacity: 0.25; stroke-width: 1; pointer-events: none; }
+.tip-pop .pop-row { display: flex; align-items: center; gap: 7px; margin-top: 3px; }
+.tip-pop .pop-row.on { font-weight: 600; }
+.tip-pop .pop-row:not(.on) { opacity: 0.72; }
+.tip-pop .pop-row b { margin-left: auto; padding-left: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tip-pop strong { display: block; margin-bottom: 2px; }
+.tip-pop .sw { display: inline-block; width: 12px; height: 0; border-top: 2.5px solid var(--mid); flex-shrink: 0; }
+.tip-pop .sw.accent, .tip-pop .sw.accent-dash { border-color: var(--accent); }
+.tip-pop .sw.fg, .tip-pop .sw.dash, .tip-pop .sw.fg-dash { border-color: var(--bg); }
+.tip-pop .sw.dash, .tip-pop .sw.fg-dash, .tip-pop .sw.accent-dash { border-top-style: dashed; }
+.tip-pop .pop-note { display: block; margin-top: 4px; opacity: 0.75; }
+.tip-pop .pop-hint { display: block; margin-top: 6px; padding-top: 6px; border-top: 1px solid color-mix(in srgb, var(--bg) 25%, transparent); opacity: 0.7; font-size: 0.74rem; }
+
+/* Scatter points: grow on hover; the selected one is ringed. */
+.pt { cursor: pointer; outline: none; }
+.pt circle { transition: r 0.15s, stroke 0.15s, stroke-width 0.15s; }
+.pt:hover circle, .pt:focus-visible circle { r: 9px; }
+.pt.sel circle { r: 9px; stroke: var(--fg); stroke-width: 2.5; }
+.pt:hover .pt-label, .pt:focus-visible .pt-label { fill: var(--fg); }
+
+/* Method panel (StatsCharts MethodPanel) reuses Explore's site panel; these are its extras. */
+.method-panel .sp-head h2 { font-size: 1.45rem; letter-spacing: -0.02em; }
+.method-panel .mp-text { color: var(--fg-soft); font-size: 0.9rem; line-height: 1.6; margin: 0; }
+.method-panel .mp-note { margin: 12px 0 0; font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+.badge.ours { background: var(--accent); border-color: var(--accent); color: #fff; }
+.mc-table { border-collapse: collapse; font-size: 0.88rem; font-variant-numeric: tabular-nums; width: 100%; }
+.mc-table th, .mc-table td { padding: 6px 0; text-align: left; border-bottom: 1px solid var(--line); }
+.mc-table thead th { font-size: 0.76rem; font-weight: 500; color: var(--muted); }
+.mc-table th[scope="row"] { font-weight: 500; color: var(--fg-soft); }
+.mc-table .num { text-align: right; padding-left: 14px; }
+.mc-table td.on { font-weight: 700; color: var(--fg); }

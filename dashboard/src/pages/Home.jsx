@@ -142,7 +142,7 @@ export default function Home() {
           <li>
             <span className="step-n">2</span>
             <h3>Learn what a tag looks like</h3>
-            <p>We trained a model on molecules from two cell types where lab tests had already found the tags.</p>
+            <p>We trained a model on the electrical signals recorded from RNA of two cell types, where lab experiments had already located the tags.</p>
           </li>
           <li>
             <span className="step-n">3</span>
@@ -166,9 +166,9 @@ export default function Home() {
       <section className="band">
         <h2>What it can't tell you</h2>
         <ul className="plain-list">
-          <li><strong>A ranking, not a certainty.</strong> A high rank means "look here first", not "this is definitely tagged".</li>
-          <li><strong>Whether, not how much.</strong> It does not say what share of the molecules carry the tag.</li>
-          <li><strong>Little evidence, less confidence.</strong> Where only a few molecules were read, the ranking is weaker.</li>
+          <li><strong>The model predicts rankings instead of probabilities.</strong> A high rank marks a site as worth testing first; it does not establish that the site is modified.</li>
+          <li><strong>The model does not estimate how much of an RNA is modified.</strong> It predicts whether a site carries m6A, but not the fraction of molecules modified there.</li>
+          <li><strong>Predictions are less reliable where few molecules were read.</strong> Sites with low read depth give the model less evidence, and their rankings are less stable.</li>
         </ul>
       </section>
 

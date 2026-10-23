@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useJson } from "../lib/data.js";
 import { LINES, LOW_DEPTH, lineName, loadGene, loadIndex, loadMeta, loadStructure, rowsFor, searchGenes, toCsv } from "../lib/sites.js";
 import { GeneViewer, Head, SiteCells, SitePanel, SiteTable, topPct } from "../components/ExploreParts.jsx";
@@ -80,6 +80,61 @@ function LinePicker({ gene, line, onPick }) {
   );
 }
 
+// Top-k as a slider over 1-5. While dragging, the thumb follows the pointer and k updates
+// as it passes each number; on release it glides to the nearest one. Numbers beyond the
+// gene's site count are greyed and cannot be reached.
+const K_MAX = 5;
+function KSlider({ value, max, onChange }) {
+  const track = useRef(null);
+  const [drag, setDrag] = useState(null);             // pointer position as a fraction, while dragging
+  const at = (n) => (n - 1) / (K_MAX - 1);
+  const limit = at(Math.max(1, Math.min(max, K_MAX)));
+  const nearest = (f) => Math.round(f * (K_MAX - 1)) + 1;
+  const fromEvent = (e) => {
+    const r = track.current.getBoundingClientRect();
+    return Math.max(0, Math.min(limit, (e.clientX - r.left) / r.width));
+  };
+  const move = (e) => {
+    const f = fromEvent(e);
+    setDrag(f);
+    const n = nearest(f);
+    if (n !== value) onChange(n);
+  };
+  const f = drag ?? at(value);
+  const onKey = (e) => {
+    const step = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1 }[e.key];
+    let n = step ? value + step : e.key === "Home" ? 1 : e.key === "End" ? max : null;
+    if (n === null) return;
+    e.preventDefault();
+    n = Math.max(1, Math.min(max, K_MAX, n));
+    if (n !== value) onChange(n);
+  };
+  return (
+    <div className="k-slider">
+      <span className="k-label">Top k</span>
+      <div className={drag === null ? "ks" : "ks dragging"} role="slider" tabIndex="0"
+        aria-label="Number of top-ranked sites" aria-valuemin="1" aria-valuemax={Math.min(max, K_MAX)} aria-valuenow={value}
+        onKeyDown={onKey}
+        onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); move(e); }}
+        onPointerMove={(e) => drag !== null && move(e)}
+        onPointerUp={() => setDrag(null)} onPointerCancel={() => setDrag(null)}>
+        <div className="ks-track" ref={track}>
+          <span className="ks-fill" style={{ width: `${f * 100}%` }} />
+          {[1, 2, 3, 4, 5].map((n) => (
+            <span key={n} className={`ks-tick${n <= value ? " on" : ""}${n > max ? " off" : ""}`} style={{ left: `${at(n) * 100}%` }} />
+          ))}
+          <span className="ks-thumb" style={{ left: `${f * 100}%` }} />
+        </div>
+        <div className="ks-nums" aria-hidden="true">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <span key={n} className={`${n === value ? "on" : ""}${n > max ? " off" : ""}`} style={{ left: `${at(n) * 100}%` }}>{n}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Shortlist({ rows, picked, k, setK, gene, line, onOpen, onRemove }) {
   const chosen = rows.filter((r) => picked.has(r.site));
   const download = () => {
@@ -99,12 +154,7 @@ function Shortlist({ rows, picked, k, setK, gene, line, onOpen, onRemove }) {
             Default: the {k} highest-ranked. Held-out recovery by k is reported in <Link to="/model-stats">Model stats</Link>.
           </p>
         </div>
-        <div className="k-picker" role="group" aria-label="Number of top-ranked sites">
-          <span>Top k</span>
-          {[1, 2, 3, 4, 5].map((n) => (
-            <button key={n} aria-pressed={k === n} onClick={() => setK(n)} disabled={n > rows.length}>{n}</button>
-          ))}
-        </div>
+        <KSlider value={k} max={rows.length} onChange={setK} />
       </div>
       <div className="table-scroll">
         <table className="sl-table">
