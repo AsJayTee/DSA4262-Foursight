@@ -25,7 +25,6 @@
 }
 .hero-copy { max-width: 560px; }
 .hero-copy h1 { max-width: 10em; }
-.cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; pointer-events: auto; }
 
 @media (max-width: 860px) {
   /* Tall screens: the strand crosses the top; the text sits below it. */

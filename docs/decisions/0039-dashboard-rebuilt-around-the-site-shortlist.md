@@ -40,8 +40,8 @@ GAPDH or ACTB was in its data.
    and dropped by the team.
 4. **Removed:** the compiled mock-up, its preview data and the scripts that made them,
    `summary.json` and `export_dashboard_data.py` (findings A-E were dropped by the plan).
-   Josh's Row browser (`TranscriptBrowser.jsx`, `export_browser_data.py`,
-   `prepare_browser.py`) is kept to adapt for Explore.
+   Josh's Row browser (`TranscriptBrowser.jsx`) was adapted into Explore's gene map and
+   then deleted; `export_browser_data.py` and `prepare_browser.py` are kept.
 
 ## Why this and not the alternatives
 

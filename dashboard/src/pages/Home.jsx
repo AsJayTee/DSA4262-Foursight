@@ -1,5 +1,4 @@
 import { lazy, Suspense } from "react";
-import { Link } from "../lib/route.jsx";
 import { useJson } from "../lib/data.js";
 import Doors from "../components/Doors.jsx";
 
@@ -90,10 +89,6 @@ export default function Home() {
               and how much protein is made from it, and its disruption is linked to cancer. We predict which
               sites carry it, from nanopore sequencing of seven human cell lines.
             </p>
-            <div className="cta-row">
-              <Link to="/explore" className="btn primary">Explore the sites</Link>
-              <Link to="/how-it-works" className="btn">How it works</Link>
-            </div>
           </div>
         </div>
       </section>

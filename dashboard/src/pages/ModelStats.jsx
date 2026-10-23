@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useJson } from "../lib/data.js";
 import Doors from "../components/Doors.jsx";
+import { lineName } from "../lib/sites.js";
 import { AucScatter, GroupedBars, Legend, LineChart, LineSelect, ReliabilityAuto, Toggle } from "../components/StatsCharts.jsx";
 
 const pct = (v) => (v == null ? null : +(v * 100).toFixed(1));
@@ -54,6 +55,8 @@ export default function ModelStats() {
 
   const depthOrder = ["1 reads", "3 reads", "10 reads", "full"];
   const dvm = s.depth_vs_m6anet;
+  const medians = s.sgnex_depth.map((r) => r.median);
+  const sgMedian = `${Math.min(...medians)}–${Math.max(...medians)}`;
   const cut = explore.trust.map((t) => t.min);
   const L = s.landmarks;
   const lab = L.labelled[source];
@@ -106,8 +109,8 @@ export default function ModelStats() {
 
       <Section id="depth" title="Read depth" control={<LineSelect value={depthLine} onChange={setDepthLine} />}
         note={dvm
-          ? "Held-out sites subsampled to 1, 3 and 10 reads, with identical reads given to both methods; SG-NEx sites have a median of 3–5 reads. m6Anet was run with its 20-read minimum lowered and is otherwise unchanged. It is not held out on HCT116, and the four HEK293T sites it does not score are excluded."
-          : "Held-out sites subsampled to 1, 3 and 10 reads; training sites all have ≥ 20 reads. SG-NEx sites have a median of 3–5 reads."}>
+          ? `Held-out sites subsampled to 1, 3 and 10 reads, with identical reads given to both methods; SG-NEx sites have a median of ${sgMedian} reads. m6Anet was run with its 20-read minimum lowered and is otherwise unchanged. It is not held out on HCT116, and the four HEK293T sites it does not score are excluded.`
+          : `Held-out sites subsampled to 1, 3 and 10 reads; training sites all have ≥ 20 reads. SG-NEx sites have a median of ${sgMedian} reads.`}>
         {dvm && <Toggle label="Metric" value={depthMetric} onChange={setDepthMetric} options={[
           ["pr_auc", "PR AUC", <><strong>Area under the precision–recall curve.</strong> Primary metric; a random ranking scores the positive rate.</>],
           ["pair_acc", "ROC AUC", <><strong>Area under the ROC curve.</strong> Probability that a positive site outranks a negative one; 0.5 is random.</>],
@@ -127,6 +130,11 @@ export default function ModelStats() {
             xLabel="Reads per site" yLabel="PR AUC" yMax={0.7} yTicks={[0, 0.2, 0.4, 0.6]}
             series={[{ name: "This model", values: depthOrder.map((d) => s.depth[depthLine][d].pr_auc), style: "accent" }]} />
         )}
+      </Section>
+
+      <Section id="sgnex-depth" title="Read depth in SG-NEx"
+        note="Reads per site with all samples of a cell line pooled and transcript copies of one position merged, as in Explore sites.">
+        <DepthTable rows={s.sgnex_depth} />
       </Section>
 
       <Section id="shortlist" title="Shortlist recovery" control={<LineSelect value={kLine} onChange={setKLine} />}
@@ -176,6 +184,40 @@ export default function ModelStats() {
         </ul>
       </Section>
       <Doors to={["explore", "how"]} />
+    </div>
+  );
+}
+
+const BANDS = [["1-2", "1–2"], ["3-9", "3–9"], ["10-19", "10–19"], ["20+", "≥ 20"]];
+
+/* Reads per site in each SG-NEx line: counts, then the share in each depth band as a bar. */
+function DepthTable({ rows }) {
+  return (
+    <div className="table-scroll">
+      <table className="depth-table">
+        <thead>
+          <tr>
+            <th scope="col">Cell line</th><th scope="col" className="num">Sites</th><th scope="col" className="num">Median reads</th>
+            {BANDS.map(([k, t]) => <th key={k} scope="col" className="num">{t} reads</th>)}
+            <th scope="col" className="bar-col"><span className="sr-only">Share by band</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.line}>
+              <th scope="row">{lineName(r.line)}</th>
+              <td className="num">{r.sites.toLocaleString()}</td>
+              <td className="num">{r.median}</td>
+              {BANDS.map(([k]) => <td key={k} className="num">{(r.bands[k] * 100).toFixed(0)}%</td>)}
+              <td className="bar-col">
+                <span className="band-bar">
+                  {BANDS.map(([k], i) => <span key={k} className={`b${i}`} style={{ width: `${r.bands[k] * 100}%` }} />)}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

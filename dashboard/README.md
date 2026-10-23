@@ -67,7 +67,7 @@ Every file is written by a script:
 | File | Written by | Contents |
 |---|---|---|
 | `model_story.json` | `analysis/sgnex/export_model_story.py` | MYC (MCF7): a stretch of the RNA with its sites' read tables, one network's real activations read by read, each site's rank alone and with neighbours, the six networks, and the held-out performance numbers |
-| `model_stats.json` | `analysis/sgnex/export_model_stats.py` | held-out performance against baselines and m6Anet, depth curve, top-k recovery, gene-level calibration, reliability by motif and depth, enrichment by distance to the stop codon and exon junctions (labelled sets and the seven SG-NEx lines) |
+| `model_stats.json` | `analysis/sgnex/export_model_stats.py` | held-out performance against baselines and m6Anet, depth curve, top-k recovery, gene-level calibration, reliability by motif and depth, enrichment by distance to the stop codon and exon junctions (labelled sets and the seven SG-NEx lines), reads per site in each SG-NEx line (needs `data/dashboard/` from `export_site_shortlist.py` first) |
 | `explore.json` | `analysis/sgnex/export_explore_meta.py` | held-out numbers Explore quotes: how often a gene's top k held a confirmed site, by how high its best site ranked; trust-label cut-offs |
 | `sites/genes.json.gz` | `analysis/sgnex/export_site_shortlist.py` | gene search index: name, location, sites per cell line |
 | `sites/shards/NNN.json.gz` | same | per gene: its sites (position, letters, region, transcripts) and each cell line's rank, molecules and per-batch ranks |
@@ -91,6 +91,5 @@ dashboard/
   src/lib/                 route.jsx (hash routes), data.js (loading, rank formatting),
                            sites.js (site data: unpacking, rows per gene, search, CSV)
   src/styles/              base.css (light/dark tokens), home.css, model.css, explore.css, stats.css
-  src/TranscriptBrowser.jsx  Josh's Row browser (not mounted; its track idea became the gene map)
   public/data/             data files the site fetches (exported by scripts)
 ```

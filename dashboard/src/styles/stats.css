@@ -153,3 +153,16 @@
 .m-ours { fill: var(--accent); stroke: var(--bg); stroke-width: 1.5; }
 .m.hollow { fill: var(--bg); stroke: var(--fg-soft); stroke-width: 2; }
 .legend.centred { justify-content: center; margin: 4px 0 0; }
+
+/* SG-NEx depth table: band shares as numbers and as one stacked bar, darker = more reads. */
+.depth-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.depth-table th, .depth-table td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; }
+.depth-table thead th { font-size: 0.78rem; font-weight: 500; color: var(--muted); }
+.depth-table th[scope="row"] { font-weight: 500; }
+.depth-table .num { text-align: right; }
+.depth-table .bar-col { width: 32%; min-width: 140px; }
+.band-bar { display: flex; height: 10px; border-radius: 3px; overflow: hidden; background: var(--surface); }
+.band-bar .b0 { background: color-mix(in srgb, var(--fg) 15%, transparent); }
+.band-bar .b1 { background: color-mix(in srgb, var(--fg) 35%, transparent); }
+.band-bar .b2 { background: color-mix(in srgb, var(--fg) 60%, transparent); }
+.band-bar .b3 { background: var(--fg); }

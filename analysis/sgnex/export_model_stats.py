@@ -18,6 +18,9 @@ Aggregates only; no per-site labels or reads leave the cache. Sections:
   gene_best     share of genes with a positive site, by the percentile of the gene's
                 best-ranked site (gene_best.csv)
   reliability   pairwise accuracy by DRACH motif x depth, worse of the two cell lines
+  sgnex_depth   reads per site in each SG-NEx line (samples pooled, transcript copies of
+                one genome position merged, as Explore shows them): sites, median, and
+                the share in each band of the reliability table (export_site_shortlist.py)
   landmarks     enrichment of positive calls by distance to the stop codon and to the
                 nearest exon junction:
                   labelled   held-out sites of both labelled lines: m6ACE-seq labels, the
@@ -46,6 +49,7 @@ RESULTS = ROOT / "analysis" / "site_types" / "results"
 SITES = ROOT / ".cache" / "site_types" / "sites.csv.gz"
 M6ANET = ROOT / "data" / "m6anet"
 SCORES = ROOT / "data" / "sgnex_scores"
+SITE_DATA = ROOT / "data" / "dashboard" / "shards"
 GTF = ROOT / "data" / "annotation" / "gtf_91.gtf.gz"
 OUT = ROOT / "dashboard" / "public" / "data" / "model_stats.json"
 LINES = ["A549", "H9", "HEYA8", "Hct116", "HepG2", "K562", "MCF7"]
@@ -166,6 +170,26 @@ def sgnex_landmarks(marks: dict) -> dict:
             "min_reads": SGNEX_MIN_READS, "top": SGNEX_TOP, "lines": out}
 
 
+def sgnex_depth() -> list[dict]:
+    """Reads per site in each SG-NEx line, from the Explore site data."""
+    reads = {line: [] for line in LINES}
+    shards = sorted(SITE_DATA.glob("*.json.gz"))
+    if not shards:
+        sys.exit(f"No site data in {SITE_DATA}. Run: python analysis/sgnex/export_site_shortlist.py")
+    for f in shards:
+        with gzip.open(f, "rt") as fh:
+            for gene in json.load(fh).values():
+                for line, rec in gene["lines"].items():
+                    reads[line].extend(rec["n"])
+    out = []
+    for line, n in reads.items():
+        n = np.asarray(n)
+        out.append({"line": line, "sites": int(n.size), "median": float(np.median(n)),
+                    "bands": {"1-2": round(float((n <= 2).mean()), 4), "3-9": round(float(((n >= 3) & (n < 10)).mean()), 4),
+                              "10-19": round(float(((n >= 10) & (n < 20)).mean()), 4), "20+": round(float((n >= 20).mean()), 4)}})
+    return out
+
+
 def depth_vs_m6anet() -> dict | None:
     """Model vs m6Anet at 1, 3, 10 and >= 20 reads, same sites and same read draw.
 
@@ -247,6 +271,7 @@ def main() -> None:
         "reliability": reliability, "depths": ["full", "10 reads", "3 reads", "1 reads"],
         "landmarks": {"labelled": labelled_landmarks(marks), "sgnex": sgnex_landmarks(marks)},
         "depth_vs_m6anet": depth_vs_m6anet(),
+        "sgnex_depth": sgnex_depth(),
         "sources": {"held_out": "analysis/site_types/results/", "baselines": "README.md (Results)",
                     "script": "analysis/sgnex/export_model_stats.py"},
     }

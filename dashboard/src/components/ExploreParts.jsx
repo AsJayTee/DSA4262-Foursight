@@ -317,14 +317,23 @@ export function SiteTable({ rows, picked, onToggle, onOpen, line, chrom, openSit
   const [hideLow, setHideLow] = useState(false);
   const [region, setRegion] = useState("all");
   const [showAll, setShowAll] = useState(false);
+  const [motif, setMotif] = useState("all");
   const regions = useMemo(() => ["all", ...new Set(rows.map((r) => r.region))], [rows]);
-  const shown = rows.filter((r) => (!hideLow || !r.low) && (region === "all" || r.region === region));
+  // Motifs present in this gene, most frequent first, with their counts.
+  const motifs = useMemo(() => {
+    const n = {};
+    rows.forEach((r) => { const m = r.kmer.slice(1, 6); n[m] = (n[m] || 0) + 1; });
+    return Object.entries(n).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  }, [rows]);
+  useEffect(() => { setMotif("all"); }, [rows]);
+  const shown = rows.filter((r) => (!hideLow || !r.low) && (region === "all" || r.region === region)
+    && (motif === "all" || r.kmer.slice(1, 6) === motif));
   const lowCount = rows.filter((r) => r.low).length;
   const visible = showAll ? shown : shown.slice(0, 20);
   return (
     <section className="card site-table" aria-labelledby="all-sites">
       <div className="table-head">
-        <h2 id="all-sites">All candidate sites <span className="muted">({rows.length})</span></h2>
+        <h2 id="all-sites">All candidate sites <span className="muted">({shown.length === rows.length ? rows.length : `${shown.length} of ${rows.length}`})</span></h2>
         <div className="filters">
           {lowCount > 0 && (
             <label className="check">
@@ -336,6 +345,13 @@ export function SiteTable({ rows, picked, onToggle, onOpen, line, chrom, openSit
             Region
             <select value={region} onChange={(e) => setRegion(e.target.value)}>
               {regions.map((r) => <option key={r} value={r}>{r === "all" ? "All" : r === "coding" ? "CDS" : r}</option>)}
+            </select>
+          </label>
+          <label className="select">
+            Motif
+            <select value={motif} onChange={(e) => setMotif(e.target.value)}>
+              <option value="all">All</option>
+              {motifs.map(([m, c]) => <option key={m} value={m}>{m.replace(/T/g, "U")} ({c})</option>)}
             </select>
           </label>
         </div>
