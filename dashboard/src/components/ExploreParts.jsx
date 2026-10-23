@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HOLDS_TOP, LOW_DEPTH, lineName } from "../lib/sites.js";
 import { InfoTip, Tip } from "./Tip.jsx";
+import { LineSelect } from "./StatsCharts.jsx";
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 // Top 1% -> 1, top 50% or lower -> 0: visual weight of a rank.
@@ -341,19 +342,12 @@ export function SiteTable({ rows, picked, onToggle, onOpen, line, chrom, openSit
               Exclude depth ≤ {LOW_DEPTH} ({lowCount})
             </label>
           )}
-          <label className="select">
-            Region
-            <select value={region} onChange={(e) => setRegion(e.target.value)}>
-              {regions.map((r) => <option key={r} value={r}>{r === "all" ? "All" : r === "coding" ? "CDS" : r}</option>)}
-            </select>
-          </label>
-          <label className="select">
-            Motif
-            <select value={motif} onChange={(e) => setMotif(e.target.value)}>
-              <option value="all">All</option>
-              {motifs.map(([m, c]) => <option key={m} value={m}>{m.replace(/T/g, "U")} ({c})</option>)}
-            </select>
-          </label>
+          <LineSelect label="Region" value={region} onChange={setRegion}
+            options={regions.map((r) => [r, r === "all" ? "All" : r === "coding" ? "CDS" : r])} />
+          {/* Motifs are typed in either alphabet: GGACT and GGACU find the same option. */}
+          <LineSelect label="Motif" value={motif} onChange={setMotif} search placeholder="Type a motif, e.g. GGACU"
+            normalise={(t) => t.toUpperCase().replace(/T/g, "U")}
+            options={[["all", "All"], ...motifs.map(([m, c]) => [m, m.replace(/T/g, "U"), c])]} />
         </div>
       </div>
       <div className="table-scroll">

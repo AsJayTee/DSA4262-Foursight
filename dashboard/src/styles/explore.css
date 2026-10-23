@@ -43,7 +43,7 @@
 .best strong { font-size: 1.6rem; letter-spacing: -0.03em; color: var(--accent); line-height: 1.15; }
 
 /* Tables (selected sites and all sites share columns) */
-.table-scroll { overflow-x: auto; }
+.table-scroll { overflow-x: auto; position: relative; }
 .site-table table, .sl-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
 .site-table th, .sl-table th { text-align: left; font-weight: 500; color: var(--muted); font-size: 0.78rem; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .site-table th.pick { cursor: default; }
@@ -76,7 +76,6 @@ td.region { color: var(--fg-soft); }
 .filters { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; font-size: 0.86rem; color: var(--fg-soft); }
 .filters .check { display: flex; gap: 6px; align-items: center; cursor: pointer; }
 .filters input[type="checkbox"] { accent-color: var(--fg); }
-.filters select { font: inherit; margin-left: 6px; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
 .show-all { margin-top: 10px; }
 
 /* Shared cell pieces */
@@ -157,6 +156,9 @@ td.region { color: var(--fg-soft); }
 .ruler.compact .ruler-track { height: 4px; }
 .ruler-tick { position: absolute; top: 8px; transform: translateX(-50%); font-size: 0.68rem; color: var(--muted); font-style: normal; }
 .ruler-tick i { font-style: normal; }
+/* End labels align inward so they never poke past the panel edge. */
+.ruler-tick:first-child { transform: none; }
+.ruler-tick:nth-child(4) { transform: translateX(-100%); }
 .ruler-mark { position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%; transform: translate(-50%, -50%); }
 .ruler-mark.ens { background: var(--accent); box-shadow: 0 0 0 2px var(--bg); }
 .ruler-mark.own { border: 2px solid var(--fg); background: var(--bg); width: 11px; height: 11px; }

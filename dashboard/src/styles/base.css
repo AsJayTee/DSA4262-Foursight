@@ -156,7 +156,14 @@ nav { display: flex; gap: 4px; overflow-x: auto; min-width: 0; }
 .plain-list { margin: 0; padding-left: 1.1em; display: grid; gap: 10px; color: var(--fg-soft); }
 .plain-list strong { color: var(--fg); }
 
+.nav-short { display: none; }
 @media (max-width: 640px) {
   .brand-sub { display: none; }
-  .nav-link { padding: 6px 8px; font-size: 0.85rem; }
+  .nav-link { padding: 6px 7px; font-size: 0.85rem; }
+  nav { gap: 0; }
+  /* Four full labels do not fit beside the brand on a phone; short ones do. */
+  .nav-full { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .nav-short { display: inline; }
+  /* The brand already links home. */
+  nav .nav-link:first-child { display: none; }
 }

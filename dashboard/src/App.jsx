@@ -6,10 +6,10 @@ import ModelStats from "./pages/ModelStats.jsx";
 import { useRoute, Link } from "./lib/route.jsx";
 
 const PAGES = [
-  { path: "/", label: "Home", component: Home },
-  { path: "/explore", label: "Explore sites", component: Explore },
-  { path: "/how-it-works", label: "How it works", component: HowItWorks },
-  { path: "/model-stats", label: "Model stats", component: ModelStats },
+  { path: "/", label: "Home", short: "Home", component: Home },
+  { path: "/explore", label: "Explore sites", short: "Explore", component: Explore },
+  { path: "/how-it-works", label: "How it works", short: "Method", component: HowItWorks },
+  { path: "/model-stats", label: "Model stats", short: "Stats", component: ModelStats },
 ];
 
 // Light or dark: the system's choice until the reader picks one with the toggle.
@@ -68,7 +68,7 @@ export default function App() {
             <nav aria-label="Main">
               {PAGES.map((p) => (
                 <Link key={p.path} to={p.path} className={p === page ? "nav-link active" : "nav-link"}>
-                  {p.label}
+                  <span className="nav-full">{p.label}</span><span className="nav-short" aria-hidden="true">{p.short}</span>
                 </Link>
               ))}
             </nav>

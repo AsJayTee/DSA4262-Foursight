@@ -197,7 +197,7 @@ function DepthTable({ rows }) {
       <table className="depth-table">
         <thead>
           <tr>
-            <th scope="col">Cell line</th><th scope="col" className="num">Sites</th><th scope="col" className="num">Median reads</th>
+            <th scope="col">Cell line</th><th scope="col" className="num sites-col">Sites</th><th scope="col" className="num">Median reads</th>
             {BANDS.map(([k, t]) => <th key={k} scope="col" className="num">{t} reads</th>)}
             <th scope="col" className="bar-col"><span className="sr-only">Share by band</span></th>
           </tr>
@@ -206,7 +206,7 @@ function DepthTable({ rows }) {
           {rows.map((r) => (
             <tr key={r.line}>
               <th scope="row">{lineName(r.line)}</th>
-              <td className="num">{r.sites.toLocaleString()}</td>
+              <td className="num sites-col">{r.sites.toLocaleString()}</td>
               <td className="num">{r.median}</td>
               {BANDS.map(([k]) => <td key={k} className="num">{(r.bands[k] * 100).toFixed(0)}%</td>)}
               <td className="bar-col">

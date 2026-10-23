@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { useJson } from "../lib/data.js";
+import { useNarrow } from "../lib/media.js";
 import Doors from "../components/Doors.jsx";
 
 // three.js loads only with this page, not with the rest of the site.
@@ -72,14 +73,18 @@ function inTen(o) {
 export default function Home() {
   const { data } = useJson("model_story.json");
   const hits = data?.performance.top3_hit;
+  // On phones the strand is left out entirely, so three.js is never downloaded.
+  const narrow = useNarrow();
 
   return (
     <div className="home">
-      <section className="hero">
+      <section className={narrow ? "hero no-strand" : "hero"}>
         {/* Full-width layer behind the text, so the strand can run off the screen. */}
-        <Suspense fallback={<div className="hero-canvas" />}>
-          <RnaStrand className="hero-canvas" />
-        </Suspense>
+        {!narrow && (
+          <Suspense fallback={<div className="hero-canvas" />}>
+            <RnaStrand className="hero-canvas" />
+          </Suspense>
+        )}
         <div className="hero-inner">
           <div className="hero-copy">
             <p className="eyebrow">Predicting m6A modifications</p>

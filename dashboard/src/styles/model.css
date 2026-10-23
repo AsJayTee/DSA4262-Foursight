@@ -209,3 +209,20 @@
 /* No browser focus box on clicked SVG sites; keyboard focus shows on the node itself. */
 .graph .node:focus, .network :focus, .read-table:focus { outline: none; }
 .graph .node:focus-visible { stroke: var(--accent); stroke-width: 3; }
+
+/* Phones: the network and graph are redrawn to fit the width (ModelViz, useNarrow), so
+   their text is set in drawing units large enough to land at ~11px. */
+.viz-fit svg { width: 100%; height: auto; display: block; }
+.network.narrow .layer-label { font-size: 27px; }
+.network.narrow .layer-sub { display: none; }
+.network.narrow .out-text { font-size: 34px; }
+.network.narrow .row-focus { stroke-width: 3; }
+.score-chart { margin-top: 18px; }
+.score-chart .layer-label { font-size: 22px; }
+.score-chart .layer-sub, .score-chart .tick { font-size: 18px; }
+.score-chart .spark { stroke-width: 3.5; }
+.graph.narrow .layer-sub { font-size: 13px; }
+@media (max-width: 760px) {
+  .step-head { grid-template-columns: 32px minmax(0, 1fr); gap: 10px; }
+  .story-step { padding: 44px 20px; }
+}

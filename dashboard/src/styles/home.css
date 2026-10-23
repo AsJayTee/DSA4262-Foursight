@@ -30,6 +30,9 @@
   /* Tall screens: the strand crosses the top; the text sits below it. */
   .hero-inner { align-items: flex-end; padding-bottom: 48px; }
 }
+/* Phones: no strand (Home, useNarrow), so the hero is only as tall as its text. */
+.hero.no-strand { height: auto; min-height: 0; }
+.hero.no-strand .hero-inner { align-items: flex-start; padding: 56px 20px 64px; }
 
 /* Sections */
 .band { max-width: 1120px; margin: 0 auto; padding: 72px 20px; border-top: 1px solid var(--line); }
@@ -99,7 +102,8 @@
 .doors.n1 { grid-template-columns: minmax(0, 560px); justify-content: center; }
 .doors.n3 { grid-template-columns: repeat(3, 1fr); }
 .doors.n3 .door-title { font-size: 1.35rem; }
-.stats .doors, .story .doors { padding-left: 0; padding-right: 0; }
+.stats .doors { padding-left: 0; padding-right: 0; }
+.story .doors { max-width: 900px; }
 
 @media (max-width: 860px) {
   .three-up, .steps, .band.result, .doors, .doors.n1, .doors.n3 { grid-template-columns: 1fr; }
@@ -131,3 +135,12 @@
 }
 .callout-label strong { color: var(--accent); font-size: 0.9rem; }
 @media (hover: none), (max-width: 860px) { .callout { display: none; } }
+
+/* Phones: the result rows put the label on its own line so the bar keeps its width. */
+@media (max-width: 480px) {
+  .result-row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label label" "track value"; gap: 6px 12px; }
+  .result-label { grid-area: label; }
+  .result-track { grid-area: track; }
+  .result-value { grid-area: value; }
+  .band { padding: 56px 20px; }
+}

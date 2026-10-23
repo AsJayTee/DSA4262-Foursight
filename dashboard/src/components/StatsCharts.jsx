@@ -1,9 +1,27 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Tip } from "./Tip.jsx";
 
 // SVG charts for the Model stats page (public/data/model_stats.json).
 
 const scale = (d0, d1, r0, r1) => (v) => r0 + ((v - d0) / (d1 - d0)) * (r1 - r0);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+// Charts draw at the width they are given, in pixels, so every figure spans its column and
+// text stays at its CSS size whatever the screen. Height grows with width, within bounds.
+function useWidth(fallback = 640) {
+  const ref = useRef(null);
+  const [w, setW] = useState(fallback);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    setW(Math.round(el.getBoundingClientRect().width) || fallback);
+    const ro = new ResizeObserver(([e]) => setW(Math.round(e.contentRect.width) || fallback));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [fallback]);
+  return [ref, w];
+}
+
 const fmt = (v) => (Math.abs(v) >= 1000 ? `${(v / 1000).toFixed(v % 1000 ? 1 : 0)}k` : `${v}`);
 
 /* Line chart: series = [{name, values, style: "accent"|"fg"|"mid"|"dash"|"thin"}] over shared x. */
@@ -16,7 +34,8 @@ export function Legend({ series, className = "" }) {
 }
 
 export function LineChart({ x, series, yLabel, xLabel, yMax, yTicks, xTicks, refY, refX, height = 280, legend = true, xFormat = fmt }) {
-  const W = 640, H = height, L = 52, R = 16, T = 14, B = 42;
+  const [ref, W] = useWidth();
+  const H = Math.round(clamp((W * height) / 640, height * 0.85, height * 1.3)), L = 52, R = 16, T = 14, B = 42;
   const vals = series.flatMap((s) => s.values.filter((v) => v != null));
   const top = yMax ?? Math.max(...vals) * 1.08;
   const sx = scale(x[0], x[x.length - 1], L, W - R), sy = scale(0, top, H - B, T);
@@ -31,9 +50,9 @@ export function LineChart({ x, series, yLabel, xLabel, yMax, yTicks, xTicks, ref
     return d;
   };
   return (
-    <figure className="stat-chart">
+    <figure className="stat-chart" ref={ref}>
       {legend && <Legend series={series} />}
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${yLabel} by ${xLabel}`}>
+      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${yLabel} by ${xLabel}`}>
         {ticks.map((v) => (
           <g key={v}>
             <line className="grid" x1={L} x2={W - R} y1={sy(v)} y2={sy(v)} />
@@ -122,15 +141,22 @@ export function useToggle(first) {
 }
 
 /* Cell-line selector shared by the charts. */
-export function LineSelect({ value, onChange, label = "Cell line",
+// A pill dropdown with a styled menu. With `search`, the menu opens with a box that filters
+// the options as you type (`normalise` maps both the query and option text before matching).
+export function LineSelect({ value, onChange, label = "Cell line", search = false, placeholder = "Search",
+  normalise = (t) => t.toLowerCase(),
   options = [["both", "Both cell lines (mean)"], ["HCT116", "HCT116"], ["HEK293T", "HEK293T"]] }) {
   const [open, setOpen] = useState(false);
   const [cursor, setCursor] = useState(0);
+  const [query, setQuery] = useState("");
   const ref = useRef(null);
+  const input = useRef(null);
   const current = options.find(([v]) => v === value) || options[0];
+  const shown = search && query ? options.filter(([, t]) => normalise(String(t)).includes(normalise(query))) : options;
   useEffect(() => {
-    if (!open) return;
+    if (!open) { setQuery(""); return; }
     setCursor(Math.max(0, options.findIndex(([v]) => v === value)));
+    input.current?.focus();
     const away = (e) => !ref.current?.contains(e.target) && setOpen(false);
     document.addEventListener("pointerdown", away);
     return () => document.removeEventListener("pointerdown", away);
@@ -139,9 +165,9 @@ export function LineSelect({ value, onChange, label = "Cell line",
   const onKey = (e) => {
     if (!open && ["ArrowDown", "Enter", " "].includes(e.key)) { e.preventDefault(); setOpen(true); return; }
     if (!open) return;
-    if (e.key === "ArrowDown") { e.preventDefault(); setCursor((c) => Math.min(c + 1, options.length - 1)); }
+    if (e.key === "ArrowDown") { e.preventDefault(); setCursor((c) => Math.min(c + 1, shown.length - 1)); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setCursor((c) => Math.max(c - 1, 0)); }
-    else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(options[cursor][0]); }
+    else if (e.key === "Enter" || (e.key === " " && !search)) { e.preventDefault(); if (shown[cursor]) choose(shown[cursor][0]); }
     else if (e.key === "Escape") setOpen(false);
   };
   return (
@@ -153,15 +179,23 @@ export function LineSelect({ value, onChange, label = "Cell line",
         <svg className="dd-chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
       </button>
       {open && (
-        <ul className="dd-menu" role="listbox" aria-label={label}>
-          {options.map(([v, t], i) => (
-            <li key={v} role="option" aria-selected={v === value} className={`${i === cursor ? "on" : ""}${v === value ? " sel" : ""}`}
-              onPointerEnter={() => setCursor(i)} onClick={() => choose(v)}>
-              {t}
-              {v === value && <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.5 5 9l4.5-6" /></svg>}
-            </li>
-          ))}
-        </ul>
+        <div className={search ? "dd-menu searchable" : "dd-menu"}>
+          {search && (
+            <input ref={input} className="dd-search" type="text" value={query} placeholder={placeholder}
+              aria-label={`Search ${label.toLowerCase()}`} spellCheck={false} autoComplete="off"
+              onChange={(e) => { setQuery(e.target.value); setCursor(0); }} onKeyDown={onKey} />
+          )}
+          <ul role="listbox" aria-label={label}>
+            {shown.map(([v, t, count], i) => (
+              <li key={v} role="option" aria-selected={v === value} className={`${i === cursor ? "on" : ""}${v === value ? " sel" : ""}`}
+                onPointerEnter={() => setCursor(i)} onClick={() => choose(v)}>
+                <span>{t}{count != null && <span className="dd-count">{count}</span>}</span>
+                {v === value && <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.5 5 9l4.5-6" /></svg>}
+              </li>
+            ))}
+            {!shown.length && <li className="dd-empty" aria-disabled="true">No match</li>}
+          </ul>
+        </div>
       )}
     </div>
   );
@@ -175,7 +209,8 @@ const LEFT = new Set(["Quantiles + LightGBM"]);
 // m6Anet's HCT116 value is not held out; the two-line mean includes it.
 const hollowIn = (lines) => lines.includes("HCT116") || lines.includes("both");
 export function AucScatter({ rows, lines }) {
-  const W = 640, H = 380, L = 56, R = 110, T = 16, B = 46;
+  const [ref, W] = useWidth();
+  const H = Math.round(clamp(W * 0.5, 320, 440)), L = 52, R = 16, T = 16, B = 46;
   const pts = rows.filter((r) => r.method !== "Random");
   const xs = pts.flatMap((r) => lines.map((l) => r.roc[l])), ys = pts.flatMap((r) => lines.map((l) => r.pr[l]));
   const x0 = Math.floor(Math.min(...xs) * 50) / 50 - 0.01, x1 = Math.ceil(Math.max(...xs) * 50) / 50 + 0.01;
@@ -184,13 +219,13 @@ export function AucScatter({ rows, lines }) {
   const step = (lo, hi, n) => { const s = (hi - lo) / n, p = 10 ** Math.floor(Math.log10(s)); const st = [1, 2, 5].map((m) => m * p).find((v) => v >= s) || s; const out = []; for (let v = Math.ceil(lo / st) * st; v <= hi + 1e-9; v += st) out.push(+v.toFixed(3)); return out; };
   const anyHollow = pts.some((r) => r.note) && hollowIn(lines);
   return (
-    <figure className="stat-chart scatter">
+    <figure className="stat-chart scatter" ref={ref}>
       <div className="legend">
         <span className="mk ours">This model</span>
         <span className="mk">Other methods</span>
         {anyHollow && <span className="mk hollow">† not held out</span>}
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="PR AUC against ROC AUC for each method">
+      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label="PR AUC against ROC AUC for each method">
         {step(y0, y1, 5).map((v) => <g key={`y${v}`}><line className="grid" x1={L} x2={W - R} y1={sy(v)} y2={sy(v)} /><text className="tick" x={L - 8} y={sy(v) + 4} textAnchor="end">{v.toFixed(2)}</text></g>)}
         {step(x0, x1, 5).map((v) => <g key={`x${v}`}><line className="grid" x1={sx(v)} x2={sx(v)} y1={T} y2={H - B} /><text className="tick" x={sx(v)} y={H - B + 18} textAnchor="middle">{v.toFixed(2)}</text></g>)}
         <text className="axis-label" x={(L + W - R) / 2} y={H - 6} textAnchor="middle">ROC AUC</text>
@@ -198,7 +233,9 @@ export function AucScatter({ rows, lines }) {
         {pts.map((r) => {
           const ours = r.method === "This model";
           const l = lines[0], x = sx(r.roc[l]), y = sy(r.pr[l]);
-          const left = LEFT.has(r.method);
+          // A label that would run past the plot edge goes on the left of its point instead.
+          const text = `${SHORT[r.method]}${r.note && hollowIn(lines) ? " †" : ""}`;
+          const left = LEFT.has(r.method) || x + 11 + text.length * 7.5 > W - R;
           const hollow = r.note && hollowIn(lines);
           return (
             <g key={r.method} className={ours ? "pt ours" : "pt"}>
