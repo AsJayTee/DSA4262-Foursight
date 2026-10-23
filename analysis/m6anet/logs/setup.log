@@ -1,0 +1,41 @@
+Downloading cpython-3.8.20-linux-x86_64-gnu (download) (19.9MiB)
+ Downloaded cpython-3.8.20-linux-x86_64-gnu (download)
+Using CPython 3.8.20
+warning: The requested interpreter resolved to Python 3.8.20, which is incompatible with the project's Python requirement: `>=3.10` (from `project.requires-python`)
+Creating virtual environment at: analysis/m6anet/.venv
+Activate with: source analysis/m6anet/.venv/bin/activate
+Using Python 3.8.20 environment at: analysis/m6anet/.venv
+Resolved 17 packages in 1.03s
+Downloading numpy (16.5MiB)
+Downloading pandas (11.8MiB)
+Downloading scikit-learn (10.6MiB)
+Downloading torch (714.1MiB)
+Downloading scipy (32.9MiB)
+ Downloaded scikit-learn
+ Downloaded pandas
+ Downloaded numpy
+ Downloaded scipy
+ Downloaded torch
+Prepared 17 packages in 13.12s
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 17 packages in 13.13s
+ + future==1.0.0
+ + joblib==1.4.2
+ + m6anet==2.1.0
+ + numpy==1.24.4
+ + pandas==2.0.3
+ + python-dateutil==3.0.0
+ + pytz==2026.5
+ + scikit-learn==1.3.2
+ + scipy==1.10.1
+ + six==1.17.0
+ + threadpoolctl==3.5.0
+ + toml==0.10.2
+ + torch==1.6.0
+ + tqdm==4.70.1
+ + typing-extensions==4.13.2
+ + tzdata==2026.5
+ + ujson==5.10.0
+m6anet OK, torch 1.6.0

@@ -1,43 +1,17 @@
-# m6A Explorer (Task 2 dashboard)
-
-## Current interface: supplied reference (20 October 2026)
-
-The Explorer now mounts `ConnectedExplorer.jsx`, retaining the reference CSS
-and navigation while reading real SG-NEx preview exports in `public/data/preview`.
-`analysis/sgnex/subset_dashboard_archive.py` prepares 1,000 sites per line from
-the supplied public prediction archive, and `connect_preview_subsets.py`
-creates the browser JSON from those CSVs and matching GTF annotations.
-All seven lines are available; scores are preserved, not recomputed.
-The first-N selection is not suitable for representative biological comparisons.
-The Explorer deliberately uses original transcript coordinates; genome mapping
-and reference sequence remain unverified. Gene metadata is from Ensembl 91.
-Other tabs still contain the reference's labelled demo analyses and real aggregate
-summaries; they are not recalculated from these subsets.
-
-At Josh's request, the active interface matches the supplied standalone
-`index.html` from Telegram Desktop. Its original bundled JavaScript and CSS
-are preserved in `src/reference/` and loaded by `src/main.jsx`. This preserves
-the four reference tabs, layout, interactions, demo data and source labels.
-The earlier Row/Data React components remain available but are not mounted.
-
-The Explorer uses real preview subsets. Other labelled synthetic panels
-and placeholders are not real predictions. Its aggregate view
-reads the existing `public/data/summary.json`; its local-development data URLs
-are not connected to a backend here. The Explorer loads its generated preview data automatically. No model code or
-weights were changed. Google Fonts requires connectivity to match typography.
-
-The original attachment contains compiled code, not editable component sources.
-Future substantial changes should recover those sources or split the interface
-into maintainable components while preserving the reference appearance.
-
-The Row browser documentation below describes the preserved previous interface.
-
-Parallel dashboard development also exists on `feat/dashboard`, including
-data-building scripts in `scripts/dashboard/`; that branch is not merged here.
+# Foursight m6A (Task 2 dashboard)
 
 A static React site (Vite), published to GitHub Pages from this repository
 ([decision 0035](../docs/decisions/0035-dashboard-is-a-static-react-site-on-github-pages.md)).
-The plan for its views is in [report/task2_briefing.md](../report/task2_briefing.md).
+It serves the use case agreed in [report/task2_plan.md](../report/task2_plan.md): helping a
+researcher choose which m6A sites of their gene to test first. Why it is built this way:
+[decision 0039](../docs/decisions/0039-dashboard-rebuilt-around-the-site-shortlist.md).
+
+| Page | Route | For | Status |
+|---|---|---|---|
+| Home | `#/` | a layperson | built |
+| How it works | `#/how-it-works` | scientists, data science readers | built |
+| Explore sites | `#/explore` | a scientist with a gene in mind | built (needs the site data, below) |
+| Model stats | `#/model-stats` | scientists judging how far to trust a rank | built |
 
 ## Run it locally
 
@@ -49,79 +23,74 @@ npm install
 npm run dev        # http://localhost:5173/DSA4262-Foursight/
 ```
 
-`npm run build` writes the static site to `dashboard/dist/` (gitignored);
-`npm run preview` serves that build.
+`npm run build` writes the static site to `dashboard/dist/` (gitignored); `npm run preview`
+serves that build. Light and dark mode follow the system setting; the button in the top bar
+overrides it.
+
+The Explore page reads the full site export. Locally, `npm run dev` and `npm run preview` serve
+it straight from `data/dashboard/` (`vite.config.js`); make it first if you have not:
+
+```bash
+python analysis/sgnex/export_site_shortlist.py   # sites, ranks, batches (needs data/sgnex_scores/)
+python analysis/sgnex/export_gene_structure.py   # exons, for the gene map
+```
+
+`SITE_DATA=<folder> npm run dev` reads it from elsewhere.
 
 ## Publish
 
-Pushing changes under `dashboard/` to `main` runs
-`.github/workflows/dashboard.yml`. It builds the site and deploys it to
-`https://asjaytee.github.io/DSA4262-Foursight/`.
+Pushing changes under `dashboard/` to `main` runs `.github/workflows/dashboard.yml`, which
+builds the site and deploys it to <https://asjaytee.github.io/DSA4262-Foursight/>.
 
-**One-time setup (repository admin):** Settings → Pages → Build and
-deployment → Source: **GitHub Actions**.
+### Publish the site data
+
+The full site export (~95 MB) is not committed (plan section 5.3). It is attached to a GitHub
+Release named `site-data`, which the workflow downloads into `public/data/sites/` before
+building. Publishing or replacing it makes the file public, so do it deliberately:
+
+```bash
+tar -cf site-data.tar -C data/dashboard genes.json.gz meta.json trust.json shards structure
+gh release create site-data site-data.tar --title "Site data for the dashboard" \
+   --notes "Model outputs on public SG-NEx data; no course labels or reads."
+# replacing it later:  gh release upload site-data site-data.tar --clobber
+```
+
+A new release does not trigger a deploy by itself: re-run the workflow from the Actions tab
+(`workflow_dispatch`). Without the release the site still builds; Explore says its data is
+missing.
 
 ## Data
 
-Hosted data comes from `public/data/`, and every file there is
-written by a script, never by hand:
+The site reads `public/data/` (committed, small) and `public/data/sites/` (the release, above).
+Every file is written by a script:
 
 | File | Written by | Contents |
 |---|---|---|
-| `summary.json` | `analysis/sgnex/export_dashboard_data.py` | Reads per site per cell line; mean score around the stop codon |
-| `browser/index.json` and transcript JSON files | `analysis/sgnex/export_browser_data.py` | Selected public SG-NEx sites and saved prediction scores |
+| `model_story.json` | `analysis/sgnex/export_model_story.py` | MYC (MCF7): a stretch of the RNA with its sites' read tables, one network's real activations read by read, each site's rank alone and with neighbours, the six networks, and the held-out performance numbers |
+| `model_stats.json` | `analysis/sgnex/export_model_stats.py` | held-out performance against baselines and m6Anet, depth curve, top-k recovery, gene-level calibration, reliability by motif and depth, enrichment by distance to the stop codon and exon junctions (labelled sets and the seven SG-NEx lines) |
+| `explore.json` | `analysis/sgnex/export_explore_meta.py` | held-out numbers Explore quotes: how often a gene's top k held a confirmed site, by how high its best site ranked; trust-label cut-offs |
+| `sites/genes.json.gz` | `analysis/sgnex/export_site_shortlist.py` | gene search index: name, location, sites per cell line |
+| `sites/shards/NNN.json.gz` | same | per gene: its sites (position, letters, region, transcripts) and each cell line's rank, molecules and per-batch ranks |
+| `sites/trust.json`, `sites/meta.json` | same | trust values by motif and depth, each motif's modification rate; cell lines and batches |
+| `sites/structure/NNN.json.gz` | `analysis/sgnex/export_gene_structure.py` | per gene: merged exons and coding span (Ensembl 91), for the gene map |
 
-### Row browser
-
-Row supports cell-line and transcript selection, transcript search, panning,
-zooming, selectable DRACH candidate sites, read coverage, and a score inspector.
-The collapsible sidebar filters by motif and minimum reads. Drag empty track
-space to pan, or hold Ctrl while scrolling to zoom; buttons and arrow keys
-provide alternatives. The linked table sorts columns and centres selected
-sites. CSV export includes only visible filtered rows and labels synthetic
-examples explicitly. Candidate, coverage and rank tracks share one axis.
-Coordinates are transcript positions, not genome coordinates; exon annotations
-and complete transcript lengths are not available in these exports.
-
-The existing Python model runs offline. `analysis/sgnex/prepare_browser.py`
-loads `models/final` through the existing SG-NEx scoring code, scores the complete
-processed input, then exports requested transcripts. It does not alter weights,
-training, or model implementation. Scoring before filtering preserves the graph
-context and within-file ranking. Full files may require substantial RAM.
-
-Both preparation and export accept `--input`, `--cell-line`, repeated
-`--transcript` identifiers and optional `--output`. Preparation accepts processed
-RNA JSON; export accepts existing prediction CSV or CSV.gz. The default output
-is `dashboard/public/data/browser`. Only publish results from public SG-NEx.
-
-A transcript export can also be opened with the Row file picker without being
-uploaded. Its fields are `cell_line`, `transcript_id`, and `sites`; each site has
-`transcript_position`, seven-base `kmer`, positive `n_reads`, and nullable
-`score_rank` and `score_raw`. Rank scores must be in [0, 1]. They are not
-calibrated modification probabilities. No raw reads or labels are exported.
-
-Until real per-site exports are supplied, use the explicitly labelled synthetic
-example to explore the interface. It is not biological evidence.
-
-To add a view's data, add an export to that script (or a new one) and list
-it here.
-
-**Never put on the public site:**
-- the course's labels (`data.info.labelled`, data1 or data2 labels);
-- the course's read files.
-
-The course data is unpublished (AGENTS.md section 5). Model scores and
-summaries from public SG-NEx data are fine.
+**Never put on the public site** the course's labels or read files (AGENTS.md section 5).
+Model outputs and reads from public SG-NEx data are fine. Example genes are chosen by
+name, never by the labels.
 
 ## Layout
 
 ```
 dashboard/
-  index.html          page shell
-  vite.config.js      base path = the repository name (GitHub Pages sub-path)
-  src/main.jsx        entry point
-  src/App.jsx         Row and Data tabs
-  src/TranscriptBrowser.jsx  selectable transcript sites and prediction inspector
-  src/styles.css      light/dark design tokens
-  public/data/        data files the site fetches (exported by scripts)
+  index.html               page shell, fonts
+  src/App.jsx              top bar (with the light/dark toggle), routes, footer
+  src/pages/               Home, HowItWorks, Explore, ModelStats
+  src/components/          RnaStrand (three.js), ModelViz (text/tables, network, graph),
+                           ExploreParts (gene viewer, site tables, site panel), StatsCharts
+                           (Model stats charts), StoryCharts (earlier charts, not mounted)
+  src/lib/                 route.jsx (hash routes), data.js (loading, rank formatting),
+                           sites.js (site data: unpacking, rows per gene, search, CSV)
+  src/styles/              base.css (light/dark tokens), home.css, model.css, explore.css, stats.css
+  src/TranscriptBrowser.jsx  Josh's Row browser (not mounted; its track idea became the gene map)
+  public/data/             data files the site fetches (exported by scripts)
 ```

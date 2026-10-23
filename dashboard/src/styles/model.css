@@ -1,0 +1,211 @@
+/* How it works: a narrow reading column; charts may run a little wider. */
+.story { padding-bottom: 40px; }
+.story-intro { padding-bottom: 24px; }
+.toc { margin: 28px 0 0; padding-left: 1.2em; color: var(--muted); display: grid; gap: 4px; }
+.toc a { color: var(--fg-soft); text-decoration: none; }
+.toc a:hover { color: var(--accent); }
+
+.story-step { max-width: 900px; margin: 0 auto; padding: 56px 20px; border-top: 1px solid var(--line); scroll-margin-top: 64px; }
+.step-head { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; max-width: 720px; margin-bottom: 28px; }
+.step-head .step-n { margin: 4px 0 0; }
+.summary { margin-top: 12px; color: var(--fg-soft); font-size: 1.08rem; }
+
+.tech { max-width: 720px; margin: 24px 0 0 56px; border-left: 2px solid var(--line); padding-left: 16px; }
+.tech summary { cursor: pointer; font-weight: 500; color: var(--muted); font-size: 0.92rem; }
+.tech[open] summary { margin-bottom: 10px; }
+.tech p { color: var(--fg-soft); font-size: 0.95rem; margin-bottom: 10px; }
+.source { font-size: 0.82rem; color: var(--muted); }
+.next { margin-top: 28px; }
+.next a { color: var(--accent); }
+
+/* Charts */
+.chart { margin: 0; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart figcaption { margin-top: 10px; font-size: 0.88rem; color: var(--muted); max-width: 46em; }
+.chart-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 14px; font-size: 0.95rem; }
+.chart-controls input[type="range"] { flex: 1 1 200px; accent-color: var(--accent); }
+.grid { stroke: var(--line); stroke-width: 1; }
+.axis { stroke: var(--muted); }
+.tick { fill: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.axis-label { fill: var(--muted); font-size: 12.5px; }
+.dot { stroke: var(--bg); stroke-width: 1.2; }
+.dot.accent { fill: var(--accent); }
+.dot.neutral { fill: var(--mid); fill-opacity: 0.75; }
+.dot.mid { fill: var(--fg-soft); }
+.dot.ring { stroke: var(--fg); stroke-width: 2; }
+.centroid line { stroke-width: 2.5; }
+.centroid.accent line { stroke: var(--accent); }
+.centroid.neutral line { stroke: var(--fg-soft); }
+.key { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: -1px; }
+.key.accent { background: var(--accent); }
+.key.neutral { background: var(--mid); }
+.window { fill: var(--accent); fill-opacity: 0.07; }
+.moving { transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) { .moving { transition: none; } }
+
+.series path { fill: none; stroke-width: 2.5; }
+.series.accent path { stroke: var(--accent); }
+.series.accent circle { fill: var(--accent); }
+.series.neutral path { stroke: var(--fg-soft); }
+.series.neutral circle { fill: var(--fg-soft); }
+.series .baseline { stroke-dasharray: 4 4; stroke-width: 1.2; }
+.series.accent .baseline { stroke: var(--accent); stroke-opacity: 0.5; }
+.series.neutral .baseline { stroke: var(--fg-soft); stroke-opacity: 0.5; }
+.series-label { font-size: 12.5px; fill: var(--fg-soft); }
+.stem { stroke: var(--line); stroke-width: 2; }
+.motif { font: 12.5px "JetBrains Mono", ui-monospace, monospace; fill: var(--fg-soft); }
+
+/* One chart per row, at a reading width: side by side, they shrank below legibility. */
+.chart { max-width: 760px; }
+.two-charts { display: grid; gap: 48px; margin-bottom: 48px; }
+.chart.compact { max-width: 620px; }
+@media (max-width: 760px) { .tech { margin-left: 0; } }
+
+/* Pipeline diagram */
+.box { fill: var(--surface); stroke: var(--line); }
+.box.soft { fill: none; }
+.box.accent { fill: var(--accent); stroke: none; }
+.box-text { fill: var(--fg-soft); font-size: 13px; }
+.box-text.strong { fill: var(--accent-ink); font-weight: 600; }
+.flow { stroke: var(--mid); stroke-width: 1.4; }
+
+/* Tables */
+.mini-table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+.mini-table th { text-align: left; font-weight: 500; color: var(--muted); font-size: 0.82rem; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.mini-table td { padding: 8px; border-bottom: 1px solid var(--line); }
+.mini-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.mini-table tr.total td { font-weight: 600; border-bottom: none; }
+.mini-table tr.ours td { font-weight: 600; }
+.bar-cell { display: grid; grid-template-columns: minmax(0, 1fr) 3em; gap: 8px; align-items: center; }
+.bar { height: 8px; border-radius: var(--radius); background: var(--mid); display: block; }
+.ours .bar { background: var(--accent); }
+.footnote { color: var(--muted); }
+
+.placeholder-page { min-height: 50vh; }
+.placeholder-page p:last-child { margin-top: 24px; }
+.placeholder-page a { color: var(--accent); }
+
+/* ---- How it works: the three model pictures (ModelViz.jsx) ---- */
+.story-step .viz { max-width: none; margin: 0; }
+.viz figcaption { margin-top: 12px; font-size: 0.88rem; color: var(--muted); max-width: 52em; }
+.viz-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-bottom: 14px; font-size: 0.95rem; }
+.viz-controls input[type="range"] { flex: 1 1 220px; max-width: 360px; accent-color: var(--accent); }
+.viz-readout { color: var(--fg-soft); font-variant-numeric: tabular-nums; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+/* Wide diagrams keep their proportions and scroll sideways on small screens. */
+.viz-scroll { overflow-x: auto; }
+.viz-scroll svg { min-width: 760px; width: 100%; height: auto; display: block; }
+
+/* 1. RNA as text, sites as tables */
+.rna-text {
+  font: 15px/1.9 var(--mono);
+  letter-spacing: 0.06em;
+  word-break: break-all;
+  color: var(--muted);
+  background: var(--surface);
+  border-radius: var(--card-radius);
+  padding: 20px 22px;
+}
+.nt { position: relative; }
+.nt.motif { color: var(--fg); }
+.site-tag {
+  display: inline-grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background: var(--fg);
+  color: var(--bg);
+  font: 600 10px/1 var(--font);
+  letter-spacing: 0;
+  vertical-align: super;
+  margin-left: 1px;
+}
+.tables { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; margin-top: 22px; }
+.read-table { display: grid; gap: 8px; justify-items: start; }
+.rt-head { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+.rt-head .site-tag { vertical-align: 0; }
+.rt-foot { font-size: 0.82rem; color: var(--muted); }
+
+/* 2. The read network */
+.network .edge { stroke: var(--fg); stroke-width: 1; }
+.network .edge.on { stroke: var(--accent); stroke-width: 1.6; stroke-opacity: 0.9; }
+.network .node { stroke: var(--line); stroke-width: 1; transition: fill 0.18s; }
+.network .node.out { stroke: var(--fg); stroke-width: 1.5; }
+.network .row-focus { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+.layer-label { fill: var(--fg); font-size: 13px; font-weight: 600; }
+.layer-sub { fill: var(--muted); font-size: 11.5px; }
+.out-text { fill: var(--fg); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.spark { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+.spark.ghost { stroke: var(--fg); stroke-opacity: 0.12; stroke-width: 1.5; }
+.spark-dot { fill: var(--accent); stroke: var(--bg); stroke-width: 1.5; }
+.network .grid { stroke: var(--line); stroke-width: 1; }
+.network .tick { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+
+/* 3. The site graph */
+.graph .arc { fill: none; stroke: var(--fg); stroke-opacity: 0.16; }
+.graph .arc.on { stroke: var(--accent); stroke-opacity: 0.8; }
+.graph .pulse { fill: var(--accent); }
+.graph .node { stroke: var(--bg); stroke-width: 1.5; transition: fill 0.8s, r 0.2s; }
+.graph .node.sel { stroke: var(--fg); stroke-width: 2; }
+.graph .site-node { cursor: pointer; }
+.graph .site-node:focus-visible circle { stroke: var(--accent); stroke-width: 3; }
+@media (prefers-reduced-motion: reduce) { .graph .node, .network .node { transition: none; } }
+
+/* Hovering a site: the other tables fade, a details panel appears beside it. */
+/* The details panel floats over the page, so the tables need no reserved height. */
+.tables { position: relative; }
+.read-table { transition: opacity 0.25s; cursor: pointer; }
+.tables.focus .read-table:not(.on) { opacity: 0.12; }
+.nt.centre { cursor: pointer; background: none; color: inherit; }
+/* The orange box is the letter alone; its number badge sits outside the hover outline. */
+.nt-a { color: var(--accent-ink); background: var(--accent); border-radius: 3px; font-weight: 600; padding: 0 1px; }
+.nt-a.on { outline: 2px solid var(--fg); outline-offset: 1px; }
+.table-panel {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px 18px;
+  font-size: 0.88rem;
+  color: var(--fg-soft);
+  animation: panel-in 0.2s ease-out;
+  /* Nothing in it to click: the pointer passes through, so it can never end a hover. */
+  pointer-events: none;
+}
+.table-panel h3 { font-size: 1rem; margin-bottom: 2px; }
+.panel-kmer { color: var(--muted); margin-bottom: 10px; }
+.table-panel dl { margin: 0; display: grid; gap: 2px; }
+.table-panel dt { font-weight: 600; color: var(--fg); margin-top: 8px; }
+.table-panel dd { margin: 0; }
+@keyframes panel-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .table-panel { animation: none; } .read-table { transition: none; } }
+.story-end { padding-top: 24px; }
+
+/* Details panel: the row formula and the colour scale. */
+/* No scroll box: the formula is sized to fit the panel, and its sub/superscripts may
+   extend past the line box without being clipped. */
+.row-formula { font-size: 0.9rem; margin: 6px 0 8px; overflow: visible; color: var(--fg); max-width: 100%; }
+.table-panel math { overflow: visible; }
+.key-sub { display: block; }
+.formula-key { list-style: none; margin: 2px 0 0; padding: 0; display: grid; gap: 2px; font-size: 0.82rem; color: var(--muted); }
+.formula-key li { display: grid; grid-template-columns: 1.6em 1fr; align-items: baseline; }
+.formula-key math { color: var(--fg); font-size: 1rem; }
+.spectrum { margin-top: 14px; display: grid; gap: 4px; }
+.spectrum-bar { display: block; height: 10px; border-radius: 5px;
+  background: linear-gradient(90deg, var(--fg), color-mix(in srgb, var(--fg) 0%, transparent) 50%, var(--accent)); border: 1px solid var(--line); }
+.spectrum-labels { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); }
+
+/* Graph: a hovered site previews its connections; the selected site shows its own. */
+.graph .arc.preview { fill: none; stroke: var(--fg); stroke-opacity: 0.32; stroke-dasharray: 3 3; animation: arc-in 0.25s ease-out; }
+.graph .node { cursor: pointer; }
+.graph .node.preview { stroke: var(--fg); stroke-width: 1.5; stroke-dasharray: 2 2; }
+@keyframes arc-in { from { stroke-opacity: 0; } to { stroke-opacity: 0.32; } }
+@media (prefers-reduced-motion: reduce) { .graph .arc.preview { animation: none; } }
+
+/* No browser focus box on clicked SVG sites; keyboard focus shows on the node itself. */
+.graph .node:focus, .network :focus, .read-table:focus { outline: none; }
+.graph .node:focus-visible { stroke: var(--accent); stroke-width: 3; }

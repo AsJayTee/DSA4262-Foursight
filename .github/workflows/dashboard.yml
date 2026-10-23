@@ -32,6 +32,19 @@ jobs:
           cache: npm
           cache-dependency-path: dashboard/package-lock.json
       - run: npm ci
+      # The Explore page's data (~90 MB) is not in git (report/task2_plan.md, 5.3): it is
+      # attached to the GitHub Release "site-data" (dashboard/README.md, "Publish the site
+      # data"). Without it the site still builds; Explore then says its data is missing.
+      - name: Fetch the site data
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p public/data/sites
+          if gh release download site-data --repo "$GITHUB_REPOSITORY" --pattern site-data.tar --dir "$RUNNER_TEMP"; then
+            tar -xf "$RUNNER_TEMP/site-data.tar" -C public/data/sites
+          else
+            echo "::warning::No site-data release found; the Explore page will have no data."
+          fi
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:

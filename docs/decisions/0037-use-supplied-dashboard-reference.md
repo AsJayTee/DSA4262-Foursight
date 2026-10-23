@@ -2,7 +2,7 @@
 
 Date: 2026-10-20
 
-Status: accepted on dashboard-josh
+Status: accepted on dashboard-josh; superseded by 0039 (2026-10-21)
 
 Josh requested an exact match to the supplied standalone HTML before providing
 data. Extract its embedded module and stylesheet without modifying their content,

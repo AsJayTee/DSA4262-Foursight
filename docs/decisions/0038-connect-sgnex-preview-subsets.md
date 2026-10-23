@@ -1,6 +1,6 @@
 # 0038 — Connect public SG-NEx preview subsets
 
-Status: accepted on dashboard-josh, 2026-10-20
+Status: accepted on dashboard-josh, 2026-10-20; superseded by 0039 (2026-10-21)
 
 Connect seven first-1,000-row pooled prediction subsets using generated static
 JSON. Preserve existing model outputs exactly. No raw reads, course labels,
