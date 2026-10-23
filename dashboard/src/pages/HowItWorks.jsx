@@ -103,9 +103,6 @@ export default function HowItWorks() {
         <SiteGraph sites={sites} highlight={slider.index} radius={data.radius_nt} kernel={data.kernel_nt} />
       </Step>
 
-      <section className="story-step story-end">
-        <p className="next">The reported rank averages six such networks (three designs, two random starts each).</p>
-      </section>
       <Doors to={["explore", "stats"]} />
     </div>
   );
