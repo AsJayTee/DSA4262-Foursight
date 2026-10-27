@@ -19,6 +19,11 @@
 .stat-section h2 { font-size: 1.45rem; margin-bottom: 16px; }
 .stat-section h3 { font-size: 0.95rem; font-weight: 600; margin: 4px 0 8px; color: var(--fg-soft); }
 .stat-note { margin-top: 14px; font-size: 0.86rem; color: var(--muted); max-width: 58em; line-height: 1.55; }
+/* Justified prose, as on Home and How it works: hyphenation keeps word gaps even, and
+   phone-width columns fall back to ragged right. */
+@media (min-width: 640px) {
+  .stats-intro .lede, .stat-note, .stats .plain-list li { text-align: justify; hyphens: auto; }
+}
 .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 36px; }
 @media (max-width: 800px) { .two { grid-template-columns: minmax(0, 1fr); } }
 
