@@ -91,8 +91,8 @@ export default function Home() {
             <h1>Where does RNA carry m6A?</h1>
             <p className="lede">
               m6A is the most common chemical modification of messenger RNA. It affects how long an RNA lasts
-              and how much protein is made from it, and its disruption is linked to cancer. We predict which
-              sites carry it, from nanopore sequencing of seven human cell lines.
+              and how much protein is made from it, and abnormalities in its occurrence are linked to cancer.
+              We built a model to predict where m6A modifications occur on RNA.
             </p>
           </div>
         </div>
@@ -109,7 +109,7 @@ export default function Home() {
           <article>
             <Letters tagged />
             <h3>Some A's get a tag</h3>
-            <p>At certain spots, the cell adds a small chemical group to an A. That tagged A is called m6A, the most common tag on our messages.</p>
+            <p>At particular sites, a small chemical group is added to an A. That tagged A is called m6A, and it is the most common tag found on our messages.</p>
           </article>
           <article>
             <div className="fate" aria-hidden="true">
@@ -118,7 +118,7 @@ export default function Home() {
               <span className="chip">different behaviour</span>
             </div>
             <h3>A tag is an instruction</h3>
-            <p>A tag tells the cell what to do with that message: use it to make protein, or clear it away sooner. When tagging goes wrong, it can contribute to diseases such as leukaemia.</p>
+            <p>A tag changes how a cell builds a protein. When the tagging mechanism goes wrong, it can contribute to diseases such as leukaemia.</p>
           </article>
         </div>
       </section>
@@ -126,50 +126,29 @@ export default function Home() {
       <section className="band">
         <h2>Why are the tags hard to find?</h2>
         <p className="wide">
-          A cell has millions of places where a tag could sit, and confirming even one in the lab takes weeks.
-          Scientists need to know where to look first.
+          RNA has thousands of places where a tag could sit, and confirming even one of them in the lab takes
+          weeks. Scientists need to know where to look first.
         </p>
       </section>
 
       <section className="band">
-        <h2>What we did</h2>
-        <ol className="steps">
-          <li>
-            <span className="step-n">1</span>
-            <h3>Read single molecules</h3>
-            <p>A nanopore sequencer pulls each RNA molecule through a tiny hole and records an electrical signal. A tagged A disturbs that signal slightly.</p>
-          </li>
-          <li>
-            <span className="step-n">2</span>
-            <h3>Learn what a tag looks like</h3>
-            <p>We trained a model on the electrical signals recorded from RNA of two cell types, where lab experiments had already located the tags.</p>
-          </li>
-          <li>
-            <span className="step-n">3</span>
-            <h3>Rank 1.5 million places</h3>
-            <p>We applied it to public data from seven cell lines, mostly cancers, and ranked every candidate place from most to least likely.</p>
-          </li>
-        </ol>
+        <h2>Our solution</h2>
+        <p className="wide">
+          We built a model from data where lab experiments had already located the m6A sites. We then applied
+          it to public data from human cells, so that scientists can see which sites in their gene are most
+          likely to carry m6A, and test those first.
+        </p>
       </section>
 
       <section className="band result">
         <div>
-          <h2>Does it help?</h2>
+          <h2>Does our model help?</h2>
           <p className="wide">
             We tested it on genes the model had never seen. If a scientist checks our top three picks in a gene, at
             least one carries the tag in {hits ? inTen(hits.model) : "8–9"} genes out of 10.
           </p>
         </div>
         {hits && <ResultBars hits={hits} />}
-      </section>
-
-      <section className="band">
-        <h2>What it can't tell you</h2>
-        <ul className="plain-list">
-          <li><strong>The model predicts rankings instead of probabilities.</strong> A high rank marks a site as worth testing first; it does not establish that the site is modified.</li>
-          <li><strong>The model does not estimate how much of an RNA is modified.</strong> It predicts whether a site carries m6A, but not the fraction of molecules modified there.</li>
-          <li><strong>Predictions are less reliable where few molecules were read.</strong> Sites with low read depth give the model less evidence, and their rankings are less stable.</li>
-        </ul>
       </section>
 
       <Doors to={["explore", "how", "stats"]} />

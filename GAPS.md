@@ -1359,11 +1359,15 @@ regenerated, and the JSON reports behind the current ones are in
 
   In order of feasibility:
 
-  **(a) GLORI labels + SG-NEx A549/K562 nanopore.** The only route where the
-  nanopore side is already in our input format *and* at a realistic depth
-  (median 2-3). Needs the GLORI site lists — GEO **GSE210563** — and conversion
-  from genomic to transcript coordinates, which is the fiddly part and the most
-  likely place to introduce a silent off-by-one. GLORI is
+  **(a) GLORI labels + SG-NEx nanopore. DONE as an evaluation, 2026-10-25:**
+  `python analysis/sgnex/glori_check.py` -> `analysis/sgnex/glori/summary.md`,
+  results in report/findings.md section 16. GLORI site lists exist for four
+  SG-NEx lines - A549 and H9 (GSE290408), HepG2 and HCT116 (GSE301419) - and
+  the coordinate mapping is verified (shift 0 puts 50-74% of GLORI sites on our
+  candidates; shift +-1 puts <= 0.2%). **GSE210563, named here before, was the
+  wrong series: it is HEK293T, HeLa and mouse only.** Still open: *training* on
+  these labels (only evaluated so far), and the A549 METTL3-knockdown samples
+  in GSE290408 as confident negatives. The original reasoning follows. GLORI is
   chemical (glyoxal-and-nitrite) rather than antibody-based, so it is not
   subject to the m6ACE-Seq background problem recorded under "Understanding the
   data" — and that cuts both ways, because **cross-method label disagreement is
@@ -1382,7 +1386,7 @@ regenerated, and the JSON reports behind the current ones are in
   thresholds, so a positive means "somebody's assay called this once". Good for
   sanity-checking our own label set, risky to train on.
 
-  Nobody has started any of them, and (a) is the one to start with.
+  (a) is done as an evaluation (above); (b) and (c) have not been started.
 - The current best out-of-fold PR AUC is **0.4759** (quantile features,
   LightGBM). One reference point is solid: a motif-only classifier scores
   **0.1537** (3.42x random) with no signal data at all.

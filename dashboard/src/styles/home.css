@@ -49,6 +49,11 @@
   gap: 10px;
 }
 .three-up p { color: var(--fg-soft); font-size: 0.95rem; }
+/* Justified prose, as on How it works (model.css): hyphenation keeps word gaps even, and
+   phone-width columns fall back to ragged right. */
+@media (min-width: 640px) {
+  .hero-copy .lede, .home .wide, .three-up p { text-align: justify; hyphens: auto; }
+}
 .letters { width: 100%; max-width: 280px; height: 64px; }
 .letter { font: 600 22px "JetBrains Mono", ui-monospace, monospace; fill: var(--muted); }
 .letter.on { fill: var(--accent); }

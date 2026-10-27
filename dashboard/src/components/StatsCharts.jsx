@@ -241,7 +241,7 @@ const SHORT = { "Logistic regression": "Logistic reg.", "Quantiles + LightGBM": 
 const LEFT = new Set(["Quantiles + LightGBM"]);
 // What each method is, for the details card under the scatter.
 const METHOD_INFO = {
-  "Logistic regression": "The required simple baseline. Each site's reads are summarised by the mean and standard deviation of the nine signal measurements; with the site's DRACH motif, these feed a logistic regression.",
+  "Logistic regression": "A simple baseline for comparison. Each site's reads are summarised by the mean and standard deviation of the nine signal measurements; with the site's DRACH motif, these feed a logistic regression.",
   "Quantiles + LightGBM": "Each measurement is summarised by five quantiles across the site's reads (5th to 95th percentile), so a minority of modified reads still shows in the tails. Gradient-boosted trees (LightGBM) classify the site.",
   "m6Anet (pretrained)": "The published m6Anet model (Hendra et al., 2022), used with its released HCT116 (RNA002) weights and not retrained. Its training data overlap the HCT116 evaluation set, so its HCT116 values are not held out.",
   "DeepSet (reads only)": "This model's read encoder on its own: one network applied to every read, then pooled across the site's reads. It does not use neighbouring sites.",
@@ -381,6 +381,103 @@ function MethodPanel({ rows, method, line, onMove, onClose }) {
 }
 
 /* Grouped bars: categories down, one bar per series, values as percentages. */
+/* GLORI section (glori_stats.json): a plain vertical bar chart, one pair of touching bars per cell
+   line (this model, m6Anet), PR AUC with every site ranked together. Hovering or focusing a pair
+   opens a table of the split by reads per site, the better of the two models bolded per row. */
+const GLORI_BANDS = [["1-2", "1–2"], ["3-9", "3–9"], ["10-19", "10–19"], ["20+", "≥ 20"], ["all", "All"]];
+const GLORI_BARS = [["This model", "model", "accent"], ["m6Anet", "m6anet", "fg"]];
+export function GloriBars({ data, names, yMax = 0.4, yTicks = [0, 0.1, 0.2, 0.3, 0.4] }) {
+  const [ref, W] = useWidth();
+  const svg = useRef(null);
+  const [hover, setHover] = useState(null);           // {line, at}
+  const f3 = (v) => v.toFixed(3);
+  const H = 300, L = 52, R = 16, T = 22, B = 42;
+  const sy = scale(0, yMax, H - B, T);
+  const band = (W - L - R) / data.lines.length;
+  const bw = Math.min(64, band * 0.3);                  // each bar; the pair touches
+  // The table opens beside the pair, level with the taller bar's top: to the right, except for the
+  // last pair, where it opens to the left so it sits over the chart rather than past its edge.
+  const open = (line, i) => {
+    const r = svg.current.getBoundingClientRect();
+    const top = Math.max(...GLORI_BARS.map(([, k]) => data.by_line[line].all[k].pr_auc));
+    const last = i === data.lines.length - 1;
+    const cx = L + band * (i + 0.5);
+    setHover({ line, side: last ? "left" : "right", at: { x: r.left + (last ? cx - bw : cx + bw), y: r.top + sy(top) - 16 } });
+  };
+  // A bar with rounded top corners and a square base, sitting on the axis.
+  const barPath = (x, v) => {
+    const y = sy(v), base = sy(0), rr = Math.min(6, bw / 2, base - y);
+    return `M${x},${base}V${y + rr}Q${x},${y} ${x + rr},${y}H${x + bw - rr}Q${x + bw},${y} ${x + bw},${y + rr}V${base}Z`;
+  };
+  return (
+    <figure className="stat-chart glori-bars" ref={ref}>
+      <div className="legend">{GLORI_BARS.map(([name, , style]) => <span key={name} className={`key bar ${style}`}>{name}</span>)}</div>
+      <svg ref={svg} viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label="PR AUC of this model and m6Anet in each cell line">
+        {yTicks.map((v) => (
+          <g key={v}>
+            <line className="grid" x1={L} x2={W - R} y1={sy(v)} y2={sy(v)} />
+            <text className="tick" x={L - 8} y={sy(v) + 4} textAnchor="end">{v}</text>
+          </g>
+        ))}
+        <text className="axis-label" transform={`translate(13,${(T + H - B) / 2}) rotate(-90)`} textAnchor="middle">PR AUC</text>
+        {data.lines.slice(1).map((line, i) => (
+          <line key={line} className="vsep" x1={L + band * (i + 1)} x2={L + band * (i + 1)} y1={T} y2={H - B} />
+        ))}
+        {data.lines.map((line, i) => {
+          const all = data.by_line[line].all;
+          const cx = L + band * (i + 0.5);
+          return (
+            <g key={line} className={hover?.line === line ? "vbar-group on" : "vbar-group"} tabIndex="0" role="button"
+              aria-label={`${names(line)}: this model ${f3(all.model.pr_auc)}, m6Anet ${f3(all.m6anet.pr_auc)}. Show the split by reads per site.`}
+              onPointerEnter={() => open(line, i)} onPointerLeave={() => setHover(null)}
+              onFocus={() => open(line, i)} onBlur={() => setHover(null)}>
+              {GLORI_BARS.map(([name, key, style], j) => {
+                const v = all[key].pr_auc, x = cx - bw + j * bw;
+                return (
+                  <g key={name}>
+                    <path className={`vbar ${style}`} d={barPath(x, v)} />
+                    <text className="vbar-val" x={x + bw / 2} y={sy(v) - 6} textAnchor="middle">{f3(v)}</text>
+                  </g>
+                );
+              })}
+              <text className="tick vbar-cat" x={cx} y={H - B + 20} textAnchor="middle">{names(line)}</text>
+            </g>
+          );
+        })}
+        <line className="axis" x1={L} x2={W - R} y1={sy(0)} y2={sy(0)} />
+      </svg>
+      {hover && (() => {
+        const d = data.by_line[hover.line];
+        const cell = (k, key, other) => {
+          const v = +f3(d[k][key].pr_auc), w = +f3(d[k][other].pr_auc);
+          return <td className={v >= w ? "win" : ""}>{f3(d[k][key].pr_auc)}</td>;
+        };
+        return (
+          <Popup at={hover.at} side={hover.side} vertical="slide" id="glori-pop">
+            <strong>{names(hover.line)}: PR AUC by reads per site</strong>
+            <table className="pop-table">
+              <thead><tr><th>Reads</th><th>This model</th><th>m6Anet*</th><th>Random</th></tr></thead>
+              <tbody>
+                {GLORI_BANDS.map(([k, label]) => (
+                  <tr key={k} className={k === "all" ? "total" : ""}>
+                    <th scope="row">{label}</th>{cell(k, "model", "m6anet")}{cell(k, "m6anet", "model")}
+                    <td className="rand">{f3(d[k].positive_rate)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <span className="pop-note">
+              * m6Anet is not designed for sites with fewer than 20 reads: as released it gives them no score
+              ({Math.round((1 - data.published[hover.line].sites) * 100)}% of {names(hover.line)}'s sites). Its
+              values below 20 reads, and so in "All", come from lowering that minimum.
+            </span>
+          </Popup>
+        );
+      })()}
+    </figure>
+  );
+}
+
 export function GroupedBars({ categories, series }) {
   return (
     <div className="grouped">
@@ -412,9 +509,10 @@ export function ReliabilityAuto({ data, depths, cutoffs }) {
     return () => ro.disconnect();
   }, []);
   const motifs = Object.keys(data).sort((a, b) => (data[b].full ?? 0) - (data[a].full ?? 0));
-  const label = { full: "≥ 20 reads", "10 reads": "10–19", "3 reads": "3–9", "1 reads": "1–2" };
+  // Measured at exactly 1, 3 and 10 reads (simulated), so labelled that way; the page note says how Explore uses them.
+  const label = { full: "≥ 20 reads", "10 reads": "10 reads", "3 reads": "3 reads", "1 reads": "1 read" };
   const tone = (v) => (v == null ? "nd" : v >= cutoffs[0] ? "high" : v >= cutoffs[1] ? "mid" : "low");
-  const cell = (m, d) => {
+  const cell =(m, d) => {
     const v = data[m][d];
     return <td key={`${m}${d}`} className={`cell ${tone(v)}`} style={{ "--v": v == null ? 0 : Math.max(0, (v - 0.5) / 0.5) }}>{v == null ? "n.d." : v.toFixed(2)}</td>;
   };

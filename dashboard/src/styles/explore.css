@@ -79,10 +79,19 @@ td.region { color: var(--fg-soft); }
 .depth { font-variant-numeric: tabular-nums; }
 .depth.low { color: var(--accent); }
 .low-tag { margin-left: 5px; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; border: 1px solid currentColor; border-radius: 4px; padding: 0 3px; }
-.holds { display: inline-flex; gap: 4px; }
-.holds .dot { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--fg-soft); }
+.holds { display: inline-flex; align-items: center; gap: 5px; padding: 4px 6px; margin: -4px -6px;
+  border-radius: 999px; transition: background 0.15s; }
+.holds.on { background: color-mix(in srgb, var(--fg) 7%, transparent); }
+.holds .dot { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--fg-soft); cursor: default;
+  transition: transform 0.15s, box-shadow 0.15s; }
 .holds .dot.held { background: var(--fg); border-color: var(--fg); }
 .holds .dot.none { border-color: var(--line); background: var(--line); }
+.holds .dot.hot { transform: scale(1.45); box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--accent) 45%, transparent); }
+/* Swatches in the replicate popup (its background is the inverse colour). */
+.tip-pop .rep-sw { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  border: 1.5px solid var(--bg); }
+.tip-pop .rep-sw.held { background: var(--bg); }
+.tip-pop .rep-sw.none { opacity: 0.4; background: var(--bg); }
 .rel { display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 1px 8px; border-radius: var(--radius); border: 1px solid var(--line); white-space: nowrap; }
 .rel.high { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .rel.moderate { color: var(--fg); }

@@ -24,6 +24,7 @@ predictions.csv
 # --- course materials (public repo; these came from Canvas) ---
 *.pdf
 handout_*.html
+sample_submission.csv
 
 # --- trained models: only the final one is committed, by hand ---
 models/*

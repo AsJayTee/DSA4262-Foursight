@@ -9,6 +9,11 @@
 .step-head { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; max-width: 720px; margin-bottom: 28px; }
 .step-head .step-n { margin: 4px 0 0; }
 .summary { margin-top: 12px; color: var(--fg-soft); font-size: 1.08rem; }
+/* Justified prose on How it works. Hyphenation (the page is lang="en") keeps the word gaps even;
+   below 640px the column is too narrow for that, so it falls back to ragged right. */
+@media (min-width: 640px) {
+  .story .summary, .story-intro .lede, .story .method-notes p { text-align: justify; hyphens: auto; }
+}
 
 .source { font-size: 0.82rem; color: var(--muted); }
 

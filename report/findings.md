@@ -45,7 +45,8 @@ Terms used throughout:
 13. [Where the data comes from, and public data beyond the course](#13-where-the-data-comes-from-and-public-data-beyond-the-course)
 14. [Models the report discusses](#14-models-the-report-discusses-agreed-10-oct)
 15. [Candidate entries for the AI-use table](#15-candidate-entries-for-the-ai-use-table-recorded-10-oct-choose-later)
-16. [Appendix: full tables](#appendix-full-tables) - every band, cell line,
+16. [SG-NEx against outside labels (GLORI), and which genes carry m6A](#16-sg-nex-against-outside-labels-glori-and-which-genes-carry-m6a-25-oct)
+17. [Appendix: full tables](#appendix-full-tables) - every band, cell line,
     threshold and bin for the clustering-by-distance (A), neighbours-per-radius
     (B), 400-nt band-use (C), position-on-transcript (D) and RNA-folding (E)
     analyses, generated from the result files
@@ -1695,6 +1696,138 @@ detected, and what was done.
 | 5 | Recommended the three-model ensemble on a seed-0 comparison (+0.004 on cell line 1) | Repeating with every component averaged over 3 seeds: +0.001, a tie | Claim restated as "ties on cell line 1, +0.006 on cell line 2" (12F, decision 0034) |
 | 6 | Wrote a wrong number into findings (deep model -0.028; the result file says -0.017) | Re-reading the result file before quoting it | Corrected |
 | 7 | (Agent action, not output) Launched Ronin jobs the user had not approved | The user noticed the extra jobs | Killed; an approval rule was adopted for every compute job |
+| 8 | GAPS.md recommended GLORI series GSE210563 as the labels for SG-NEx A549/K562 | Listing the series' samples on GEO (25 Oct): HEK293T, HeLa and mouse only, no SG-NEx line | Searched GEO for GLORI in SG-NEx lines; used GSE290408 (A549, H9) and GSE301419 (HepG2, HCT116) instead (section 16) |
+
+---
+
+## 16. SG-NEx against outside labels (GLORI), and which genes carry m6A (25 Oct)
+
+### 16A. The model on four SG-NEx lines, judged by GLORI
+
+GLORI (glyoxal and nitrite) is a chemical, single-base m6A assay, independent
+of the antibody method behind the course labels. Public GLORI site lists exist
+for four SG-NEx lines:
+
+| SG-NEx line | GLORI data | GLORI sites |
+|---|---|---:|
+| A549 | GSE290408 (`A549_GLORI3_hg38_SNuc_KDremoved`) | 47,259 |
+| H9 (hESC) | GSE290408 (`H9_GLORI3_hg38_SNuc_KDremoved`) | 34,906 |
+| HepG2 | GSE301419, sgCTRL | 7,356 |
+| HCT116 | GSE301419, sgCTRL | 6,680 |
+
+Method, in brief:
+
+- Each scored SG-NEx site's A was mapped from its Ensembl 91 transcript
+  position to the genome.
+- The mapping is verified. With no shift, 50-74% of GLORI sites land on our
+  candidates; shifted by one base either way, at most 0.2% do.
+- One row per genomic A: the isoform copy with the most reads.
+- Negatives are our candidates in genes where GLORI called at least one site.
+  A real site GLORI missed therefore counts as a negative, so every precision
+  below is a lower bound. This is worst for HepG2 and HCT116, whose GLORI
+  runs called only about 7k sites.
+- HCT116's 121,838 training sites are excluded.
+- The motif-only baseline ranks each site by its 5-mer's modification rate in
+  the training labels.
+
+PR AUC lift (PR AUC divided by the positive rate), within read-depth bands:
+
+| line | 1-2 reads | 3-9 | 10-19 | 20+ | motif-only (20+) |
+|---|---:|---:|---:|---:|---:|
+| A549 | 4.2x | 5.0x | 5.2x | **6.0x** | 2.4x |
+| H9 | 4.0x | 4.8x | 4.9x | **5.9x** | 2.1x |
+| HepG2 | 5.2x | 7.4x | 7.2x | **8.3x** | 3.1x |
+| HCT116 (non-training sites) | 6.9x | 7.5x | 6.1x | **6.9x** | 3.0x |
+
+- **The model transfers to cell lines it never saw, judged by a different
+  assay.** At 20+ reads its PR AUC is 0.366 (A549), 0.300 (H9) and 0.381
+  (HepG2), against 0.150, 0.107 and 0.141 for motif-only. In the top 1% of
+  A549 sites with 20+ reads, 45% are GLORI sites (positive rate 6.1%).
+- **The reads add signal even at 1-2 reads.** In every line and every depth
+  band the model's lift is about twice motif-only's (A549 at 1-2 reads: 4.2x
+  vs 2.3x). The simulated read-dropping sweep put a model at 1 read near the
+  motif-only floor. Two differences may explain the gap: real low-depth
+  sites keep their deep neighbours, and the 1-2 band includes 2 reads. This
+  is the first measurement on real, not simulated, low-depth sites.
+- **The lift is roughly half dataset0's own** (about 12x out-of-fold). That
+  fits the cross-source result (0029): a change of cell line *and* of
+  labelling costs about half the ranking quality.
+- **Two assays on the same cell line agree on fewer than half the sites.** On
+  HCT116's training sites in genes GLORI covered (48,620 sites), the course
+  labels have precision 0.477 and recall 0.443 against GLORI. At that same
+  recall the model reaches precision 0.425 on A549 and 0.395 on HepG2 (20+
+  reads), close to the agreement between the two assays.
+  - The comparison is not like for like: those training sites are all
+    abundant, and HCT116's GLORI run is shallow.
+- **The score tracks how much of a site is modified.** Among GLORI sites, the
+  Spearman correlation between score and GLORI's m6A fraction is 0.39-0.62.
+  It is 0.55-0.68 at 20+ reads, and 0.35-0.67 within GGACT alone, so motif
+  does not explain it. The model was trained only on binary labels.
+- Caveat: GLORI's positive rate rises with SG-NEx depth (A549 3.3% at 1-2
+  reads to 6.1% at 20+; HepG2 0.4% to 4.6%). Some of that is GLORI missing
+  sites on rare transcripts, so read across a row with care.
+  Lift within a band is the fair comparison, and the motif-only row faces the
+  same labels.
+
+Source: `analysis/sgnex/glori_check.py` -> `analysis/sgnex/glori/{summary.md, metrics.csv, mapping.csv}`.
+
+### 16B. Which kinds of genes carry more m6A (depth-matched)
+
+Raw scores rise with depth, and depth is transcript abundance, so on raw
+scores any class of abundant genes looks heavily modified. Each site is
+therefore ranked only against sites in the same depth band and cell line, and
+called "high" if it is in the band's top 5%. A class's effect is its genes'
+mean share of high sites minus that of other protein-coding genes, in
+percentage points (the expected share is 5%). Genes are the unit, and
+intervals resample genes. A class counts as a finding only if all three hold:
+
+- the same sign in all 7 lines, with the interval excluding 0 in at least 4;
+- GLORI agrees in sign in all 4 of its lines;
+- GLORI's interval excludes 0 in at least 2 of them.
+
+54 classes were tested (four gene types plus the 50 MSigDB hallmark sets), with
+no multiplicity correction, so this is descriptive.
+
+| class | model, 7 lines (pp) | GLORI, 4 lines (pp) | finding |
+|---|---|---|---|
+| transcription factors (1,082 genes) | +2.0 to +3.2 | +0.7 to +2.3 | yes |
+| TNF-alpha / NF-kB signalling | +2.9 to +4.4 | +1.7 to +4.9 | yes |
+| early oestrogen response | +1.1 to +2.3 | +0.3 to +4.0 | yes |
+| long non-coding RNAs (vs protein-coding) | +0.5 to +1.4 | +3.3 to +5.6 | yes |
+| MYC targets v1 | -3.1 to -3.9 | -1.7 to -2.5 | yes |
+| E2F targets | -2.4 to -3.1 | -1.1 to -2.8 | yes |
+| protein secretion | -3.5 to -3.8 | -0.8 to -1.9 | yes |
+| mTORC1 signalling | -1.9 to -3.0 | -0.5 to -1.1 | yes |
+| mitotic spindle | -1.1 to -1.6 | -1.3 to -1.7 | yes |
+| ribosomal proteins (79 genes) | -1.9 to -3.7 | -0.5 to +1.5 | **no: the two disagree** |
+| mitochondrially encoded (12 genes) | -5.4 to -5.7 | no GLORI calls | negative control |
+
+- **Regulatory genes carry more m6A; growth and housekeeping genes carry
+  less.** Transcription factors and immediate-early inflammatory genes (NF-kB)
+  are enriched. Proliferation and biosynthesis programmes (MYC, E2F, mTORC1,
+  mitotic spindle, secretion) are depleted. Each holds in all 7 lines and in
+  GLORI. This fits the literature's picture of m6A marking short-lived,
+  regulatory transcripts for decay. We have not tested half-life here.
+- **Depth matching reverses the raw result for ribosomal proteins.** On raw
+  scores, ribosomal-protein genes look heavily modified (+0.38 in A549, among
+  the highest of any class). Matched on depth, they sit 1.9-3.7 points
+  *below* other genes in every line. GLORI places them near average (-0.5 to
+  +1.5), so their direction is not settled. The size of the raw artefact is
+  the point.
+- **Mitochondrially encoded genes almost never have a high site** (about
+  -5.5 points against an expected 5% share, so roughly 0%). That fits m6A's
+  writer complex being nuclear, and it is the clearest negative control the
+  data offers.
+- **Only cross-line consistency is claimed here.** Every class has nearly the
+  same effect in all 7 lines, which fits A2 and E: the lines' m6A landscapes
+  look alike.
+- Caveat: "high" includes the motif. A class with more GGACT sites scores
+  higher partly for that reason, and that is still m6A biology, not an
+  artefact. Repeating this within one motif has not been done.
+
+Source: `analysis/sgnex/gene_classes.py` -> `analysis/sgnex/gene_classes/{summary.md, effects.csv}`.
+Gene lists: Lambert et al. 2018 TF list (`TF_names_v_1.01.txt`), MSigDB
+hallmarks v2023.2.
 
 ---
 

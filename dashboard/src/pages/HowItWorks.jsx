@@ -13,7 +13,7 @@ function Step({ n, title, summary, children, detail }) {
         <span className="step-n">{n}</span>
         <div>
           <h2>{title}</h2>
-          <p className="summary">{summary}</p>
+          {[].concat(summary).map((para, i) => <p className="summary" key={i}>{para}</p>)}
           {detail && (
             <>
               <button type="button" className={open ? "method-link open" : "method-link"} aria-expanded={open}
@@ -33,6 +33,9 @@ function Step({ n, title, summary, children, detail }) {
   );
 }
 
+// What the worked example's cell line is, for readers without biology.
+const LINE_DESC = { MCF7: "a breast cancer cell line" };
+
 export default function HowItWorks() {
   const { data, error } = useJson("model_story.json");
   if (error) return <div className="page-narrow"><p role="alert">{error}</p></div>;
@@ -45,14 +48,19 @@ export default function HowItWorks() {
         <p className="eyebrow">How it works</p>
         <h1>How the model ranks a site</h1>
         <p className="lede">
-          The model treats an RNA as text and each candidate site on it as a small table of measurements. It scores
-          a site from its own table, then refines the score using the sites around it. Each step below runs on real
-          data: the gene <strong>MYC</strong> in {data.cell_line} cells.
+          The model treats an RNA as text and each candidate site on it as a small table of measurements. It learned
+          from sites where lab experiments in two human cell lines had already established, site by site, whether
+          m6A is present. It scores a site from its own table, then refines the score using the sites around it.
+          Each step below runs on real data: the gene <strong>MYC</strong> in {data.cell_line} cells
+          {LINE_DESC[data.cell_line] ? `, ${LINE_DESC[data.cell_line]}` : ""}.
         </p>
       </header>
 
       <Step n="1" title="Input: sequence and signal per molecule"
-        summary="An RNA is a string of four letters. Some positions are candidate sites, where the modification can occur. For each candidate site we get a table: one row per sequenced molecule that contains the site, and nine numbers per row describing the signal around that position. The number of rows differs from site to site, from one to several hundred, so the model must accept a table of any height."
+        summary={[
+          "An RNA is a string of four letters (A, C, G and U). Only some A's can carry m6A: those in the middle of a short letter pattern called DRACH. Every such A is a candidate site, and candidate sites are the only positions the model scores.",
+          "The measurements come from nanopore sequencing, which pulls single RNA molecules through a tiny pore and records the electrical current as each stretch of letters passes; a modified A shifts that current slightly. A sample contains many copies of the same RNA, and each copy is read separately. So for each candidate site we get a table: one row per molecule that contains the site, and nine numbers per row describing the current around that position. The number of rows differs from site to site, from one to several hundred, so the model must accept a table of any height.",
+        ]}
         detail={
           <>
             <p>
@@ -77,13 +85,14 @@ export default function HowItWorks() {
             <p>
               This is a Deep Sets encoder (Zaheer et al., 2017). The row network φ maps 37 inputs (9 measurements and 28
               letter inputs) through two ReLU layers of 64 units. The site is summarised by the mean and standard
-              deviation of those 64-unit outputs and the log of the row count; a site network ρ (157 → 64 → 64) and a
-              linear head give the score from the site's own molecules. Pooling makes the model invariant to row order
-              and indifferent to table height.
+              deviation of those 64-unit outputs, the log of the row count and the site's 28 letter inputs, added again
+              at this stage; a site network ρ (157 → 64 → 64) and a linear head give the score from the site's own
+              molecules. Pooling makes the model invariant to row order and indifferent to table height.
             </p>
             <p>
-              The diagram shows real activations of one of the six networks (residual design, seed 0) for the site at
-              position {slider.position}, {network.inputs.length} molecules in a fixed random order. With few molecules
+              The diagram shows real activations of one of the model's six networks (the residual design described in
+              step 3, first random start) for the site at position {slider.position}, {network.inputs.length} molecules
+              in a fixed random order. With few molecules
               the score swings; with more it settles. This is why we report the number of molecules beside every rank.
             </p>
           </>
@@ -92,14 +101,21 @@ export default function HowItWorks() {
       </Step>
 
       <Step n="3" title="Adding evidence from nearby sites"
-        summary="Modified sites tend to occur near each other. So each RNA becomes a graph: candidate sites are nodes, and sites within 150 letters are connected, more strongly when closer. Each site receives its neighbours' evidence and updates its score. Click a site in the graph to pass its neighbours' evidence to it and see the scores change."
+        summary="Modified sites tend to occur near each other, so a site's neighbours carry evidence about it. To use that evidence, each RNA becomes a graph, a network of connections: candidate sites are its nodes, and sites within 150 letters of each other are connected, more strongly when closer. Each site receives its neighbours' evidence and updates its score. Click a site in the graph to pass its neighbours' evidence to it and see the scores change."
         detail={
           <>
             <p>
-              Three graph designs are used. One is a two-head H2GCN (Zhu et al., 2020) that keeps a site's own
-              representation separate from its neighbours'. Another adds a correction to the site's own score from
-              neighbours within 150 letters, weighted by e<sup>−d/λ</sup> with λ = {data.kernel_nt} letters fitted on
-              training labels. In the third, each neighbour passes only its own score. The last two are trained with
+              The clustering is measured in our training labels: two modified sites less than 25 letters apart occur
+              about 2.2 times as often as expected from how heavily their transcripts are modified overall, and the
+              excess fades to nothing by 200–400 letters.
+            </p>
+            <p>
+              Three graph designs are used, and each is trained twice from different random starting points, giving
+              the six networks combined in step 4. The first is a two-head H2GCN (Zhu et al., 2020) that keeps a site's
+              own representation separate from its neighbours'. The second, the residual design, adds a correction to
+              the site's own score from neighbours within 150 letters, weighted by e<sup>−d/λ</sup> with
+              λ = {data.kernel_nt} letters fitted on training labels. In the third, each neighbour passes only its own
+              score. The last two are trained with
               neighbours randomly removed, so no single neighbour can carry a site, which helps them transfer to new
               cell lines.
             </p>
@@ -112,6 +128,23 @@ export default function HowItWorks() {
         }>
         <SiteGraph sites={sites} highlight={slider.index} radius={data.radius_nt} kernel={data.kernel_nt} />
       </Step>
+
+      <Step n="4" title="From six networks to one ranking"
+        summary="The model is six networks: the three graph designs from step 3, each trained twice. Each network scores every candidate site in a sample, and the scores are turned into ranks. The final result is the average of the six ranks, expressed as a percentile: a site in the top 2% outranks 98% of the candidate sites in that sample. This is the number shown beside every site in Explore sites. It is a ranking, not a probability: it tells a researcher which sites to test first, not the chance that a given site is modified."
+        detail={
+          <>
+            <p>
+              Averaging ranks rather than raw outputs stops any one network from dominating just because its outputs
+              span a wider range. The networks' raw outputs are not calibrated probabilities, so a rank is the more
+              honest summary.
+            </p>
+            <p>
+              Ranks are computed within one file (one sample, or one cell line's samples pooled), so a rank in one
+              cell line cannot be compared directly with a rank in another. Where scores must be compared across
+              files, our analyses use the average of the six networks' raw outputs instead.
+            </p>
+          </>
+        } />
 
       <Doors to={["explore", "stats"]} />
     </div>

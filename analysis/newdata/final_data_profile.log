@@ -1,0 +1,71 @@
+dataset0: 121,838 sites
+dataset1: 90,810 sites
+dataset2: 1,323 sites
+dataset3: 98,830 sites
+dataset4: 52,720 sites
+dataset5: 238,748 sites
+dataset6: 27,357 sites
+dataset7: 60,403 sites
+file                                dataset0  dataset1  dataset2  dataset3  dataset4  dataset5  dataset6  dataset7
+sites                               121838.0   90810.0    1323.0   98830.0   52720.0  238748.0   27357.0   60403.0
+transcripts                           5333.0    4451.0       7.0   12294.0    3854.0    8908.0    1336.0       7.0
+sites per transcript (median)           19.0      17.0     189.0       7.0      11.0      22.0      17.0    8629.0
+Ensembl IDs %                          100.0     100.0       0.0       0.0       0.0       0.0     100.0       0.0
+versioned IDs %                          0.0       0.0       0.0     100.0       0.0       0.0       0.0       0.0
+reads p25                               32.0      27.0     440.0      26.0      28.0      27.0      25.0      37.0
+reads median                            47.0      40.0     814.0      36.0      46.0      40.0      35.0      58.0
+reads max                              991.0     994.0    3438.0     991.0     200.0     997.0     988.0     820.0
+sites < 20 reads %                       0.0       0.0       0.0       0.0       0.0       0.0       0.0       0.0
+positions multiple of 10 %              10.1      10.1     100.0      10.0      10.0      10.1      10.1     100.0
+distinct 7-mers                        288.0     288.0     139.0     288.0     288.0     288.0     288.0     288.0
+DRACH centre %                         100.0     100.0     100.0     100.0     100.0     100.0     100.0     100.0
+transcripts shared with dataset0 %     100.0      83.3       0.0       0.0       0.0       0.0      93.6       0.0
+transcripts shared with dataset1 %      65.4     100.0       0.0       0.0       0.0       0.0      99.7       0.0
+          shared 5-mers  median |current - dataset0| (pA)  median current shift (pA)  median sd ratio  median dwell ratio
+file                                                                                                                     
+dataset0             18                             0.000                      0.000            1.000               1.000
+dataset1             18                             0.199                     -0.199            0.964               0.985
+dataset2             18                             1.618                     -1.618            0.990               0.969
+dataset3             18                             0.405                     -0.359            0.980               0.934
+dataset4             18                             0.488                     -0.488            0.958               0.970
+dataset5             18                             0.290                     -0.290            0.943               1.015
+dataset6             18                             0.178                      0.178            0.976               0.965
+dataset7             18                             0.268                     -0.024            0.998               0.989
+  SGNex_A549_directRNA_replicate5_run1 checked
+  SGNex_A549_directRNA_replicate6_run1 checked
+  SGNex_H9_directRNA_replicate2_run1 checked
+  SGNex_H9_directRNA_replicate2_run2 checked
+  SGNex_H9_directRNA_replicate3_run1 checked
+  SGNex_H9_directRNA_replicate3_run2 checked
+  SGNex_H9_directRNA_replicate4_run1 checked
+  SGNex_H9_directRNA_replicate4_run2 checked
+  SGNex_HEYA8_directRNA_replicate1_run1 checked
+  SGNex_HEYA8_directRNA_replicate1_run2 checked
+  SGNex_HEYA8_directRNA_replicate2_run1 checked
+  SGNex_HEYA8_directRNA_replicate2_run2 checked
+  SGNex_HEYA8_directRNA_replicate3_run1 checked
+  SGNex_Hct116_directRNA_replicate3_run1 checked
+  SGNex_Hct116_directRNA_replicate3_run4 checked
+  SGNex_Hct116_directRNA_replicate4_run3 checked
+  SGNex_HepG2_directRNA_replicate5_run2 checked
+  SGNex_HepG2_directRNA_replicate6_run1 checked
+  SGNex_K562_directRNA_replicate4_run1 checked
+  SGNex_K562_directRNA_replicate5_run1 checked
+  SGNex_K562_directRNA_replicate6_run1 checked
+  SGNex_MCF7_directRNA_replicate3_run1 checked
+  SGNex_MCF7_directRNA_replicate4_run1 checked
+    file                                 sample  present %  same n_reads %
+dataset0 SGNex_Hct116_directRNA_replicate3_run1     100.00          100.00
+dataset0 SGNex_Hct116_directRNA_replicate3_run4     100.00            3.48
+dataset1 SGNex_Hct116_directRNA_replicate3_run1      98.64            1.37
+dataset1     SGNex_H9_directRNA_replicate4_run1      96.36            1.31
+dataset3     SGNex_H9_directRNA_replicate3_run1       0.00            0.00
+dataset3   SGNex_A549_directRNA_replicate6_run1       0.00            0.00
+dataset4     SGNex_H9_directRNA_replicate3_run1       0.00            0.00
+dataset4     SGNex_H9_directRNA_replicate2_run2       0.00            0.00
+dataset5     SGNex_H9_directRNA_replicate3_run1       0.00            0.00
+dataset5   SGNex_A549_directRNA_replicate6_run1       0.00            0.00
+dataset6  SGNex_HEYA8_directRNA_replicate2_run2      99.09            1.35
+dataset6   SGNex_A549_directRNA_replicate5_run1      98.63            1.34
+dataset7     SGNex_H9_directRNA_replicate2_run1       0.00            0.00
+dataset7   SGNex_A549_directRNA_replicate6_run1       0.00            0.00

@@ -240,7 +240,7 @@ export function ReadNetwork({ network, table, site }) {
   const chart = (
     <g>
       <text className="layer-label" x={(cx0 + cx1) / 2} y={titleY} textAnchor="middle">Score as molecules are added</text>
-      <text className="layer-sub" x={(cx0 + cx1) / 2} y={titleY + (narrow ? 24 : 16)} textAnchor="middle">rank percentile in the sample</text>
+      <text className="layer-sub" x={(cx0 + cx1) / 2} y={titleY + (narrow ? 24 : 16)} textAnchor="middle">rank among the sample's sites (step 4)</text>
       {[0, 0.25, 0.5, 0.75, 1].map((v) => (
         <g key={v}>
           <line className="grid" x1={cx0} x2={cx1} y1={py(v)} y2={py(v)} />

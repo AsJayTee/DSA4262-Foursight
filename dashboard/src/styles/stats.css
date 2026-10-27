@@ -6,6 +6,16 @@
 .stat-toc a { color: var(--muted); text-decoration: none; }
 .stat-toc a:hover { color: var(--fg); }
 .stat-section { border-top: 1px solid var(--line); padding: 40px 0 8px; scroll-margin-top: 64px; }
+/* Glossary: a quiet dropdown under the intro, so the terms are there without a section of definitions. */
+.glossary { max-width: 760px; margin: 4px 0 28px; font-size: 0.9rem; }
+.glossary summary { cursor: pointer; color: var(--muted); width: fit-content; text-decoration: underline dotted;
+  text-underline-offset: 3px; }
+.glossary summary:hover, .glossary summary:focus-visible { color: var(--fg); }
+.glossary dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; margin: 12px 0 0;
+  padding: 14px 16px; background: var(--surface); border-radius: var(--card-radius); }
+.glossary dt { font-weight: 600; }
+.glossary dd { margin: 0; color: var(--fg-soft); }
+@media (max-width: 560px) { .glossary dl { grid-template-columns: minmax(0, 1fr); } .glossary dd { margin-bottom: 6px; } }
 .stat-section h2 { font-size: 1.45rem; margin-bottom: 16px; }
 .stat-section h3 { font-size: 0.95rem; font-weight: 600; margin: 4px 0 8px; color: var(--fg-soft); }
 .stat-note { margin-top: 14px; font-size: 0.86rem; color: var(--muted); max-width: 58em; line-height: 1.55; }
@@ -87,9 +97,33 @@
 .g-bar { display: block; height: 9px; border-radius: 4px; }
 .g-bar.accent { background: var(--accent); }
 .g-bar.mid { background: var(--mid); }
+.g-bar.fg { background: var(--fg); }
+/* GLORI vertical bars: a pair per cell line, values on top; the hovered pair stays full strength. */
+.vbar.accent { fill: var(--accent); }
+.vbar.fg { fill: var(--fg); }
+.vbar { cursor: default; }
+/* Only the bars take the pointer, not their labels or the space around them. */
+.vbar-val { font-size: 0.8rem; fill: var(--fg-soft); font-variant-numeric: tabular-nums; pointer-events: none; }
+.vbar-cat { font-size: 0.9rem; pointer-events: none; }
+.vsep { stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 4 4; }
+.vbar-group { outline: none; }
+.glori-bars svg:has(.vbar-group.on) .vbar-group:not(.on) { opacity: 0.45; }
+.glori-bars .axis { stroke: var(--fg); stroke-opacity: 0.5; }
+/* The hover table inside a chart popup: a ruled table, the better model bolded per row. */
+.tip-pop .pop-table { border-collapse: collapse; margin: 8px 0 4px; font-variant-numeric: tabular-nums; }
+.tip-pop .pop-table th, .tip-pop .pop-table td { padding: 3px 9px; text-align: right; font-weight: 400;
+  border: 1px solid color-mix(in srgb, var(--bg) 35%, transparent); }
+.tip-pop .pop-table th[scope="row"], .tip-pop .pop-table thead th:first-child { text-align: left; }
+.tip-pop .pop-table thead th { font-weight: 600; }
+.tip-pop .pop-table td.win { font-weight: 700; }
+.tip-pop .pop-table td:not(.win) { opacity: 0.75; }
+.tip-pop .pop-table td.rand { opacity: 0.6; }
+.tip-pop .pop-table tr.total th, .tip-pop .pop-table tr.total td { border-top-width: 2px; }
+#glori-pop { max-width: 340px; }
 .g-val { font-size: 0.82rem; text-align: right; font-variant-numeric: tabular-nums; color: var(--fg-soft); }
 .legend .key.bar::before { height: 9px; border: none; border-radius: 3px; background: var(--mid); }
 .legend .key.bar.accent::before { background: var(--accent); }
+.legend .key.bar.fg::before { background: var(--fg); }
 
 /* Reliability grid fills the width; cells share it evenly. */
 .reliability { width: 100%; table-layout: fixed; }

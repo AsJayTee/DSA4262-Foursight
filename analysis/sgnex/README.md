@@ -84,6 +84,23 @@ Turns the committed `explore/` tables into the small JSON the dashboard loads.
 It exports aggregate numbers from public SG-NEx data only: never course labels
 or reads (see [dashboard/README.md](../../dashboard/README.md)).
 
+## Against outside labels: GLORI
+
+GLORI is a chemical single-base m6A assay. Public GLORI site lists exist for
+four SG-NEx lines (A549, H9, HepG2, HCT116), which turns those lines' scores
+into a held-out test at SG-NEx's real read depths.
+
+```bash
+python analysis/sgnex/glori_check.py    # ~2.5 min; the model vs GLORI, by read depth
+python analysis/sgnex/gene_classes.py   # ~3 min; which kinds of genes carry more m6A
+```
+
+Both need `data/sgnex_scores/` (step 1) and `data/annotation/`
+(`analysis/newdata/annotation_context.py`). The GLORI files and gene lists go
+in `data/external/glori/`; each script prints the download commands if they
+are missing. Results are in `glori/summary.md` and `gene_classes/summary.md`,
+and are written up in [report/findings.md](../../report/findings.md) section 16.
+
 ## Checks
 
 ### `survey.py`: what is in the bucket

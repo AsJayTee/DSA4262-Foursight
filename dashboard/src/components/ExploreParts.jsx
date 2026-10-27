@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HOLDS_TOP, LOW_DEPTH, lineName } from "../lib/sites.js";
-import { InfoTip, Tip } from "./Tip.jsx";
+import { InfoTip, Popup, Tip } from "./Tip.jsx";
 import { LineSelect } from "./StatsCharts.jsx";
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
@@ -30,13 +30,35 @@ export function Depth({ reads }) {
     : <span className="depth">{reads}</span>;
 }
 
+const ordinal = (n) => `${n}${[, "st", "nd", "rd"][(n % 100 >> 3) ^ 1 && n % 10] || "th"}`;
+const repName = (name) => name.replace("replicate", "Replicate ");
+
+// One dot per replicate (a separately grown batch of the cell line's cells). Hovering a dot
+// enlarges it and lists every replicate, the hovered one highlighted.
 export function HoldsDots({ row }) {
+  const [hover, setHover] = useState(null);         // {k, at}
+  const state = (b) => (b.rank == null ? "none" : b.position <= HOLDS_TOP ? "held" : "out");
   return (
-    <span className="holds" aria-label={`Within the gene's top ${HOLDS_TOP} in ${row.holds.held} of ${row.holds.measured} replicates`}>
-      {row.batches.map((b) => (
-        <span key={b.name} className={b.rank == null ? "dot none" : b.position <= HOLDS_TOP ? "dot held" : "dot"}
-          title={b.rank == null ? `${b.name}: not covered` : `${b.name}: rank ${b.position} in gene, depth ${b.reads}`} />
+    <span className={hover ? "holds on" : "holds"} onPointerLeave={() => setHover(null)}
+      aria-label={`Among the gene's top ${HOLDS_TOP} in ${row.holds.held} of ${row.holds.measured} replicates`}>
+      {row.batches.map((b, k) => (
+        <span key={b.name} className={`dot ${state(b) === "out" ? "" : state(b)}${hover?.k === k ? " hot" : ""}`}
+          onPointerEnter={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            setHover({ k, at: { x: r.right, y: r.bottom } });
+          }} />
       ))}
+      {hover && (
+        <Popup at={hover.at}>
+          <strong>Top {HOLDS_TOP} in the gene in {row.holds.held} of {row.holds.measured} replicate{row.holds.measured === 1 ? "" : "s"}</strong>
+          {row.batches.map((b, k) => (
+            <span key={b.name} className={k === hover.k ? "pop-row on" : "pop-row"}>
+              <i className={`rep-sw ${state(b)}`} />{repName(b.name)}
+              <b>{b.rank == null ? "not measured" : `${ordinal(b.position)} in gene · ${b.reads} molecules`}</b>
+            </span>
+          ))}
+        </Popup>
+      )}
     </span>
   );
 }
@@ -59,7 +81,7 @@ export const COLUMNS = (line) => [
   { key: "region", head: "Region", help: "Transcript region (5′ UTR, CDS, 3′ UTR, non-coding)" },
   { key: "depth", head: "Depth", help: "Reads at the site, all samples of the line pooled. ≤ 2: low confidence", num: true },
   { key: "top", head: `Top % (${lineName(line)})`, help: "Rank percentile among all candidate sites in this cell line (smaller = higher)", num: true },
-  { key: "reps", head: "Replicates", help: `One dot per biological replicate: filled if within the gene's top ${HOLDS_TOP} when that replicate is ranked alone; grey if not covered` },
+  { key: "reps", head: "Replicates", help: `Does the rank hold up when the experiment is repeated? Each dot is one replicate: a separate batch of this cell line's cells, sequenced and ranked on its own. Filled: the site is still among the gene's top ${HOLDS_TOP} sites in that replicate. Hollow: it is not. Grey: that replicate did not measure this site.` },
   { key: "rel", head: "Reliability", help: "Held-out pairwise accuracy for this motif and depth: high ≥ 0.84, moderate ≥ 0.75, low below; n.d. if not estimable" },
 ];
 

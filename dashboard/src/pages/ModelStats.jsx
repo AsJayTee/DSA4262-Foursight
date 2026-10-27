@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useJson } from "../lib/data.js";
 import Doors from "../components/Doors.jsx";
 import { lineName } from "../lib/sites.js";
-import { AucScatter, GroupedBars, Legend, LineChart, LineSelect, ReliabilityAuto, Toggle } from "../components/StatsCharts.jsx";
+import { AucScatter, GloriBars, GroupedBars, Legend, LineChart, LineSelect, ReliabilityAuto, Toggle } from "../components/StatsCharts.jsx";
 
 const pct = (v) => (v == null ? null : +(v * 100).toFixed(1));
 // "Both cell lines" is the unweighted mean of the HCT116 and HEK293T values: one series,
@@ -30,10 +30,12 @@ function withMean(s) {
   return { ...s, performance: perf, depth, topk, gene_best, depth_vs_m6anet: dvm };
 }
 
-function Section({ id, title, children, note, control }) {
+// `question` is the section's point in plain words, read before the chart; `note` is the method.
+function Section({ id, title, question, children, note, control }) {
   return (
     <section className="stat-section" id={id}>
       <div className="stat-head"><h2>{title}</h2>{control}</div>
+      {question && <p className="stat-q">{question}</p>}
       {children}
       {note && <p className="stat-note">{note}</p>}
     </section>
@@ -44,6 +46,7 @@ export default function ModelStats() {
   const { data: raw, error } = useJson("model_stats.json");
   const s = useMemo(() => (raw ? withMean(raw) : null), [raw]);
   const { data: explore } = useJson("explore.json");
+  const { data: glori } = useJson("glori_stats.json");
   const [aucLine, setAucLine] = useState("both");
   const [depthLine, setDepthLine] = useState("both");
   const [depthMetric, setDepthMetric] = useState("pr_auc");
@@ -54,6 +57,8 @@ export default function ModelStats() {
   if (!s || !explore) return <div className="page-narrow"><p role="status">Loading…</p></div>;
 
   const depthOrder = ["1 reads", "3 reads", "10 reads", "full"];
+  const randomRates = glori ? glori.lines.map((l) => glori.by_line[l].all.positive_rate) : [];
+  const randomRange = `${Math.min(...randomRates).toFixed(2)}–${Math.max(...randomRates).toFixed(2)}`;
   const dvm = s.depth_vs_m6anet;
   const medians = s.sgnex_depth.map((r) => r.median);
   const sgMedian = `${Math.min(...medians)}–${Math.max(...medians)}`;
@@ -74,8 +79,8 @@ export default function ModelStats() {
       { name: "This model", values: lab[key].model, style: "accent" },
       { name: "m6Anet", values: lab[key].m6anet, style: "mid" }]);
   const sourceNote = source === "SG-NEx"
-    ? `SG-NEx sites with ≥ ${sg.min_reads} reads; positive = top ${sg.top * 100}% of each cell line.`
-    : `Held-out sites; model and m6Anet positive = top ${pct(lab.base_rate)}% of the file, the labelled positive rate.`;
+    ? `SG-NEx sites with ≥ ${sg.min_reads} reads; a ranking has no yes/no answer, so the top ${sg.top * 100}% of each cell line's sites count as positive.`
+    : `Held-out sites. To compare a ranking with yes/no labels, the model's and m6Anet's top ${pct(lab.base_rate)}% of sites count as positive, the same share as the labels.`;
   const depthTitle = (v) => ["1 read per site", "3 reads per site", "10 reads per site", "All reads (≥ 20 per site)"][v];
   const topkChart = (line, legend = true) => (
     <LineChart key={line} x={[1, 2, 3, 4, 5]} xTicks={[1, 2, 3, 4, 5]} xLabel="Sites tested (top k)" yLabel="Genes recovered (%)"
@@ -88,7 +93,7 @@ export default function ModelStats() {
   const calChart = (line) => (
     <GroupedBars key={line} categories={BANDS} series={[
       { name: "All reads (≥ 20 per site)", style: "accent", values: s.gene_best.full.map((b) => b[line]) },
-      { name: "One read per site (subsampled)", style: "mid", values: s.gene_best.one_read.map((b) => b[line]) },
+      { name: "One read per site (simulated)", style: "mid", values: s.gene_best.one_read.map((b) => b[line]) },
     ]} />
   );
 
@@ -98,21 +103,58 @@ export default function ModelStats() {
         <p className="eyebrow">Model stats</p>
         <h1>Model performance</h1>
         <p className="lede">
-          Held-out evaluation of the site-graph ensemble in HCT116 (m6ACE-seq labels) and HEK293T, using five-fold
-          cross-validation grouped by gene, and the positional distribution of its predictions in seven SG-NEx cell
-          lines. Where both cell lines are selected, values are the unweighted mean of the two.
+          How far can you trust the model's ranking of sites? This page measures it on genes the model never saw
+          while it was being trained, in the two human cell lines where lab experiments had already located the m6A
+          sites: HCT116 (colon cancer) and HEK293T (embryonic kidney). It then checks that the model's predictions in
+          the seven public SG-NEx cell lines fall where m6A is known to occur along a gene.
         </p>
       </header>
 
-      <Section id="discrimination" title="Discrimination" control={<LineSelect value={aucLine} onChange={setAucLine} />}
-        note="PR AUC against ROC AUC on held-out genes; a random ranking has PR AUC 0.045 (HCT116) and 0.072 (HEK293T). m6Anet (hollow, †) was trained on HCT116 and is not held out in that cell line.">
+      <details className="glossary">
+        <summary>Glossary</summary>
+        <dl>
+          <dt>Held out</dt><dd>Measured on genes the model was not trained on.</dd>
+          <dt>Read depth</dt><dd>How many RNA molecules were measured at a site.</dd>
+          <dt>PR AUC</dt><dd>How well a ranking puts modified sites at the top. A random ranking scores the share
+            of sites that are modified.</dd>
+          <dt>ROC AUC</dt><dd>The chance that a modified site ranks above an unmodified one. 0.5 is random.</dd>
+          <dt>m6ACE-seq, GLORI</dt><dd>Two lab methods that locate m6A. m6ACE-seq gave the labels the model learned
+            from; GLORI is an independent check.</dd>
+          <dt>Both cell lines</dt><dd>The average of HCT116 and HEK293T.</dd>
+        </dl>
+      </details>
+
+      <Section id="discrimination" title="Comparison with other methods" control={<LineSelect value={aucLine} onChange={setAucLine} />}
+        question="How well does each method separate modified sites from unmodified ones?"
+        note="Each point is one method, scored on held-out genes; higher and further right is better. Click a point for how the method works. m6Anet (hollow, †) was trained on HCT116, so its HCT116 values are not held out.">
         <AucScatter rows={s.performance} lines={[aucLine]} />
       </Section>
 
+      <Section id="shortlist" title="Shortlist recovery" control={<LineSelect value={kLine} onChange={setKLine} />}
+        question="If you test the top few sites the model picks in a gene, how often is at least one of them modified?"
+        note="Share of held-out genes (≥ 5 sites, ≥ 1 positive) whose k top-ranked sites include an m6ACE-seq-positive site, at full depth. The motif rule orders sites by the positive rate of their DRACH motif in training genes.">
+        {topkChart(kLine)}
+      </Section>
+
+      <Section id="calibration" title="Gene-level calibration" control={<LineSelect value={calLine} onChange={setCalLine} />}
+        question="How often does a gene carry m6A, given the rank of its best site?"
+        note="Genes are grouped by the percentile of their highest-ranked site; bars show the share carrying at least one m6ACE-seq-positive site. Grey bars repeat the analysis with reads randomly removed until every site has a single read.">
+        {calChart(calLine)}
+      </Section>
+
+      {glori && (
+        <Section id="glori" title="New cell lines, checked by an independent lab method"
+          question="Does the ranking still hold up in cell lines the model never saw, judged by a different lab method?"
+          note={`GLORI is a chemical method that maps m6A one letter at a time, independently of the m6ACE-seq labels the model learned from (A549 and H9: GEO GSE290408; HepG2: GSE301419). Each bar is the PR AUC with all of a cell line's candidate sites ranked together, deep and shallow, as in Explore sites; a random ranking would score ${randomRange}. Hover over a cell line for the split by reads per site. GLORI lists only the sites it detected, so every value is a lower bound, for both methods alike. HCT116 is left out because the model was trained on it.`}>
+          <GloriBars data={glori} names={lineName} />
+        </Section>
+      )}
+
       <Section id="depth" title="Read depth" control={<LineSelect value={depthLine} onChange={setDepthLine} />}
+        question="How much worse does the model get when fewer molecules are read at a site?"
         note={dvm
-          ? `Held-out sites subsampled to 1, 3 and 10 reads, with identical reads given to both methods; SG-NEx sites have a median of ${sgMedian} reads. m6Anet was run with its 20-read minimum lowered and is otherwise unchanged. It is not held out on HCT116, and the four HEK293T sites it does not score are excluded.`
-          : `Held-out sites subsampled to 1, 3 and 10 reads; training sites all have ≥ 20 reads. SG-NEx sites have a median of ${sgMedian} reads.`}>
+          ? `Every labelled site has at least 20 reads, so lower depths are simulated: reads are removed at random until 1, 3 or 10 remain, and both methods get the same reads. SG-NEx sites have a median of ${sgMedian} reads. m6Anet was run with its 20-read minimum lowered and is otherwise unchanged. It is not held out on HCT116, and the four HEK293T sites it does not score are excluded.`
+          : `Every labelled site has at least 20 reads, so lower depths are simulated: reads are removed at random until 1, 3 or 10 remain. SG-NEx sites have a median of ${sgMedian} reads.`}>
         {dvm && <Toggle label="Metric" value={depthMetric} onChange={setDepthMetric} options={[
           ["pr_auc", "PR AUC", <><strong>Area under the precision–recall curve.</strong> Primary metric; a random ranking scores the positive rate.</>],
           ["pair_acc", "ROC AUC", <><strong>Area under the ROC curve.</strong> Probability that a positive site outranks a negative one; 0.5 is random.</>],
@@ -137,30 +179,22 @@ export default function ModelStats() {
       </Section>
 
       <Section id="sgnex-depth" title="Read depth in SG-NEx"
-        note="Reads per site with all samples of a cell line pooled and transcript copies of one position merged, as in Explore sites.">
+        question="How many molecules does a typical site in the public SG-NEx data have?"
+        note="All samples of a cell line are pooled. A position shared by several versions (transcripts) of a gene's RNA counts once, with its molecules added together, as in Explore sites.">
         <DepthTable rows={s.sgnex_depth} />
       </Section>
 
-      <Section id="shortlist" title="Shortlist recovery" control={<LineSelect value={kLine} onChange={setKLine} />}
-        note="Share of held-out genes (≥ 5 sites, ≥ 1 positive) whose k top-ranked sites include an m6ACE-seq-positive site, at full depth. The motif rule orders sites by the positive rate of their DRACH motif in training genes.">
-        {topkChart(kLine)}
-      </Section>
-
-      <Section id="calibration" title="Gene-level calibration" control={<LineSelect value={calLine} onChange={setCalLine} />}
-        note="Genes are grouped by the percentile of their highest-ranked site; bars show the share carrying at least one m6ACE-seq-positive site. Grey bars repeat the analysis with every site subsampled to a single read.">
-        <p className="stat-q">How often does a gene carry m6A, given the rank of its best site?</p>
-        {calChart(calLine)}
-      </Section>
-
       <Section id="reliability" title="Reliability by motif and depth"
-        note={`Probability that a positive site outranks a negative site of the same motif and depth (ROC AUC within stratum, worse of the two cell lines). Explore labels sites high (≥ ${cut[0]}), moderate (≥ ${cut[1]}) or low; n.d., too few positives.`}>
+        question="For a site with a given DRACH motif and number of reads, how often does the model rank a modified site above an unmodified one?"
+        note={`Each value is the ROC AUC within one motif-and-depth group, taking the worse of the two cell lines. Depths are simulated by removing reads until exactly 1, 3 or 10 remain; Explore applies them to sites with 1–2, 3–9 and 10–19 reads, which makes its labels slightly conservative. Explore labels sites high (≥ ${cut[0]}), moderate (≥ ${cut[1]}) or low; n.d. means too few modified sites to measure.`}>
         <ReliabilityAuto data={s.reliability} depths={s.depths} cutoffs={cut} />
       </Section>
 
       <Section id="position" title="Transcript position"
         control={<LineSelect label="Data" value={source} onChange={setSource}
           options={[["HCT116", "HCT116 (labelled)"], ["HEK293T", "HEK293T (labelled)"], ["SG-NEx", "SG-NEx, 7 cell lines"]]} />}
-        note={`${sourceNote} Enrichment is the share of positive sites in a bin relative to the overall share. The model reproduces the enrichment downstream of the stop codon but depletes sites within ~75 nt of exon junctions more strongly than the labels.`}>
+        question="Do the predicted sites fall where m6A is known to occur along a gene?"
+        note={`The stop codon is where the protein-coding part of an RNA ends; exon junctions are where separately copied pieces of a gene were joined together. m6A is known to gather just after the stop codon and to be scarce close to junctions. ${sourceNote} Enrichment is the share of positive sites in a bin relative to the overall share. The model is never told where a site sits in its gene, yet it reproduces the rise after the stop codon. Near exon junctions it goes too far: within about 75 nt it ranks sites even lower than the labels show they should be.`}>
         <div className="two">
           <div>
             <h3>Distance to stop codon</h3>
@@ -179,12 +213,10 @@ export default function ModelStats() {
 
       <Section id="limitations" title="Limitations">
         <ul className="plain-list">
-          <li><strong>The model outputs ranks instead of probabilities.</strong> Scores are within-sample percentiles; they are uncalibrated and cannot be compared across samples.</li>
-          <li><strong>The model does not estimate stoichiometry.</strong> It was trained on binary site labels, so the score carries no information on the modified fraction.</li>
-          <li><strong>Performance at low depth is estimated by subsampling.</strong> Every labelled site has at least 20 reads; results at 1–10 reads come from randomly thinned reads.</li>
-          <li><strong>The model cannot detect differences between cell lines.</strong> Rank agreement between replicates of one cell line is no higher than agreement between cell lines.</li>
-          <li><strong>Sites near exon junctions are likely under-ranked.</strong> Within about 75 nt of a junction, the model depletes sites more strongly than the labels do.</li>
-          <li><strong>Reported accuracy is likely an underestimate.</strong> m6ACE-seq misses some true sites, and these count against the model in evaluation.</li>
+          <li><strong>Scores are ranks, not probabilities.</strong> A site in the top 1% is more likely to be modified than one in the top 10%, but the number is not the chance that it is modified. Ranks can only be compared within one cell line.</li>
+          <li><strong>Most results at low read depth are simulated.</strong> Every lab-labelled site was measured on at least 20 molecules, so we tested fewer by throwing molecules away at random. The GLORI check above, which uses sites that really were measured on few molecules, gives a similar picture.</li>
+          <li><strong>Modified sites near exon junctions may be missed.</strong> m6A is rare within about 75 letters of a junction, where two pieces of a gene were joined. The model has learned this too well: it ranks sites there even lower than the lab data suggests, so the few modified ones are easy to miss.</li>
+          <li><strong>The lab labels miss some real sites.</strong> When the model ranks one of these highly, it counts as a mistake, so the true accuracy is probably higher than shown.</li>
         </ul>
       </Section>
       <Doors to={["explore", "how"]} />
