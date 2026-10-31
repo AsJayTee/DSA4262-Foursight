@@ -1,0 +1,86 @@
+\contentsline {section}{\numberline {1}Introduction}{1}{section.1}%
+\contentsline {section}{\numberline {2}Problem Statement}{1}{section.2}%
+\contentsline {section}{\numberline {3}Methods}{1}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Evaluation Design}{1}{subsection.3.1}%
+\contentsline {paragraph}{Datasets.}{1}{subsection.3.1}%
+\contentsline {paragraph}{Gene-held-out and cross-cell-line evaluation.}{1}{subsection.3.1}%
+\contentsline {paragraph}{Read-depth robustness and external validation.}{2}{subsection.3.1}%
+\contentsline {paragraph}{Model comparison and selection.}{2}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Model Development}{2}{subsection.3.2}%
+\contentsline {subsubsection}{\numberline {3.2.1}From Reads to a Site Representation}{2}{subsubsection.3.2.1}%
+\contentsline {paragraph}{Representing a variable set of reads.}{2}{subsubsection.3.2.1}%
+\contentsline {paragraph}{Representation screening.}{2}{subsubsection.3.2.1}%
+\contentsline {paragraph}{Finding 1: supervision matters more than encoder architecture.}{2}{table.caption.1}%
+\contentsline {paragraph}{Finding 2: simple pooling is sufficient.}{3}{figure.caption.2}%
+\contentsline {paragraph}{Finding 3: learned representations generalise and tolerate low depth.}{3}{figure.caption.2}%
+\contentsline {paragraph}{Decision.}{3}{figure.caption.2}%
+\contentsline {subsubsection}{\numberline {3.2.2}Modified Sites Cluster Along a Transcript}{3}{subsubsection.3.2.2}%
+\contentsline {paragraph}{Motivation.}{3}{subsubsection.3.2.2}%
+\contentsline {paragraph}{Measuring local clustering.}{4}{subsubsection.3.2.2}%
+\contentsline {paragraph}{Finding: local clustering is consistent across cell lines.}{4}{figure.caption.3}%
+\contentsline {paragraph}{Implication for the model.}{5}{figure.caption.3}%
+\contentsline {subsubsection}{\numberline {3.2.3}A Site Graph Improves Prediction Through Corroboration}{5}{subsubsection.3.2.3}%
+\contentsline {paragraph}{Graph construction and architecture.}{5}{subsubsection.3.2.3}%
+\contentsline {paragraph}{Why the graph helps: corroboration.}{5}{subsubsection.3.2.3}%
+\contentsline {paragraph}{Neighbours help most at low read depth.}{6}{figure.caption.4}%
+\contentsline {paragraph}{Decision.}{6}{figure.caption.4}%
+\contentsline {subsubsection}{\numberline {3.2.4}How Far Should Neighbours Reach?}{6}{subsubsection.3.2.4}%
+\contentsline {paragraph}{About 100\,nt transfers; wider context does not.}{6}{subsubsection.3.2.4}%
+\contentsline {paragraph}{Why the wider context does not transfer.}{6}{figure.caption.5}%
+\contentsline {paragraph}{Why 100\,nt in particular.}{6}{figure.caption.5}%
+\contentsline {paragraph}{Decision.}{6}{figure.caption.5}%
+\contentsline {subsubsection}{\numberline {3.2.5}More Capacity Captures Cell-Line-Specific Patterns}{6}{subsubsection.3.2.5}%
+\contentsline {paragraph}{Motivation.}{6}{subsubsection.3.2.5}%
+\contentsline {paragraph}{Finding 1: more freedom helps the training cell line, not the unseen one.}{7}{subsubsection.3.2.5}%
+\contentsline {paragraph}{Finding 2: additional capacity captures cell-line-specific patterns.}{7}{subsubsection.3.2.5}%
+\contentsline {paragraph}{Finding 3: part of the cross-cell-line gap cannot be closed.}{7}{subsubsection.3.2.5}%
+\contentsline {paragraph}{Decision.}{7}{figure.caption.6}%
+\contentsline {subsubsection}{\numberline {3.2.6}Constraining the Neighbours}{7}{subsubsection.3.2.6}%
+\contentsline {paragraph}{Motivation.}{7}{subsubsection.3.2.6}%
+\contentsline {paragraph}{Three constrained designs.}{7}{subsubsection.3.2.6}%
+\contentsline {paragraph}{Finding 1: constraining transfers better.}{8}{table.caption.7}%
+\contentsline {paragraph}{Finding 2: neighbour dropout accounts for most of the residual design's advantage.}{8}{table.caption.7}%
+\contentsline {paragraph}{Finding 3: distance weighting helps, but not through its measured profile.}{8}{table.caption.7}%
+\contentsline {paragraph}{Decision.}{8}{table.caption.7}%
+\contentsline {subsection}{\numberline {3.3}The Final Model}{8}{subsection.3.3}%
+\contentsline {paragraph}{Components.}{8}{figure.caption.8}%
+\contentsline {paragraph}{Why ensemble three networks?}{9}{figure.caption.8}%
+\contentsline {paragraph}{Training.}{9}{figure.caption.8}%
+\contentsline {paragraph}{Inference and output.}{9}{figure.caption.8}%
+\contentsline {subsection}{\numberline {3.4}Task 2: SG-NEx Datasets and Analysis}{9}{subsection.3.4}%
+\contentsline {section}{\numberline {4}Results (1): Model Evaluation}{9}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Held-out Performance Against the Baselines and m6Anet}{9}{subsection.4.1}%
+\contentsline {paragraph}{Comparators.}{9}{subsection.4.1}%
+\contentsline {paragraph}{Held-out performance.}{9}{subsection.4.1}%
+\contentsline {paragraph}{On an unseen cell line.}{10}{table.caption.9}%
+\contentsline {subsection}{\numberline {4.2}Intermediate Models}{10}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Robustness}{11}{subsection.4.3}%
+\contentsline {paragraph}{New sequencing runs.}{11}{subsection.4.3}%
+\contentsline {paragraph}{Low read depth.}{11}{subsection.4.3}%
+\contentsline {paragraph}{Known modification fractions (data2).}{12}{table.caption.12}%
+\contentsline {section}{\numberline {5}Results (2): Application on the SG-NEx Data}{12}{section.5}%
+\contentsline {section}{\numberline {6}Discussion}{12}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Interpretation of Model Performance}{12}{subsection.6.1}%
+\contentsline {paragraph}{What the model learned.}{12}{subsection.6.1}%
+\contentsline {paragraph}{Why the clustering transfers and the labels do not.}{12}{subsection.6.1}%
+\contentsline {paragraph}{What this means for an unknown test set.}{12}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Interpretation of the SG-NEx Analysis}{12}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Limitations and Future Work}{13}{subsection.6.3}%
+\contentsline {paragraph}{Future work.}{13}{subsection.6.3}%
+\contentsline {section}{References}{a}{section*.13}%
+\contentsline {section}{Code Availability}{b}{section*.14}%
+\contentsline {section}{Use of AI Methods}{b}{section*.15}%
+\contentsline {section}{Appendix}{d}{section*.18}%
+\contentsline {paragraph}{How we searched.}{d}{section*.19}%
+\contentsline {paragraph}{The problem: cross-validation folds are not independent.}{e}{section*.23}%
+\contentsline {paragraph}{The Nadeau--Bengio correction.}{e}{section*.23}%
+\contentsline {paragraph}{Example: comparing two feature representations.}{e}{section*.23}%
+\contentsline {paragraph}{Interpretation.}{f}{section*.23}%
+\contentsline {paragraph}{Seeds, ties and model selection.}{f}{section*.23}%
+\contentsline {paragraph}{Derivation.}{k}{equation.2}%
+\contentsline {paragraph}{Several neighbours.}{l}{equation.2}%
+\contentsline {paragraph}{Why GCN fails.}{l}{equation.2}%
+\contentsline {paragraph}{Graph transformers out of distribution.}{o}{table.caption.52}%
+\contentsline {paragraph}{Distance weighting.}{p}{section*.59}%
+\contentsline {paragraph}{Residual + dropout.}{p}{section*.59}%
+\contentsline {paragraph}{Scalar messages.}{p}{section*.59}%
