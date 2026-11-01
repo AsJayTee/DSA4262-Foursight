@@ -6,9 +6,9 @@ model, and the analyses built on those scores.
 The bucket `s3://sg-nex-data` is **public and needs no credentials**. Nothing
 here needs an AWS key, a `.env`, or the R2 bucket.
 
-SG-NEx has 14 cell lines with direct RNA-seq, but only 7 of them (22 samples)
+SG-NEx has 14 cell lines with direct RNA-seq, but only 7 of them (23 samples)
 have already been through m6Anet's dataprep, the step that produces the
-`data.json` our model reads. Those 22 samples are what Task 2 covers; the rest
+`data.json` our model reads. Those 23 samples are what Task 2 covers; the rest
 would need nanopolish eventalign and m6Anet dataprep first.
 
 ## The pipeline
