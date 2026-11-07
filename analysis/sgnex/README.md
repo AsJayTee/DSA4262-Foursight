@@ -99,7 +99,7 @@ Both need `data/sgnex_scores/` (step 1) and `data/annotation/`
 (`analysis/newdata/annotation_context.py`). The GLORI files and gene lists go
 in `data/external/glori/`; each script prints the download commands if they
 are missing. Results are in `glori/summary.md` and `gene_classes/summary.md`,
-and are written up in [report/findings.md](../../report/findings.md) section 16.
+and are written up in [report/notes/findings.md](../../report/notes/findings.md) section 16.
 
 ## Checks
 

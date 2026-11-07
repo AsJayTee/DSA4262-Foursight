@@ -1361,7 +1361,7 @@ regenerated, and the JSON reports behind the current ones are in
 
   **(a) GLORI labels + SG-NEx nanopore. DONE as an evaluation, 2026-10-25:**
   `python analysis/sgnex/glori_check.py` -> `analysis/sgnex/glori/summary.md`,
-  results in report/findings.md section 16. GLORI site lists exist for four
+  results in report/notes/findings.md section 16. GLORI site lists exist for four
   SG-NEx lines - A549 and H9 (GSE290408), HepG2 and HCT116 (GSE301419) - and
   the coordinate mapping is verified (shift 0 puts 50-74% of GLORI sites on our
   candidates; shift +-1 puts <= 0.2%). **GSE210563, named here before, was the

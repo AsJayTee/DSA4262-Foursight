@@ -4,7 +4,7 @@
 
 score_hct116_runs.py asked "does a new run of the same cells score as well?" and
 kept summary numbers only, for an earlier ensemble. The Task 2 shortlist analysis
-(report/task2_plan.md, 4.1) needs the per-site scores of the shipped designs -
+(report/notes/task2_plan.md, 4.1) needs the per-site scores of the shipped designs -
 h2gcn_twohead_aux, res_gate, scalar_drop, seeds 0-2, trained on both files - so
 the top-k hit rate can be measured on real, independently sequenced molecules
 rather than only on thinned ones.

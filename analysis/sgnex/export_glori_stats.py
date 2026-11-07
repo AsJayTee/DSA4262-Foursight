@@ -6,7 +6,7 @@
 
 Turns those two scripts' result tables into one small JSON. Aggregates only, from public
 data (SG-NEx, GLORI on GEO); no per-site values leave analysis/. Definitions behind every
-number: report/sgnex_glori_findings.md.
+number: report/notes/sgnex_glori_findings.md.
 
   bands         depth bands (pooled reads per site)
   lines         held-out lines with GLORI: A549, H9, HepG2. HCT116 is left out because

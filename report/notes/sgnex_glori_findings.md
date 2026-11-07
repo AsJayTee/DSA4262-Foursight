@@ -66,7 +66,7 @@ reason.
 **Read and read depth.** A read is one RNA molecule passing through the
 nanopore. A site's depth (`n_reads`) is the number of distinct molecules
 measured at it. It is not repeated measurements of one molecule
-([docs/data.md](../docs/data.md#read-depth)). Depth mostly reflects how
+([docs/data.md](../../docs/data.md#read-depth)). Depth mostly reflects how
 abundant the transcript is.
 
 **Pooled line.** Each cell line has 2-6 SG-NEx samples (separate batches and
@@ -587,7 +587,7 @@ labels.
 
 Related summaries:
 
-- `report/findings.md`, section 16: the same results in the findings log
+- `report/notes/findings.md`, section 16: the same results in the findings log
   (written before the m6Anet run, so it does not include Finding 2).
-- `report/sgnex_glori_notes.md`: the plain-language version prepared for the
+- `report/notes/sgnex_glori_notes.md`: the plain-language version prepared for the
   team meeting.

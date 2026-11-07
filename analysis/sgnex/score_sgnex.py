@@ -200,7 +200,7 @@ def main() -> None:
     if args.batch:
         # A "replicate" in SG-NEx is a separately grown batch of cells; its runs are the same
         # RNA re-sequenced. The dashboard's "holds up?" check counts batches, so a batch with
-        # several runs needs one ranking of its own (report/task2_plan.md, 3.3).
+        # several runs needs one ranking of its own (report/notes/task2_plan.md, 3.3).
         line, rep = args.batch.split("_", 1)
         names = [n for n in lines[line] if f"_directRNA_{rep}_" in n]
         if not names:

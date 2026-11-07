@@ -12,7 +12,7 @@
 
 ## Context
 
-The team adopted one use case for Task 2 ([report/task2_plan.md](../../report/task2_plan.md)):
+The team adopted one use case for Task 2 ([report/notes/task2_plan.md](../../report/notes/task2_plan.md)):
 a researcher choosing which few m6A sites of their gene to test. The interface on `main`
 was a supplied standalone mock-up mounted as a compiled bundle (0037), with one tab on
 the first 1,000 sites of each cell line (0038). It read as generic, was hard to navigate,

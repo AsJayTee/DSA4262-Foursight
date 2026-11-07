@@ -7,7 +7,7 @@ A guide for whoever writes or presents with these figures. Each entry covers:
 - what not to claim from it;
 - where the numbers come from.
 
-The full results and their context are in [../findings.md](../findings.md).
+The full results and their context are in [../notes/findings.md](../notes/findings.md).
 
 **Regenerating.** The `models_*` and most `fig_*` figures read committed
 result tables, so they need no Ronin, no torch and no data download:

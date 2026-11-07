@@ -1,4 +1,4 @@
-"""Does a gene's top-k shortlist find real m6A? (report/task2_plan.md, 4.1)
+"""Does a gene's top-k shortlist find real m6A? (report/notes/task2_plan.md, 4.1)
 
     python analysis/site_types/build_table.py    # first
     python analysis/site_types/shortlist.py

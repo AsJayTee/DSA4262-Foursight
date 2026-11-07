@@ -9,7 +9,7 @@ From analysis/site_types/results/ (aggregates only, no labels):
   - topk: for a gene's top k sites (k = 1..5), the share of genes where at least one
     was confirmed - the basis for suggesting "test these 3";
   - trust: the labels for the per-site trust note (pairwise accuracy cut-offs, agreed
-    with the team: report/task2_plan.md decision 6.4).
+    with the team: report/notes/task2_plan.md decision 6.4).
 
 Writes dashboard/public/data/explore.json.
 """

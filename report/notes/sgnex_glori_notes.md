@@ -73,7 +73,7 @@ better than picking at random.
 **2. Sites with very few reads are less reliable but still useful.** In
 SG-NEx, about a third of sites have only 1-2 reads. A read is one RNA
 molecule measured at the site
-([what depth means](../docs/data.md#read-depth)). At 1-2 reads in A549, the
+([what depth means](../../docs/data.md#read-depth)). At 1-2 reads in A549, the
 model's top picks are confirmed **19%** of the time, against 3% at random and
 9% for sequence alone. Our earlier simulations suggested the model knows
 almost nothing at that depth, so this is better than expected. It supports
@@ -247,5 +247,5 @@ python analysis/sgnex/m6anet_glori_compare.py   # ~2 min, locally
 Results: `analysis/sgnex/glori/summary.md`,
 `analysis/sgnex/gene_classes/summary.md` and
 `analysis/sgnex/m6anet_glori/summary.md`. The write-up of the first two, with
-every number, is `report/findings.md` section 16. The downloaded GLORI files
+every number, is `report/notes/findings.md` section 16. The downloaded GLORI files
 and m6Anet outputs sit under `data/`, which is never committed.

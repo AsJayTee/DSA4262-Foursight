@@ -27,7 +27,7 @@ report uses the pretrained model as the comparator. Its cell line 2 score
 closely matches the HEK293T result published for m6Anet (0.35 PR AUC / 0.83
 ROC AUC), which indicates it was run as intended. The comparison with our
 models, including the fair test on a cell line neither was trained on, is in
-the report (Results 1) and in `report/findings.md` section 13.
+the report (Results 1) and in `report/notes/findings.md` section 13.
 
 ---
 

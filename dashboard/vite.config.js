@@ -8,7 +8,7 @@ import path from "node:path";
 const base = "/DSA4262-Foursight/";
 
 // The Explore page reads the full site export (analysis/sgnex/export_site_shortlist.py,
-// ~90 MB). It is not committed (report/task2_plan.md, 5.3): the deploy workflow puts it in
+// ~90 MB). It is not committed (report/notes/task2_plan.md, 5.3): the deploy workflow puts it in
 // public/data/sites/ from a GitHub Release. Locally, `npm run dev` and `npm run preview`
 // serve it straight from data/dashboard/ instead, so nothing needs copying.
 // SITE_DATA=<folder> points them elsewhere.

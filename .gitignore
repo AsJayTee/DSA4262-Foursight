@@ -76,5 +76,15 @@ analysis/newdata/annotation_context/site_context.csv.gz
 node_modules/
 dashboard/dist/
 # The full site export, put here by the deploy workflow from a GitHub Release
-# (dashboard/vite.config.js); never committed (report/task2_plan.md, 5.3).
+# (dashboard/vite.config.js); never committed (report/notes/task2_plan.md, 5.3).
 dashboard/public/data/sites/
+
+# LaTeX build output for report/report.tex (rebuild locally with latexmk/xelatex)
+report/*.aux
+report/*.fdb_latexmk
+report/*.fls
+report/*.log
+report/*.out
+report/*.synctex.gz
+report/*.toc
+report/*.xdv

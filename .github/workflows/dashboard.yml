@@ -32,7 +32,7 @@ jobs:
           cache: npm
           cache-dependency-path: dashboard/package-lock.json
       - run: npm ci
-      # The Explore page's data (~90 MB) is not in git (report/task2_plan.md, 5.3): it is
+      # The Explore page's data (~90 MB) is not in git (report/notes/task2_plan.md, 5.3): it is
       # attached to the GitHub Release "site-data" (dashboard/README.md, "Publish the site
       # data"). Without it the site still builds; Explore then says its data is missing.
       - name: Fetch the site data

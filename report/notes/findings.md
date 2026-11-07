@@ -1602,7 +1602,7 @@ re-checked by us).**
     +3-5% AUC) is **not** verified. Its neighbour stage aggregates a ±25 bp
     histogram of neighbours' final fractions (no distance, no read counts,
     trained after stage 1). Its LSTM is the per-read signal model, not the
-    neighbour model. See report/literature.md, "DeepMod vs our model".
+    neighbour model. See report/notes/literature.md, "DeepMod vs our model".
     **Cite it.**
   - **DeepCpG** (Genome Biol 2017), **CpG Transformer** (Bioinformatics
     2022) and GraphCpG (Bioinformatics 2023) impute single-cell CpG states

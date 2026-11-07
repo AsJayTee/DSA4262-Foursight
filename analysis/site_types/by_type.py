@@ -1,4 +1,4 @@
-"""How well the shipped model ranks each type of site (report/task2_plan.md, 4.2).
+"""How well the shipped model ranks each type of site (report/notes/task2_plan.md, 4.2).
 
     python analysis/site_types/build_table.py    # first
     python analysis/site_types/by_type.py

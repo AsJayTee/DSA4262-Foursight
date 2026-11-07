@@ -1,4 +1,4 @@
-"""Data for the Task 2 site shortlist dashboard (report/task2_plan.md, sections 1.3, 3 and 5).
+"""Data for the Task 2 site shortlist dashboard (report/notes/task2_plan.md, sections 1.3, 3 and 5).
 
     python analysis/site_types/by_type.py           # the trust notes come from here
     python analysis/sgnex/export_site_shortlist.py

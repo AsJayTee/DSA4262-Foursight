@@ -1,7 +1,7 @@
 # Where the model ranks well, and whether a shortlist works
 
 Task 2 analyses behind the site shortlist dashboard
-([report/task2_plan.md](../../report/task2_plan.md), section 4). Everything is
+([report/notes/task2_plan.md](../../report/notes/task2_plan.md), section 4). Everything is
 measured on **held-out genes** of the two labelled cell lines: every site is
 scored by a fold model that never saw its gene. The model is the shipped
 ensemble's three designs (`h2gcn_twohead_aux`, `res_gate`, `scalar_drop`), three

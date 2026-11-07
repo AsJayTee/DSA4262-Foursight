@@ -111,7 +111,7 @@ is too thin to show that.
 
 A **read** is one RNA molecule passing through the sequencer. A site's read
 count is how many molecules the model saw there (see
-[docs/data.md](../docs/data.md#read-depth)). The model was trained on sites
+[docs/data.md](../../docs/data.md#read-depth)). The model was trained on sites
 with 20 or more reads; in SG-NEx, a third of sites have only 1-2. Fewer reads
 means less evidence and a less reliable rank, and the plan shows this
 everywhere.
@@ -250,7 +250,7 @@ and HEK293T): the shipped model's three designs, three seeds each. Low read
 counts are simulated by randomly removing reads, repeated five times and
 averaged. Intervals are 95%, from resampling whole genes.
 
-Code, tables and how to rerun: [analysis/site_types/](../analysis/site_types/README.md).
+Code, tables and how to rerun: [analysis/site_types/](../../analysis/site_types/README.md).
 Every number below comes from `analysis/site_types/results/`.
 
 ### 4.1 Does the shortlist work? (top-3 hit rate)
@@ -477,7 +477,7 @@ line are dropped because their transcript is not in Ensembl 91.
 ## 7. What happens to the earlier findings (A-E)
 
 The earlier analyses
-([analysis/sgnex/explore/summary.md](../analysis/sgnex/explore/summary.md))
+([analysis/sgnex/explore/summary.md](../../analysis/sgnex/explore/summary.md))
 are not the story any more, but three of them now justify design choices:
 
 | Earlier finding | Role in this plan |

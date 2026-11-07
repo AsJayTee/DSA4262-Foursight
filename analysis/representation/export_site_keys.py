@@ -4,7 +4,7 @@
 
 xsrc_nets.py writes held-out scores as bare arrays in bundle order (dataset0's
 sites, then data1's). Analyses that only read those arrays - the site-type
-performance and top-k shortlist tables (report/task2_plan.md, section 4) - need
+performance and top-k shortlist tables (report/notes/task2_plan.md, section 4) - need
 to know which site each row is, without loading every read again.
 
 Writes .cache/representation/xsrc_nets/site_keys.csv.gz (gitignored: it holds

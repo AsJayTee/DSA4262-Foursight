@@ -7,7 +7,7 @@
 ## Context
 
 Under 0033 the shipped model was `h2gcn_twohead_aux` + `h2gcn_aux`. The 8-10 Oct
-experiments (report/findings.md section 12) found that the graph network works
+experiments (report/notes/findings.md section 12) found that the graph network works
 by corroboration: nearby sites that look modified raise a site's score. They
 also found that constraining *how* neighbours are used transfers better to a
 cell line the model never trained on. Two designs stood out:

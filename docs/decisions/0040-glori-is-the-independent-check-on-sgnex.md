@@ -5,7 +5,7 @@
 - **Affects:** `analysis/sgnex/glori_check.py`, `gene_classes.py`, `m6anet_prep.py`,
   `run_m6anet_glori.sh`, `m6anet_glori_compare.py`, `export_glori_stats.py` (all new);
   `dashboard/public/data/glori_stats.json` (new file the Model stats page reads);
-  `report/sgnex_glori_findings.md` (the definitions behind every number)
+  `report/notes/sgnex_glori_findings.md` (the definitions behind every number)
 
 ## Context
 

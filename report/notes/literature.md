@@ -23,7 +23,7 @@ Nothing below is "Verified" on the strength of a report alone.
 Related files:
 - [findings.md](findings.md): the results each citation supports (sections
   12B and 13).
-- [../docs/literature-review.md](../docs/literature-review.md): an earlier
+- [../docs/literature-review.md](../../docs/literature-review.md): an earlier
   (23 Sep) deep-research review of nanopore m6A methods, kept for its own
   provenance notes.
 
@@ -173,8 +173,13 @@ report's AI-use table: findings section 15):
   - EpiNano as "Science 2019" (Nat Commun 2019);
   - GraphGPS as "Dwivedi et al., ICLR 2022" (Rampášek et al., NeurIPS 2022);
   - SMART-m6A's year conflicts with its DOI.
-- **Earlier notes:** m6Aiso cited as "Guo et al. 2025"; the first author is
-  not confirmed.
+- **Earlier notes:** m6Aiso cited as "Guo et al. 2025"; the first author was
+  unconfirmed until 7 Nov, when the DOI's Crossref record confirmed Wenbing
+  Guo (*Mol Cell* 85(6), 1233-1246). The report now cites it as Guo et al.
+- **Report draft (found 7 Nov from Crossref):** He et al. (*Science* 2023) was
+  titled "...m6A suppression and stability"; the published title is "Exon
+  architecture controls mRNA m6A suppression and gene expression" (379(6633),
+  677-682).
 - **Deep research report 1, found on re-reading its full text (16 Oct):**
   - CpG Transformer credited to "Clauwaert et al."; the first author is De
     Waele (De Waele, Clauwaert, Menschaert & Waegeman, *Bioinformatics* 2022);

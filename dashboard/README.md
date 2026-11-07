@@ -2,7 +2,7 @@
 
 A static React site (Vite), published to GitHub Pages from this repository
 ([decision 0035](../docs/decisions/0035-dashboard-is-a-static-react-site-on-github-pages.md)).
-It serves the use case agreed in [report/task2_plan.md](../report/task2_plan.md): helping a
+It serves the use case agreed in [report/notes/task2_plan.md](../report/notes/task2_plan.md): helping a
 researcher choose which m6A sites of their gene to test first. Why it is built this way:
 [decision 0039](../docs/decisions/0039-dashboard-rebuilt-around-the-site-shortlist.md).
 
@@ -68,7 +68,7 @@ Every file is written by a script:
 |---|---|---|
 | `model_story.json` | `analysis/sgnex/export_model_story.py` | MYC (MCF7): a stretch of the RNA with its sites' read tables, one network's real activations read by read, each site's rank alone and with neighbours, the six networks, and the held-out performance numbers |
 | `model_stats.json` | `analysis/sgnex/export_model_stats.py` | held-out performance against baselines and m6Anet, depth curve, top-k recovery, gene-level calibration, reliability by motif and depth, enrichment by distance to the stop codon and exon junctions (labelled sets and the seven SG-NEx lines), reads per site in each SG-NEx line (needs `data/dashboard/` from `export_site_shortlist.py` first) |
-| `glori_stats.json` | `analysis/sgnex/export_glori_stats.py` | Model stats' GLORI section: the model, m6Anet and the motif rule against GLORI's m6A sites in A549, H9 and HepG2, by read depth; m6Anet's coverage as published; correlation with GLORI's modified fraction (definitions: `report/sgnex_glori_findings.md`) |
+| `glori_stats.json` | `analysis/sgnex/export_glori_stats.py` | Model stats' GLORI section: the model, m6Anet and the motif rule against GLORI's m6A sites in A549, H9 and HepG2, by read depth; m6Anet's coverage as published; correlation with GLORI's modified fraction (definitions: `report/notes/sgnex_glori_findings.md`) |
 | `explore.json` | `analysis/sgnex/export_explore_meta.py` | held-out numbers Explore quotes: how often a gene's top k held a confirmed site, by how high its best site ranked; trust-label cut-offs |
 | `sites/genes.json.gz` | `analysis/sgnex/export_site_shortlist.py` | gene search index: name, location, sites per cell line |
 | `sites/shards/NNN.json.gz` | same | per gene: its sites (position, letters, region, transcripts) and each cell line's rank, molecules and per-batch ranks |

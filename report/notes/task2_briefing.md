@@ -3,8 +3,8 @@
 For the group meeting. Status as of **10 October 2026**.
 
 Detailed numbers:
-- [../analysis/sgnex/explore/summary.md](../analysis/sgnex/explore/summary.md) (tables);
-- [../analysis/sgnex/explore/overview.png](../analysis/sgnex/explore/overview.png) (figure);
+- [../analysis/sgnex/explore/summary.md](../../analysis/sgnex/explore/summary.md) (tables);
+- [../analysis/sgnex/explore/overview.png](../../analysis/sgnex/explore/overview.png) (figure);
 - [findings.md](findings.md), section 13.
 
 ---
@@ -17,7 +17,7 @@ Detailed numbers:
 3. **An interactive platform** for other researchers to explore the
    results. We have decided to host it on **GitHub Pages in this
    repository, built with React**. A starter template is in
-   [`dashboard/`](../dashboard/).
+   [`dashboard/`](../../dashboard/).
 
 It is written up as **Results (2)** in the report, about 1.25 pages.
 

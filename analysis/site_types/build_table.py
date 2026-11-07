@@ -13,7 +13,7 @@ and data/annotation/gtf_91.gtf.gz for each site's region and genome position.
 "Held-out" means every site was scored by the fold model that never saw its gene.
 The model is the shipped ensemble's three designs, three seeds each, trained on
 both labelled files: each network's score is ranked within its file, and the nine
-ranks are averaged - what predict.py does (report/task2_plan.md, 1.1).
+ranks are averaged - what predict.py does (report/notes/task2_plan.md, 1.1).
 
 Writes .cache/site_types/sites.csv.gz and hct116_runs.csv.gz. They hold the course
 labels, so they stay in the gitignored cache; only aggregates leave it.
